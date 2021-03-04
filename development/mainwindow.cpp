@@ -104,7 +104,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionCalEnergy , SIGNAL(triggered(bool)), this, SLOT(slotEnergyCalibration(bool)));
     connect(ui->actionCalFWHM, SIGNAL(triggered(bool)), this, SLOT(slotFWHMCalibration(bool)));
     connect(ui->actionCompare_Spectra, SIGNAL(triggered(bool)),this,SLOT(slotCompareSpectra(bool)));
-//Status
+    ui->actionCompare_Spectra->setEnabled(false);
+    //Status
     connect(ui->actionStatus, SIGNAL(triggered(bool)), this, SLOT(slotShowStatus(bool)));
 
     connect(ui->export_ENS_File, SIGNAL(triggered(bool)), this, SLOT(exportENSFile(bool)));
@@ -174,15 +175,14 @@ MainWindow::MainWindow(QWidget *parent) :
 //    connect(ui->tableContamination,SIGNAL(cellChanged(int,int)), SLOT(slotUpdateContaminationData(int,int)));
 
 
-    QStringList header;
-    header << "File Name" << "Norm (%)" << "free param" << "histID" ;
-    ui->tableContamination->setHorizontalHeaderLabels(header);  //header is also set in mainwindow_ui
+ //   QStringList header;
+ //   header << "File Name" << "Norm (%)" << "free param" << "histID" ;
+ //   ui->tableContamination->setHorizontalHeaderLabels(header);
 
 
 
     //2D Analysis panel
     connect(ui->buttonAnalysis2D, SIGNAL(clicked()), this, SLOT(slotOpen2DAnalysis()));
-
 
     connect(m1, SIGNAL(signalRecalculateLevel()), this, SLOT(slotCalculateDECSpectrum()));
 //    connect(this, SIGNAL(signalUpdateSpecPlot()), m1, SLOT(takesMySignal()));
@@ -201,7 +201,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->lineEditFitLevelsTo, SIGNAL(returnPressed()), this, SLOT(slotProjectFitLevelsTo()));
     connect(ui->lineEditFitLambda, SIGNAL(returnPressed()), this, SLOT(slotProjectFitLambda()));
     connect(ui->lineEditNoFitIterations, SIGNAL(returnPressed()), this, SLOT(slotProjectNoFitIterations()));
-//    connect(ui->lineEditFitHistId, SIGNAL(returnPressed()), this, SLOT(slotProjectExpSpecIDUpdate()));
+    connect(ui->lineEditFitEnergyFrom, SIGNAL(editingFinished()), this, SLOT(slotProjectFitEnergyFrom()));
+    connect(ui->lineEditFitEnergyTo, SIGNAL(editingFinished()), this, SLOT(slotProjectFitEnergyTo()));
+    connect(ui->lineEditFitLevelsFrom, SIGNAL(editingFinished()), this, SLOT(slotProjectFitLevelsFrom()));
+    connect(ui->lineEditFitLevelsTo, SIGNAL(editingFinished()), this, SLOT(slotProjectFitLevelsTo()));
+    connect(ui->lineEditFitLambda, SIGNAL(editingFinished()), this, SLOT(slotProjectFitLambda()));
+    connect(ui->lineEditNoFitIterations, SIGNAL(editingFinished()),this, SLOT(slotProjectNoFitIterations()));
+    //    connect(ui->lineEditFitHistId, SIGNAL(returnPressed()), this, SLOT(slotProjectExpSpecIDUpdate()));
     connect(ui->openHistogramGraph, SIGNAL(clicked()), this, SLOT(openHistogramGraph()));
 
 }
@@ -236,6 +242,7 @@ void MainWindow::createDecayInstance(const string DecayFileName)
      ui->buttonUploadAndCalculateResponse->setEnabled(false);
      ui->buttonCalculateSIMSpec->setEnabled(false);
      ui->buttonUpdateResponseContainer->setEnabled(false);
+     ui->actionCompare_Spectra->setEnabled(false);
    cout << "QValue: "<< decayPath->GetAllNuclides()->at(0).GetNuclideLevels()->at(0).GetTransitions()->at(0)->GetTransitionQValue() << endl;
 }
 
@@ -314,10 +321,16 @@ void MainWindow::slotCompareSpectra(bool trigered)
     QVector<double> y2 = QVector<double>::fromStdVector(myProject->getRecHist()->GetAllDataD());
     QVector<double> d12 = QVector<double>::fromStdVector(myProject->getDifHist()->GetAllDataD());
 
-    specComp_ui->initializeGraphs();
-//    specComp_ui->showDataExpSimDiff(x, y1, y2, d12);
-    specComp_ui->showSpectra(0);
 
+    string respType = "c";
+    specComp_ui->setResponseType(respType);
+    specComp_ui->initializeGraphs();
+    specComp_ui->setXValues(x);  //sets X value vector so rang is correctly calculated
+    specComp_ui->setYValues(y1);
+    specComp_ui->setY2Values(y2);
+    specComp_ui->setDiffValues(d12);
+    //    specComp_ui->showDataExpSimDiff(x, y1, y2, d12);
+    specComp_ui->showResponseFunctions();
 //-----spectra display code ------
 
     specComp_ui->show();
@@ -339,8 +352,6 @@ void MainWindow::slotOpen2DAnalysis()
     a2D_ui = new Analysis2D();
     a2D_ui->show();
 }
-
-
 
  void MainWindow::slotAddContamination()
 {
@@ -591,6 +602,7 @@ void MainWindow::slotDecayPathEdited()
     ui->buttonUploadAndCalculateResponse->setEnabled(false);
     //ui->buttonCalculateSIMSpec->setEnabled(false);
     ui->buttonMakeDirsAndCheckFiles->setEnabled(false);
+    ui->actionCompare_Spectra->setEnabled(false);
 }
 
 void MainWindow::slotMakeDirsAndCheckFiles()
@@ -604,6 +616,7 @@ void MainWindow::slotMakeDirsAndCheckFiles()
     ResponseFunction* responseFunction = ResponseFunction::get();
     if( responseFunction->GetAllFilesReadyFlag() && responseFunction->GetResponseFunctionReady() )
         ui->buttonCalculateSIMSpec->setEnabled(true);
+
     else if( responseFunction->GetAllFilesReadyFlag() )
         ui->buttonUploadAndCalculateResponse->setEnabled(true);
     else
@@ -651,6 +664,7 @@ void MainWindow::slotUpdateResponseContainer()
     ui->buttonCalculateSIMSpec->setEnabled(false);
     ui->buttonUpdateResponseContainer->setEnabled(false);
     ui->buttonMakeDirsAndCheckFiles->setEnabled(true);
+    ui->actionCompare_Spectra->setEnabled(false);
 }
 
 void MainWindow::slotCalculateDECSpectrum()
@@ -674,6 +688,7 @@ void MainWindow::slotCalculateDECSpectrum()
     ui->buttonAutoFit->setEnabled(true);
     ui->buttonAnalysis2D->setEnabled(true);
     ui->buttonManualFit->setEnabled(true);
+    ui->actionCompare_Spectra->setEnabled(true);
 
        std::vector<Contamination>* contaminations = myProject->getContaminations();
         float sumNormCont = 0.0;
@@ -817,6 +832,11 @@ void MainWindow::WriteTableData(QTableWidget* table, int row, int column, string
 void MainWindow::slotUpdateContaminationPanel()
 {
     Project* myProject = Project::get();
+
+    QStringList header;
+    header << "File Name" << "Norm (%)" << "free param" << "histID" ;
+    ui->tableContamination->setHorizontalHeaderLabels(header);
+
 
     std::vector<Contamination> contaminations = *(myProject->getContaminations());
     {
@@ -1669,4 +1689,5 @@ MainWindow::~MainWindow()
     delete ui;
     delete t1;
     delete m1;
+    //delete a2D_ui;
 }

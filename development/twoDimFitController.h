@@ -80,8 +80,7 @@ private:
     Histogram diffHist_;
     vector <double> errors;
     double otherLevelsToFeedingsRatio_;
-    //Histogram otherLevelsForFitting_; // not scaled
-    //double histogramVisibilityFactor_;
+    int normalizeStartPoint_;
 
     void PrepareNeutronLevelsResponse();
     Histogram prepareTransitionResponse(Transition *transition_, Level *tmpLevel_);

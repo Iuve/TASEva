@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>925</width>
-    <height>514</height>
+    <height>600</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -22,19 +22,19 @@
   <widget class="QCustomPlot" name="histogramPlot" native="true">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>50</y>
-     <width>651</width>
-     <height>291</height>
+     <x>12</x>
+     <y>74</y>
+     <width>681</width>
+     <height>321</height>
     </rect>
    </property>
   </widget>
   <widget class="QPushButton" name="buttonClose">
    <property name="geometry">
     <rect>
-     <x>800</x>
-     <y>480</y>
-     <width>113</width>
+     <x>842</x>
+     <y>564</y>
+     <width>77</width>
      <height>32</height>
     </rect>
    </property>
@@ -45,10 +45,10 @@
   <widget class="QCustomPlot" name="histogramDiffPlot" native="true">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>350</y>
-     <width>651</width>
-     <height>131</height>
+     <x>12</x>
+     <y>413</y>
+     <width>681</width>
+     <height>141</height>
     </rect>
    </property>
   </widget>
@@ -56,8 +56,8 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>30</y>
-     <width>111</width>
+     <y>44</y>
+     <width>115</width>
      <height>20</height>
     </rect>
    </property>
@@ -68,9 +68,9 @@
   <widget class="QLabel" name="labelXAxisMin">
    <property name="geometry">
     <rect>
-     <x>130</x>
-     <y>10</y>
-     <width>91</width>
+     <x>126</x>
+     <y>12</y>
+     <width>70</width>
      <height>16</height>
     </rect>
    </property>
@@ -81,9 +81,9 @@
   <widget class="QLineEdit" name="lineEditXAxisMin">
    <property name="geometry">
     <rect>
-     <x>200</x>
-     <y>10</y>
-     <width>61</width>
+     <x>206</x>
+     <y>12</y>
+     <width>75</width>
      <height>21</height>
     </rect>
    </property>
@@ -100,9 +100,9 @@
   <widget class="QLineEdit" name="lineEditXAxisMax">
    <property name="geometry">
     <rect>
-     <x>350</x>
-     <y>10</y>
-     <width>61</width>
+     <x>374</x>
+     <y>12</y>
+     <width>76</width>
      <height>21</height>
     </rect>
    </property>
@@ -119,9 +119,9 @@
   <widget class="QLabel" name="labelXAxisMax">
    <property name="geometry">
     <rect>
-     <x>270</x>
-     <y>10</y>
-     <width>81</width>
+     <x>291</x>
+     <y>12</y>
+     <width>73</width>
      <height>16</height>
     </rect>
    </property>
@@ -132,16 +132,16 @@
   <widget class="QTableWidget" name="tableLevels">
    <property name="geometry">
     <rect>
-     <x>690</x>
-     <y>30</y>
-     <width>221</width>
-     <height>421</height>
+     <x>707</x>
+     <y>43</y>
+     <width>206</width>
+     <height>477</height>
     </rect>
    </property>
    <property name="sizePolicy">
     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-     <horstretch>2</horstretch>
-     <verstretch>2</verstretch>
+     <horstretch>1</horstretch>
+     <verstretch>1</verstretch>
     </sizepolicy>
    </property>
    <property name="iconSize">
@@ -180,8 +180,8 @@
   <widget class="QPushButton" name="buttonRecalculate">
    <property name="geometry">
     <rect>
-     <x>800</x>
-     <y>450</y>
+     <x>806</x>
+     <y>530</y>
      <width>113</width>
      <height>32</height>
     </rect>
@@ -193,9 +193,9 @@
   <widget class="QPushButton" name="buttonNormalise">
    <property name="geometry">
     <rect>
-     <x>690</x>
-     <y>450</y>
-     <width>113</width>
+     <x>701</x>
+     <y>530</y>
+     <width>103</width>
      <height>32</height>
     </rect>
    </property>
@@ -206,9 +206,9 @@
   <widget class="QCheckBox" name="checkContrOtherLevels">
    <property name="geometry">
     <rect>
-     <x>440</x>
-     <y>10</y>
-     <width>241</width>
+     <x>460</x>
+     <y>13</y>
+     <width>242</width>
      <height>20</height>
     </rect>
    </property>
@@ -222,9 +222,9 @@
   <widget class="QLabel" name="labelNoCounts">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>490</y>
-     <width>651</width>
+     <x>12</x>
+     <y>568</y>
+     <width>129</width>
      <height>16</height>
     </rect>
    </property>
@@ -235,9 +235,9 @@
   <widget class="QLabel" name="labelYAxisMin">
    <property name="geometry">
     <rect>
-     <x>130</x>
-     <y>30</y>
-     <width>71</width>
+     <x>126</x>
+     <y>43</y>
+     <width>69</width>
      <height>16</height>
     </rect>
    </property>
@@ -248,9 +248,9 @@
   <widget class="QLabel" name="labelYAxisMax">
    <property name="geometry">
     <rect>
-     <x>270</x>
-     <y>30</y>
-     <width>81</width>
+     <x>291</x>
+     <y>43</y>
+     <width>73</width>
      <height>16</height>
     </rect>
    </property>
@@ -261,9 +261,9 @@
   <widget class="QLineEdit" name="lineEditYAxisMin">
    <property name="geometry">
     <rect>
-     <x>200</x>
-     <y>30</y>
-     <width>61</width>
+     <x>206</x>
+     <y>43</y>
+     <width>75</width>
      <height>21</height>
     </rect>
    </property>
@@ -277,9 +277,9 @@
   <widget class="QLineEdit" name="lineEditYAxisMax">
    <property name="geometry">
     <rect>
-     <x>350</x>
-     <y>30</y>
-     <width>61</width>
+     <x>374</x>
+     <y>43</y>
+     <width>76</width>
      <height>21</height>
     </rect>
    </property>
@@ -293,9 +293,9 @@
   <widget class="QCheckBox" name="checkShowSIM">
    <property name="geometry">
     <rect>
-     <x>440</x>
-     <y>30</y>
-     <width>231</width>
+     <x>460</x>
+     <y>44</y>
+     <width>218</width>
      <height>20</height>
     </rect>
    </property>

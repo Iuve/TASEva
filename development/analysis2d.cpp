@@ -28,7 +28,9 @@ Analysis2D::Analysis2D(QWidget *parent) :
     prepareRestLevelResponseDoneFlag_=false;
 
     ui2D->buttonShowGate->setDisabled(true);
-        connect(ui2D->buttonClose, SIGNAL(clicked()), this, SLOT(close()));
+        connect(ui2D->buttonClose, SIGNAL(clicked()), this, SLOT(slotClose()));
+        connect(this, SIGNAL(signalClose2dUI()), this, SLOT(close()));
+
         connect(ui2D->checkLogXProj, SIGNAL(clicked(bool)), this, SLOT(slotSetLogScaleXProj(bool)));
         connect(ui2D->checkLogYProj, SIGNAL(clicked(bool)), this, SLOT(slotSetLogScaleYProj(bool)));
     //Display
@@ -63,10 +65,15 @@ Analysis2D::Analysis2D(QWidget *parent) :
 }
 
 Analysis2D::~Analysis2D()
-{
-    delete ui2D;
+{ 
+    delete yRectGate1Item_;
+    delete yRectGate2Item_;
+    delete yRectGate12DItem_;
+    delete yRectGate22DItem_;
+    //delete colorMap2D_;
     delete fit2DController_;
     delete m1;
+    delete ui2D;
 }
 
 std::vector<double> Analysis2D::gateOnY(int low, int high)
@@ -140,7 +147,7 @@ void Analysis2D::setInitialValues()
     ui2D->lineYGate1Low->insert(QString::number(gateOnYLow_));
     ui2D->lineYGate1High->insert(QString::number(gateOnYHigh_));
     ui2D->lineYGate2Low->insert(QString::number(gateOnYLow_));
-    ui2D->lineYGate2High->insert(QString::number(gateOnYHigh_));
+    ui2D->lineYGate2High->insert(QString::number(gateOnYLow_ + 5));
 }
 
 void Analysis2D::setGraphics()
@@ -165,14 +172,14 @@ void Analysis2D::setGraphics()
     ui2D->PlotProjOnX->xAxis->setRange(Display2DXmin,Display2DXmax);
     ui2D->PlotProjOnY->yAxis->setRange(Display2DYmin,Display2DYmax);
 
-    QCPColorMap *colorMap2D = new QCPColorMap(ui2D->Plot2D->xAxis, ui2D->Plot2D->yAxis);
-    colorMap2D->data()->setRange(QCPRange(Display2DXmin, Display2DXmax), QCPRange(Display2DYmin, Display2DYmax));
-    colorMap2D->data()->setSize(Display2DXmax,Display2DYmax);
-    colorMap2D->setBrush(Qt::NoBrush);
-    colorMap2D->setPen(QPen(Qt::black));
-    colorMap2D->setDataScaleType(QCPAxis::stLogarithmic);  //stLinear
-    colorMap2D->setGradient(QCPColorGradient::gpPolar);
-    colorMap2D->setInterpolate(true);
+    colorMap2D_ = new QCPColorMap(ui2D->Plot2D->xAxis, ui2D->Plot2D->yAxis);
+    colorMap2D_->data()->setRange(QCPRange(Display2DXmin, Display2DXmax), QCPRange(Display2DYmin, Display2DYmax));
+    colorMap2D_->data()->setSize(Display2DXmax,Display2DYmax);
+    colorMap2D_->setBrush(Qt::NoBrush);
+    colorMap2D_->setPen(QPen(Qt::black));
+    colorMap2D_->setDataScaleType(QCPAxis::stLogarithmic);  //stLinear
+    colorMap2D_->setGradient(QCPColorGradient::gpPolar);
+    colorMap2D_->setInterpolate(true);
     cout << "number of bins : " << myProject->getExp2DHist()->GetNrOfBins() << endl;
     cout << " Xmax: " << Display2DXmax << " Ymax: " <<Display2DYmax << " iloczyn: " <<  (Display2DXmax+1)*(Display2DYmax+1)<< endl;
 
@@ -180,10 +187,10 @@ void Analysis2D::setGraphics()
     for (unsigned int x=0; x<xSize_; ++x){
         unsigned int xpos = x*(xSize_+1);
         for (unsigned int y=0; y<ySize_; ++y){
-          colorMap2D->data()->setCell(x, y, myProject->getExp2DHist()->GetBinValue(xpos+y));
+          colorMap2D_->data()->setCell(x, y, myProject->getExp2DHist()->GetBinValue(xpos+y));
         }
     }
-      colorMap2D->rescaleDataRange(true);
+      colorMap2D_->rescaleDataRange(true);
       ui2D->Plot2D->rescaleAxes();
       ui2D->Plot2D->replot();
 
@@ -225,6 +232,8 @@ void Analysis2D::setGraphics()
       ui2D->PlotProjOnY->yAxis->setRange(Display2DYmin,Display2DYmax);
       ui2D->PlotProjOnY->xAxis->setRange(1,yMax);
       ui2D->PlotProjOnY->replot();
+
+      //delete colorMap2D;
 }
 
 void Analysis2D::slot2DFitControler()
@@ -286,8 +295,9 @@ void Analysis2D::slotMakeGate()
     for(unsigned k = 0; k < high; k++)
         fvect.push_back(static_cast<float>(projectionOnX.at(k)));
     Histogram* tmpHist = new Histogram(min,max,fvect);
-    tmpHist->Normalize(1.);
+    tmpHist->Normalize(10.);
     myProject->setExpGate( *tmpHist );
+    delete tmpHist;
     fit2DController_->setExperimentalHistogram( myProject->getExpGate() );
 
     ui2D->PlotProjOnX->graph(0)->setData(QVector<double>::fromStdVector(channelProjectionOnX),QVector<double>::fromStdVector(projectionOnX));
@@ -377,13 +387,13 @@ void Analysis2D::slotReplotGraphics()
     }
 
     cout << "ReplotGraphics-3" << endl;
-    QCPColorMap *colorMap2D = new QCPColorMap(ui2D->Plot2D->xAxis, ui2D->Plot2D->yAxis);
-
-    colorMap2D->rescaleDataRange(true);
+    colorMap2D_->rescaleDataRange(true);
 
     ui2D->Plot2D->replot();
     ui2D->PlotProjOnX->replot();
     ui2D->PlotProjOnY->replot();
+
+    //delete colorMap2D;
     cout << "ReplotGraphics-4" << endl;
 
 }
@@ -451,7 +461,7 @@ void Analysis2D::slotShowGate1ExpVsSim(bool recalculateTransitions)
     QStringList header;
     std::vector<RowData> rowData_;
 
-    header << "Display ?" << "Final Level Energy" << "Intensity[%]" ;
+    header << "Display ?" << "Final Level Energy" <<"Fitting flag" << "Intensity[%]" ;
     m1->ManualFitGraph::setHeader(header);
     m1->show();
 
@@ -469,7 +479,8 @@ void Analysis2D::slotShowGate1ExpVsSim(bool recalculateTransitions)
         QString QDisplayStatus_ = displayStatus.at(i) ? "true" : "false";
         QString QEnergy_ = QString::number(transitions_->at(i)->GetFinalLevelEnergy());
         QString QIntensity_ = QString::number(transitions_->at(i)->GetIntensity()*100);
-        rowData_.push_back(RowData(QDisplayStatus_, QEnergy_, QIntensity_));
+        QString QFittingFlag_ = transitions_->at(i)->GetIntensityFitFlag() ? "true" : "false";
+        rowData_.push_back(RowData(QDisplayStatus_, QEnergy_, QFittingFlag_, QIntensity_));
     }
     m1->ManualFitGraph::initializeTable(rowData_);
 
@@ -477,12 +488,12 @@ void Analysis2D::slotShowGate1ExpVsSim(bool recalculateTransitions)
     //float xMin = 0;
     //float xMax = ui2D->lineDisplayXmax->text().toDouble() ;  //expHist->GetNrOfBins();
 //    float xMax = 8000.0;
-    if( recalculateTransitions )
-    {
+//    if( recalculateTransitions )
+//    {
        fit2DController_->prepareFeedings();
        fit2DController_->calculateSimulatedHistogram();
        fit2DController_->calculateDiffHistogram();
-    }
+//    }
 
     QVector<double> x1 = QVector<double>::fromStdVector(fit2DController_->getExperimentalHistogram()->GetEnergyVectorD());
     QVector<double> y1 = QVector<double>::fromStdVector(fit2DController_->getExperimentalHistogram()->GetAllDataD());
@@ -537,4 +548,8 @@ double Analysis2D::vectorMax(std::vector<double> yM, double minEn, double maxEn)
     return yMax;
 }
 
-
+void Analysis2D::slotClose()
+{
+    emit signalClose2dUI();
+    delete colorMap2D_;
+}

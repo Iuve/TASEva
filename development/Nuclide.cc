@@ -125,6 +125,7 @@ void Nuclide::AddLevelEI(double energy, double intensity)
 void Nuclide::AddLevel(double energy, double spin, std::string parity, double T12, double intensity)
 {
     nuclideLevels_.push_back( Level(energy, spin, parity, T12) );
+    nuclideLevels_.back().setAsPseudoLevel();
     //add default gamma transition to ground state
     nuclideLevels_.back().AddTransition("G", energy, 1.);
     //add default beta minus transition to created level

@@ -1,9 +1,10 @@
 #include <DeclareHeaders.hh>
+#include "pseudoLevelsController.h"
+#include "transitionEditor.h"
 #include "decayPathEditor.h"
 #include "ui_DecayPathEditor.h"
 #include "tablecontroller.h"
 #include "responsefunction.h"
-#include "pseudoLevelsController.h"
 
 #include "QDebug"
 #include <QDialog>
@@ -21,7 +22,7 @@ DecayPathEditor::DecayPathEditor(QWidget *parent) :
     myProject = Project::get();
     g1 = new TransitionEditor();
     DecayPath* decayPath = DecayPath::get();
-    pseudoLevelsController_ =  new PseudoLevelsController(decayPath);
+    pseudoLevelsController_ =  new PseudoLevelsController();
 
     setComboBoxMethod();
 

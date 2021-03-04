@@ -2,19 +2,23 @@
 #include "pseudoLevelsController.h"
 #include "Exceptions.h"
 #include "qdebug.h"
-
+#include <vector>
+#include <string>
 
 #include "QDebug"
 #include <QDialog>
 #include <QMessageBox>
+
 class DialogOptionsWidget;
 
-PseudoLevelsController::PseudoLevelsController(DecayPath* decay)
+using namespace std;
+
+PseudoLevelsController::PseudoLevelsController()
 {
     std::cout<<"PseudoLevelsController::PseudoLevelsController(Decay* decayVal)"<<std::endl;
     try
     {
-        decayPath_= decay;
+        decayPath_= DecayPath::get();
 //TasEva        levelDensity_ = new LevelDensity();
         createIntensityMethodList();
     }
@@ -127,20 +131,20 @@ void PseudoLevelsController::addRemainingTransition(string method)
     for(auto it=levels->begin(); it< levels->end(); it++)  //loop over all levels to locate ne pseudolevels
     {
         double energy = it->GetLevelEnergy();
-        if(energy < minEnergy_)continue;  //fast out for levels below minEnergy_
+        if(energy < minEnergy_) continue;  //fast out for levels below minEnergy_
         for (int i=0; i<nrOfPseudolevels; i++)  //looking for pseudolevel matching (it) pointer
         {
             double plevelEnergy = minEnergy_ + i*deltaE_;
             if(plevelEnergy == energy )  // found pseudolevel
             {
-                it->setAsPseudoLevel();
+                //it->setAsPseudoLevel();
                 for(auto ik=levels->begin(); ik != it; ik++) //scaning for final levels
                 {
 
-                    if(ik->isPseudoLevel())continue;  //out for other pseudolevels
+                    if(ik->isPseudoLevel()) continue;  //out for other pseudolevels
                 double intensity;
                 double transitionEnergy = plevelEnergy - ik->GetLevelEnergy();
-                    if(transitionEnergy <= 0)continue;
+                    if(transitionEnergy <= 0) continue;
                 if (method == "Equal"){
                     intensity = 1;
                 }
@@ -175,6 +179,80 @@ void PseudoLevelsController::addRemainingTransition(string method)
         it->NormalizeTransitionIntensities();
     }
 }
+
+
+double PseudoLevelsController::getE1Intensity(double atomicMass, double energy)
+{
+    double intensity = pow(energy/1000., 3.) *pow(10., 7.) * pow(atomicMass, 2./3.);
+    //std::cout<<" E1: "<<intensity;
+    return  intensity;
+}
+
+double PseudoLevelsController::getE2Intensity(double atomicMass, double energy)
+{
+    double intensity = 7.3 * pow(energy/1000., 5.) * pow(atomicMass, 4./3.);
+    //std::cout<<" E2: "<<intensity;
+    return  intensity;
+}
+
+double PseudoLevelsController::getM1Intensity(double atomicMass, double energy)
+{
+    double intensity = 5.6 * pow(energy/1000., 3.) *pow(10., 6.);
+    //std::cout<<" M1: "<<intensity;
+    return  intensity;
+}
+
+double PseudoLevelsController::getM2Intensity(double atomicMass, double energy)
+{
+    double intensity = 3.5 * pow(energy/1000., 5.) * pow(atomicMass, 2./3.);
+    //std::cout<<" M2: "<<intensity;
+    return  intensity;
+}
+
+void PseudoLevelsController::changeIntensitiesToChoosenMethod(Level* level, string method)
+{
+    cout << "changeIntensitiesToChoosenMethod - start" << endl;
+    int atomicMass;
+    std::vector<Nuclide>* nuclides = decayPath_->GetAllNuclides();
+    for(auto in = nuclides->begin(); in != nuclides->end(); ++in)
+        for(auto il = in->GetNuclideLevels()->begin(); il != in->GetNuclideLevels()->end(); ++il)
+            if(level == &(*il))
+                atomicMass = in->GetAtomicMass();
+
+
+    std::vector<Transition*>* transitionsFromLevel = level->GetTransitions();
+    for(auto it = transitionsFromLevel->begin(); it != transitionsFromLevel->end(); ++it)
+    {
+        double newTransitionIntensity = 0.;
+        double transitionEnergy = (*it)->GetTransitionQValue();
+        if (method == "Equal"){
+            newTransitionIntensity = 1;
+        }
+        else if(method == "AllE1"){
+            newTransitionIntensity = getE1Intensity(atomicMass, transitionEnergy);
+        }
+        else if (method == "AllE2")
+        {
+            newTransitionIntensity = getE2Intensity(atomicMass, transitionEnergy);
+        }
+        else if (method == "AllM1")
+        {
+            newTransitionIntensity = getM1Intensity(atomicMass, transitionEnergy);
+        }
+        else if (method == "AllM2")
+        {
+            newTransitionIntensity = getM2Intensity(atomicMass, transitionEnergy);
+        }
+        else
+        {
+            newTransitionIntensity = 1;
+        }
+        (*it)->ChangeIntensity(newTransitionIntensity);
+    }
+
+    level->NormalizeTransitionIntensities();
+}
+
 
 /*Eva
 
@@ -289,34 +367,6 @@ double PseudoLevelsController::findTransitionIntensity
     return transInt;
 }
 Eva */
-
-double PseudoLevelsController::getE1Intensity(double atomicMass, double energy)
-{
-    double intensity = pow(energy/1000., 3.) *pow(10., 7.) * pow(atomicMass, 2./3.);
-    //std::cout<<" E1: "<<intensity;
-    return  intensity;
-}
-
-double PseudoLevelsController::getE2Intensity(double atomicMass, double energy)
-{
-    double intensity = 7.3 * pow(energy/1000., 5.) * pow(atomicMass, 4./3.);
-    //std::cout<<" E2: "<<intensity;
-    return  intensity;
-}
-
-double PseudoLevelsController::getM1Intensity(double atomicMass, double energy)
-{
-    double intensity = 5.6 * pow(energy/1000., 3.) *pow(10., 6.);
-    //std::cout<<" M1: "<<intensity;
-    return  intensity;
-}
-
-double PseudoLevelsController::getM2Intensity(double atomicMass, double energy)
-{
-    double intensity = 3.5 * pow(energy/1000., 5.) * pow(atomicMass, 2./3.);
-    //std::cout<<" M2: "<<intensity;
-    return  intensity;
-}
 
 /*
 void PseudoLevelsController::addStatPseudoLevels()

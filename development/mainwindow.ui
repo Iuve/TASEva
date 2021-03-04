@@ -901,36 +901,9 @@
        <attribute name="horizontalHeaderStretchLastSection">
         <bool>true</bool>
        </attribute>
-       <column>
-        <property name="text">
-         <string>FileName</string>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>12</pointsize>
-         </font>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Norm (%)</string>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>12</pointsize>
-         </font>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>HistID</string>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>11</pointsize>
-         </font>
-        </property>
-       </column>
+       <column/>
+       <column/>
+       <column/>
        <column/>
       </widget>
      </widget>

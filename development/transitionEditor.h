@@ -8,7 +8,7 @@
 #include <string>
 #include <iostream>
 
-//class Transition;
+class PseudoLevelsController;
 
 namespace Ui {
 class TransitionEditor;
@@ -39,6 +39,8 @@ public slots:
     void slotNormalizeTransitionIntensity();
      void slotFittingStatusClicked(int row, int column);
      void slotTableChanged(int row, int column);
+     void slotSetGammaIntensityMethod(QString method);
+     void slotChangeIntensitiesToMethod();
 signals:
     void signalUpdateTransitionTable(int currentNuclideIndex_, int currentLevelIndex_);
     void signalUpdateLevelTable();
@@ -46,6 +48,7 @@ signals:
 
 
 private:
+    void setComboBoxMethod();
     void initializeRow(int rowNumber, RowData rowData);
     void initializeTable();
     void checkData();
@@ -55,6 +58,9 @@ private:
     int currentLevelIndex_;
     int currentNuclideIndex_;
     bool transitionEditorOpen_;
+
+    PseudoLevelsController* pseudoLevelsController_;
+    //std::string gammaIntensityMethod_;
 };
 
 #endif // TRANSITIONEDITOR_H

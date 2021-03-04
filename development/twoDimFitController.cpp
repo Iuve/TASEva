@@ -8,12 +8,13 @@
 
 TwoDimFitController::TwoDimFitController(QWidget *parent)
 {
-    decayPath= DecayPath::get();
+    decayPath = DecayPath::get();
     myProject = Project::get();
 
     //histogramVisibilityFactor_ = 1;
     decayPath->FindAndMarkNeutronLevels();
     otherLevelsToFeedingsRatio_ = 0;
+    normalizeStartPoint_ = 100;
 }
 
 TwoDimFitController::~TwoDimFitController()
@@ -228,7 +229,7 @@ void TwoDimFitController::calculateRecHistogram()
       cout << "TwoDimFitController::calculateRecHistogram - START" << endl;
       cout << "Total number of Counts in SIM spectrum: " << simGate_.GetNrOfCounts() << endl;
       cout << "counts in otherLevelsResponse_ function: " << otherLevelsResponse_->GetNrOfCounts() << endl;
-      double xMin = 100;  // to avoid channel 0
+      double xMin = normalizeStartPoint_;  // to avoid channel 0
       //double xMax = expGate_->GetXMax();
       double xMax = maxEn_;
       //float xMax = ui2D->lineDisplayXmax->text().toDouble() ;  //expHist->GetNrOfBins();
@@ -324,7 +325,7 @@ void TwoDimFitController::makeFit()
     std::vector< vector<double> > responsesForFit = responses;
     responsesForFit.push_back(otherLevelsContribution);
 
-    int minPoint = 100;
+    int minPoint = normalizeStartPoint_;
     int maxPoint = maxEn_;
 /*    int maxPoint = nrOfPoints;
     for(int j = 0; j != nrOfHistograms + 1; j++)

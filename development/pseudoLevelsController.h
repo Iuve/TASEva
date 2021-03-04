@@ -2,7 +2,9 @@
 #define PSEUDOLEVELSCONTROLLER_H
 //#include "levelDensity.h"
 
-using namespace std;
+#include <vector>
+#include <string>
+
 class DecayPath;
 
 class SpinAndParity
@@ -25,9 +27,10 @@ class SpinAndParity
 class PseudoLevelsController
 {
 public:
-    PseudoLevelsController(DecayPath* decay);
-    virtual ~PseudoLevelsController(){std::cout<<"delete pseudoLevelsController"<< std::endl;}//empty destructor so far
-    void addPseudoLevels(double stepEnergy, double minEn, double maxEn, double totInt,  string gammaIntensityMethod);
+    PseudoLevelsController();
+    ~PseudoLevelsController();
+
+    void addPseudoLevels(double stepEnergy, double minEn, double maxEn, double totInt,  std::string gammaIntensityMethod);
 //EVa    void applyStatisticalModel();
 
     /** Add pseudolevels with no information about spin.
@@ -35,7 +38,7 @@ public:
       * is calculated anly form energy (as E2 transition)
       **/
     void addSimplePseudoLevels();
-    void addRemainingTransition(string method);
+    void addRemainingTransition(std::string method);
 //EVa    void addStatPseudoLevels();
 //Eva    double findTransitionIntensity
 //            ( Level* finalLevel, double atomicMass, double energy, SpinAndParity spin);
@@ -43,10 +46,11 @@ public:
  //           (Level* finalLevel, double atomicMass, double energy, std::vector<SpinAndParity> allSpins);
  //Eva   Level* createPseudoLevel(Level* parentLevel, double energy);
  //Eva   void setSpinAndParity(Level* parentLevel, Level* pseudoLevel);
-    std::vector<string> getIntensityMethodList();
-    void setIntensityMethod(string method){intensityMethod_ =method;}
-    string getIntensityMethod(){return intensityMethod_;}
+    std::vector<std::string> getIntensityMethodList();
+    void setIntensityMethod(std::string method){intensityMethod_ = method;}
+    std::string getIntensityMethod(){return intensityMethod_;}
     void setNuclideIndex(int tabIndex){currentNuclideIndex_ = tabIndex;}
+    void changeIntensitiesToChoosenMethod(Level*, std::string);
 
 
 private:
@@ -62,8 +66,8 @@ private:
     double totIntensity_;
     bool ifStatisticalModel_;
     double deltaE_;
-    std::vector<string> intensityMethodList_;
-    string intensityMethod_;
+    std::vector<std::string> intensityMethodList_;
+    std::string intensityMethod_;
     int currentNuclideIndex_;
 
     //Eva    LevelDensity* levelDensity_;

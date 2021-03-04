@@ -2,7 +2,6 @@
 #define DECAYPATHEDITOR_H
 
 #include "rowData.h"
-#include "transitionEditor.h"
 #include "project.h"
 
 #include <string>
@@ -14,6 +13,7 @@
 #include <QTableWidget>
 
 class PseudoLevelsController;
+class TransitionEditor;
 
 class DialogOptionsWidget;
 //class Level;
@@ -87,7 +87,7 @@ private:
     double pseudoLevelEnergyMax_=5000;
     double pseudoLevelTotInten_=10;
     bool ifStatModel_ = true;
-    string gammaIntensityMethod_ = "";
+    string gammaIntensityMethod_;
 };
 
 #endif // LEVELEDITOR_H

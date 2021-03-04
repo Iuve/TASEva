@@ -1,4 +1,5 @@
 #include "DeclareHeaders.hh"
+#include "pseudoLevelsController.h"
 #include "transitionEditor.h"
 #include "histogram.h"
 #include "responsefunction.h"
@@ -15,6 +16,9 @@ TransitionEditor::TransitionEditor(QWidget *parent) :
 {
     uiL->setupUi(this);
     transitionEditorOpen_ = false;
+    pseudoLevelsController_ =  new PseudoLevelsController();
+
+    setComboBoxMethod();
 
     pointerToTable_= uiL->tableTransition;
 //    connect(uiL->tableGamma->verticalHeader(), SIGNAL(sectionDoubleClicked(int)), this, SLOT(slotEditGammas(int)));
@@ -24,6 +28,8 @@ TransitionEditor::TransitionEditor(QWidget *parent) :
       connect(uiL->buttonQuit, SIGNAL(clicked(bool)), this, SLOT(close()));
       connect(uiL->tableTransition, SIGNAL(cellClicked(int,int)), this,SLOT(slotFittingStatusClicked(int,int)));
       connect(uiL->tableTransition, SIGNAL(cellChanged(int,int)),this, SLOT(slotTableChanged(int,int)));
+      connect(uiL->comboBoxIntensity, SIGNAL(currentTextChanged(QString)), this, SLOT(slotSetGammaIntensityMethod(QString)));
+      connect(uiL->buttonMethod, SIGNAL(clicked(bool)), this, SLOT(slotChangeIntensitiesToMethod()));
       //Mouse right click actions
           setContextMenuPolicy(Qt::ActionsContextMenu);
           QAction* transitionAddAction = new QAction("Add transition");
@@ -51,12 +57,41 @@ TransitionEditor::~TransitionEditor()
     delete uiL;
 }
 
-/*Eva
-void GammaEditor::slotUpdateGammaData(int row, int column)
+void TransitionEditor::setComboBoxMethod()
 {
-   setTotalIntensityLabel();
+    vector<string> methodList = pseudoLevelsController_->getIntensityMethodList();
+    for (unsigned i=0; i< methodList.size(); i++)
+    {
+        QString qtext = QString::fromStdString(methodList.at(i));
+        uiL->comboBoxIntensity->addItem(qtext);
+    }
+
 }
-*/
+
+void TransitionEditor::slotSetGammaIntensityMethod(QString qmethod)
+{
+    pseudoLevelsController_->setIntensityMethod(qmethod.toStdString());
+    //gammaIntensityMethod_ = qmethod.toStdString();
+
+}
+
+void TransitionEditor::slotChangeIntensitiesToMethod()
+{
+    ResponseFunction* responseFunction = ResponseFunction::get();
+    DecayPath* decayPath = DecayPath::get();
+    std::vector<Nuclide>* nuclides_=decayPath->GetAllNuclides();
+    std::vector <Level>* levels_ = nuclides_->at(currentNuclideIndex_).GetNuclideLevels();
+    Level* level = (&levels_->at(currentLevelIndex_));
+
+    string method = pseudoLevelsController_->getIntensityMethod();
+    pseudoLevelsController_->changeIntensitiesToChoosenMethod(level, method);
+
+    responseFunction->UpdateWholeContainerIntensities();
+    responseFunction->RefreshFlags();
+
+   emit signalTransitionsEdited();
+   emit signalUpdateTransitionTable(currentNuclideIndex_,  currentLevelIndex_);
+}
 
 void TransitionEditor::slotTableChanged(int row, int column)
 {

@@ -269,7 +269,7 @@ Nuclide LoadDecayData::LoadNuclideData(const string filename)
 			}	
 			else
 			{
-				cout << "Unknown particle type! Data not registered." << endl;
+                cout << "Unknown particle type: " << type << "! Transition QValue: " << transitionQval << ". Data not registered." << endl;
 			}		
 		}
         //double lvlEnergy = level.attribute("Energy").as_double();

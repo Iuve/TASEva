@@ -57,28 +57,33 @@ ManualFitGraph::ManualFitGraph(QWidget *parent) :
         setContextMenuPolicy(Qt::ActionsContextMenu);
         FittingStatusTrueAction_ = new QAction("Set Fitting status TRUE");
         FittingStatusFalseAction_ = new QAction("Set Fitting status FALSE");
-        QAction* DisplayStatusTrueAction = new QAction("Set Display status TRUE");
-        QAction* DisplayStatusFalseAction = new QAction("Set Display status FALSE");
+        DisplayStatusTrueAction_ = new QAction("Set Display status TRUE");
+        DisplayStatusFalseAction_ = new QAction("Set Display status FALSE");
         connect(FittingStatusTrueAction_, SIGNAL(triggered()), this, SLOT(slotFittingStatusTrue()));
         connect(FittingStatusFalseAction_, SIGNAL(triggered()), this, SLOT(slotFittingStatusFalse()));
-        connect(DisplayStatusTrueAction, SIGNAL(triggered()), this, SLOT(slotDisplayStatusTrue()));
-        connect(DisplayStatusFalseAction, SIGNAL(triggered()), this, SLOT(slotDisplayStatusFalse()));
+        connect(DisplayStatusTrueAction_, SIGNAL(triggered()), this, SLOT(slotDisplayStatusTrue()));
+        connect(DisplayStatusFalseAction_, SIGNAL(triggered()), this, SLOT(slotDisplayStatusFalse()));
         addAction(FittingStatusTrueAction_);
         addAction(FittingStatusFalseAction_);
-        addAction(DisplayStatusTrueAction);
-        addAction(DisplayStatusFalseAction);
+        addAction(DisplayStatusTrueAction_);
+        addAction(DisplayStatusFalseAction_);
     //Mouse right click acctions END
 
-
-
     boolTableDataInitialised = false;
-    xMaxInitial_ = 6000;
-    xMinInitial_ = 0;
+//    xMaxInitial_ = 6000;
+//    xMinInitial_ = 0;
+
+    //delete DisplayStatusTrueAction;
+    //delete DisplayStatusFalseAction;
 }
 
 ManualFitGraph::~ManualFitGraph()
 {
     delete uiM;
+    delete FittingStatusTrueAction_;
+    delete FittingStatusFalseAction_;
+    delete DisplayStatusTrueAction_;
+    delete DisplayStatusFalseAction_;
 }
 
 void ManualFitGraph::setHeader(QStringList header)
@@ -94,7 +99,8 @@ void ManualFitGraph::slotDisplayStatusClicked( int row, int column)
 {
     bool status;
     if((respType_ == "c") && (column == 2))return;
-    if(column ==0){
+    if(column ==0)
+    {
     displayStatus.at(row)= !displayStatus.at(row);
     slotStatusClicked(displayStatus.at(row), row, column);
     } else if(column ==2 ){
@@ -108,18 +114,30 @@ void ManualFitGraph::slotDisplayStatusClicked( int row, int column)
 void ManualFitGraph::slotStatusClicked(bool status, int row, int column)
 {
      QTableWidget *pointerToTable_ = 0L;
+     QTableWidgetItem* tempQTableWidgetItem = new QTableWidgetItem(status ? "true" : "false");
      pointerToTable_ = uiM->tableLevels;
     if(column == 0){
-    pointerToTable_->setItem(row, 0, new QTableWidgetItem(status ? "true" : "false"));
+    pointerToTable_->setItem(row, 0, tempQTableWidgetItem);
     pointerToTable_->show();
-    if(respType_ == "l")showResponseFunctionsLevels(2);
-    if(respType_ == "g")showResponseFunctionsGammas(2);
-    if(respType_ == "c")showSpectra(2);
+    int start = 0; //exp and simulation spectra
+    if(respType_ == "l")start = 2;
+    if(respType_ == "g")start = 2;
+    if(respType_ == "c")start = 0;
+    //mk    if(respType_ == "l")
+//    {
+     if(displayStatus.at(row))uiM->histogramPlot->graph(row+start)->setVisible(true);
+     if(!displayStatus.at(row))uiM->histogramPlot->graph(row+start)->setVisible(false);
+//    }
+//    if(respType_ == "l")showResponseFunctionsLevels(2);
+//    if(respType_ == "g")showResponseFunctionsGammas(2);
+//    if(respType_ == "c")showSpectra(2);
     uiM->histogramPlot->replot();
     } else if(column == 2){
-     pointerToTable_->setItem(row, 2, new QTableWidgetItem(status ? "true" : "false"));
+     pointerToTable_->setItem(row, 2, tempQTableWidgetItem);
      pointerToTable_->show();
     }
+
+    //delete tempQTableWidgetItem;
 }
 
 void ManualFitGraph::slotRecalculate()
@@ -153,14 +171,14 @@ void ManualFitGraph::setxMin(QString qstr)
 {
     uiM->lineEditXAxisMin->clear();
     uiM->lineEditXAxisMin->insert(qstr);
-    xMinInitial_ =qstr.toDouble();
+//mk    xMinInitial_ =qstr.toDouble();
 }
 
 void ManualFitGraph::setxMax(QString qstr)
 {
     uiM->lineEditXAxisMax->clear();
     uiM->lineEditXAxisMax->insert(qstr);
-    xMaxInitial_ = qstr.toDouble();
+//mk    xMaxInitial_ = qstr.toDouble();
 }
 
 
@@ -184,10 +202,13 @@ void ManualFitGraph::changeGammaTable(int row, int column)
             if (str == "true")displayStatus.at(row) = true;
             if (str == "false")displayStatus.at(row) = false;
             return;
-         } else if (column==1){
+         } else if (column==1) {
  //           std::cout << " nie zmieniamy energii gammy" << std::endl;
                     return;
         }  else if(column==2) {
+            if(qstr=="true")transitionsVec_->at(row)->SetIntensityFitFlag(true);
+            if(qstr=="false")transitionsVec_->at(row)->SetIntensityFitFlag(false);
+        }  else if(column==3) {
              double newIntensity = qstr.toDouble()/100;
 //             qDebug() << "przed ustawieniem: " << newIntensity <<"bylo " <<transitionsVec_->at(row)->GetIntensity();
              QTableWidgetItem* itm = uiM->tableLevels->item( row, 1 );
@@ -213,14 +234,7 @@ void ManualFitGraph::changeSpectraTable(int row, int column)
 {
     if(boolTableDataInitialised){
 
-/*        ResponseFunction* responseFunction = ResponseFunction::get();
 
-        DecayPath* decayPath= DecayPath::get();
-        std::vector<Nuclide>* nuclides_ = decayPath->GetAllNuclides();
-        std::vector<Level>* motherLevels_ = nuclides_->at(0).GetNuclideLevels();
-        std::vector<Transition*>* betaTransitions = motherLevels_->at(0).GetTransitions();
-
-*/
         QString qstr = uiM->tableLevels->item(row,column)->text();
         string str = qstr.toUtf8().constData();
         if(column==0){
@@ -306,7 +320,11 @@ void ManualFitGraph::initializeTable(std::vector<RowData> rowData)
 void ManualFitGraph::initializeRow(int rowNumber, RowData rowData)
 {
     for(unsigned int i = 0; i != rowData.GetNumberOfCells(); ++i)
-        uiM->tableLevels->setItem(rowNumber, i, new QTableWidgetItem(rowData.GetCellData(i)));
+    {
+        QTableWidgetItem* tempQTableWidgetItem = new QTableWidgetItem(rowData.GetCellData(i));
+        uiM->tableLevels->setItem(rowNumber, i, tempQTableWidgetItem);
+        //delete tempQTableWidgetItem;
+    }
 }
 
 
@@ -363,15 +381,16 @@ double ManualFitGraph::vectorMax(QVector<double> yM, double minEn, double maxEn)
 void ManualFitGraph::slotSetAxisRange()
 {
 
+// this method responses to changes on GUI.
 
     double xMinEn =  uiM -> lineEditXAxisMin->text().toDouble();
-    //double xMaxEn =  uiM -> lineEditXAxisMax->text().toDouble();
-    double xMaxEn = x.size();
+    double xMaxEn =  uiM -> lineEditXAxisMax->text().toDouble();
+//    double xMaxEn = x.size();
     double yMin =  uiM->lineEditYAxisMin->text().toDouble();
     double yMax =  uiM->lineEditYAxisMax->text().toDouble();
-   if(xMaxEn > xMaxInitial_)
+   if(xMaxEn > x.size())
     {
-        xMaxEn =xMaxInitial_;
+        xMaxEn =x.size();
         QMessageBox msgBox;
         QString info;
         QString qstrxMax = QString::number(xMaxEn);
@@ -399,10 +418,11 @@ void ManualFitGraph::slotSetAxisRange()
 
 void ManualFitGraph::slotShowSimSpec(bool checked)
 {
-    QVector<double> zero = y2;
-    for(int ii=0; ii !=zero.size(); ii++)zero[ii]=0.0;
-    if(uiM->checkShowSIM->isChecked())uiM->histogramPlot->graph(1)->setData(x, y2);
-    if(!uiM->checkShowSIM->isChecked())uiM->histogramPlot->graph(1)->setData(x, zero);
+    if(uiM->checkShowSIM->isChecked())
+        uiM->histogramPlot->graph(1)->setVisible(true);
+    if(!uiM->checkShowSIM->isChecked())
+        uiM->histogramPlot->graph(1)->setVisible(false);
+
     uiM->histogramPlot->replot();
 
 }
@@ -460,7 +480,10 @@ void ManualFitGraph::initializeGraphs()
             QValueLine->end->setCoords(QValue, 1);
             QValueLine->setHead(QCPLineEnding::esSpikeArrow);
             QValueLine->setPen(QPen(Qt::red));
+            delete textLabel;
             }
+
+            delete QValueLine;
 
     cout<< "end of preparation phase" << endl;
 
@@ -479,6 +502,8 @@ void ManualFitGraph::showDataExpSimDiff(QVector<double> xx, QVector<double> yy, 
     double xMaxEn = x.size();
     double yMin= uiM->lineEditYAxisMin->text().toDouble();
     double yMaxUser = uiM->lineEditYAxisMax->text().toDouble();
+    if(xMinEn == 0.0)
+		xMinEn = 1;
     double yMax = vectorMax(y,xMinEn,xMaxEn);
     yMax = std::min(yMax,yMaxUser);
     yMax = yMax*1.1; //adding 10% to the scale
@@ -495,13 +520,17 @@ void ManualFitGraph::showDataExpSimDiff(QVector<double> xx, QVector<double> yy, 
      uiM->histogramPlot->addGraph();
      uiM->histogramPlot->graph(1)->setName("Reconstruction");
 
-     QVector<double> zero = y2;
-     for(int ii=0; ii !=zero.size(); ii++)
-         zero[ii]=0.0;
+//mkout     QVector<double> zero = y2;
+//mkout     for(int ii=0; ii !=zero.size(); ii++)
+//mkout         zero[ii]=0.0;
      if(uiM->checkShowSIM->isChecked())
+     {
          uiM->histogramPlot->graph(1)->setData(x, y2);
+          uiM->histogramPlot->graph(1)->setVisible(true);
+     }
      if(!uiM->checkShowSIM->isChecked())
-         uiM->histogramPlot->graph(1)->setData(x, zero);
+         uiM->histogramPlot->graph(1)->setVisible(false);
+
      //uiM->histogramPlot->graph(1)->setData(x, y2);
      uiM->histogramPlot->graph(1)->setPen(redDotPen);
      uiM->histogramPlot->graph(1)->setLineStyle(QCPGraph::LineStyle::lsStepCenter);
@@ -520,14 +549,17 @@ void ManualFitGraph::showDataExpSimDiff(QVector<double> xx, QVector<double> yy, 
 
 //     uiM->histogramDiffPlot->yAxis->setRange(-yMax/20,yMax/20);
 
+
      // calculating SUM of displayed EXP,REC,DIFF spectra
-            QString ExpSpecSum_ = QString::number(accumulate(y.begin(),y.end(),0.0));
-            QString SimSpecSum_ = QString::number(accumulate(y2.begin(),y2.end(),0.0))   ;
-            QString DiffSpecSum_ = QString::number(accumulate(diff.begin(),diff.end(),0.0))   ;
-            QString qstr = "Number of counts in: EXPspec "+ ExpSpecSum_ + ", SimSpec: " + SimSpecSum_ + ", DiffSpec: " + DiffSpecSum_;
-            uiM->labelNoCounts->setText(qstr);
+     int startIndex = 100;
+     QString ExpSpecSum_ = QString::number(accumulate(y.begin() + startIndex, y.end(), 0.0));
+     QString SimSpecSum_ = QString::number(accumulate(y2.begin() + startIndex, y2.end(), 0.0))   ;
+     QString DiffSpecSum_ = QString::number(accumulate(diff.begin(),diff.end(),0.0))   ;
+     QString qstr = "Number of counts in: EXPspec "+ ExpSpecSum_ + ", SimSpec: " + SimSpecSum_ + ", DiffSpec: " + DiffSpecSum_;
+     uiM->labelNoCounts->setText(qstr);
      uiM->histogramPlot->replot();
      uiM->histogramDiffPlot->replot();
+     uiM->lineEditYAxisMax->setText(QString::number(yMax));
 
      std::cout << " ManualFitGraph::showDataExpSimDiff - KONIEC " << std::endl;
 
@@ -542,7 +574,7 @@ void ManualFitGraph::showResponseFunctions()
         cout << "ManualFitGraph::showDataExpSimDiff - GAMMAS: " <<respType_ <<  endl;
     showResponseFunctionsGammas(2);
     } else if (respType_ == "c") {
-      showSpectra(2);
+      showSpectra(0);
      }   else {
         // do nothing
     }
@@ -626,22 +658,8 @@ void ManualFitGraph::showSpectra(int start )
 
     float xMin = 0;
     float xMax = 10000; // expHist->GetNrOfBins();
-/*    QPen blueDotPen;
-    blueDotPen.setColor(QColor(0, 0, 255, 150));
-    blueDotPen.setStyle(Qt::DotLine);
-    blueDotPen.setWidthF(1);
-    QPen redDotPen;
-    redDotPen.setColor(QColor(255, 0, 0, 250));
-    redDotPen.setStyle(Qt::DotLine);
-    redDotPen.setWidthF(2);
-    QPen blackDotPen;
-    blackDotPen.setColor(QColor(0, 0, 0, 250));
-    blackDotPen.setStyle(Qt::DotLine);
-    blackDotPen.setWidthF(2);
-    QPen blackPen;
-    blackPen.setColor(QColor(0, 0, 0, 250));
-    blackPen.setWidthF(1);
-*/
+      uiM->checkContrOtherLevels->hide();
+      uiM->checkShowSIM->hide();
 
     DecayPath *decayPath_ = DecayPath::get();
     ResponseFunction* responseFunction_ = ResponseFunction::get();
@@ -653,36 +671,36 @@ void ManualFitGraph::showSpectra(int start )
 
 
     //petal po liniach tabeli
-
+   cout << "liczba graph " << uiM->histogramPlot->graphCount() << endl;
     for (unsigned int row = 0; row<uiM->tableLevels->rowCount(); row++)
     {
         uiM->histogramPlot->addGraph();
         uiM->histogramPlot->graph()->selectable();
         uiM->histogramPlot->graph()->selectionDecorator()->setPen(QPen(Qt::green));
         QString spectrumType = uiM->tableLevels->item(row,3)->text();
-        Histogram* tmpHist;
+        Histogram tmpHist;
         int hisID = uiM->tableLevels->item(row,1)->text().toInt();
         if(spectrumType == "ExpMap"){
-            tmpHist = new Histogram(myProject->getHistFromExpMap(hisID));
+            tmpHist = Histogram(myProject->getHistFromExpMap(hisID));
             cout << "Ploting EXPMap spectrum:" << hisID << endl;
             uiM->histogramPlot->graph(row+start)->setPen(blackPen);
             uiM->histogramPlot->graph(row+start)->setLineStyle(QCPGraph::LineStyle::lsStepCenter);
 
         } else if(spectrumType == "SimMap"){
             cout << "SIM not yet implemented";
-            tmpHist = new Histogram( *responseFunction_->GetResponseFunction(motherLevel_, hisID));
-            tmpHist->Normalize(1e6);
+            tmpHist = Histogram( *responseFunction_->GetResponseFunction(motherLevel_, hisID));
+            tmpHist.Normalize(1e6);
             uiM->histogramPlot->graph(row+start)->setPen(redDotPen);
             uiM->histogramPlot->graph(row+start)->setLineStyle(QCPGraph::LineStyle::lsStepCenter);
 
         } else if(spectrumType.contains(".his")){
             string fileName = spectrumType.toStdString();
  //           int hisID = uiM->tableLevels->item(row,1)->text().toInt();
-            tmpHist = new Histogram(fileName,hisID);
+            tmpHist = Histogram(fileName,hisID);
         } else continue;
- //       tmpHist = new Histogram(responseFunction_->GetLevelRespFunction( (*it)->GetPointerToFinalLevel(), histID ));
-        double xMax = tmpHist->GetXMax();
-        double xMin = tmpHist->GetXMin();
+ //       tmpHist = Histogram(responseFunction_->GetLevelRespFunction( (*it)->GetPointerToFinalLevel(), histID ));
+        double xMax = tmpHist.GetXMax();
+        double xMin = tmpHist.GetXMin();
  /*       cout << " number of counts in exp: " << myProject->getExpHist()->GetNrOfCounts() << endl;
         cout << " number of counts in resp fun: " << tmpHist->GetNrOfCounts() << endl;
         cout << " number of counts in dec: " << myProject->getDecHist()->GetNrOfCounts() << endl;
@@ -694,18 +712,20 @@ void ManualFitGraph::showSpectra(int start )
         tmpHist->Scale(norm_);
         cout << " number of counts in resp fun after NORM: " << tmpHist->GetNrOfCounts() << endl;
 */
-        QVector<double> x2 = QVector<double>::fromStdVector(tmpHist->GetEnergyVectorD());
-        QVector<double> y2 = QVector<double>::fromStdVector(tmpHist->GetAllDataD());
-        QVector<double> zero = y2;
-      for(int ii=0; ii !=zero.size(); ii++)zero[ii]=0.0;
+        QVector<double> x2 = QVector<double>::fromStdVector(tmpHist.GetEnergyVectorD());
+        QVector<double> y2 = QVector<double>::fromStdVector(tmpHist.GetAllDataD());
     // set style for the graph
            uiM->histogramPlot->graph(row+start)->setLineStyle(QCPGraph::LineStyle::lsStepCenter);
             uiM->histogramPlot->graph(row+start)->selectable();
             uiM->histogramPlot->graph(row+start)->selectionDecorator()->setPen(QPen(Qt::yellow));
     // set data for the graph
-   if(displayStatus.at(row))uiM->histogramPlot->graph(row+start)->setData(x2, y2);
-   if(!displayStatus.at(row))uiM->histogramPlot->graph(row+start)->setData(x2, zero);
-
+   if(displayStatus.at(row))
+   {
+       uiM->histogramPlot->graph(row+start)->setData(x2, y2);
+       uiM->histogramPlot->graph(row+start)->setVisible(true);
+   }
+   if(!displayStatus.at(row))
+       uiM->histogramPlot->graph(row+start)->setVisible(false);
 
     }
 
@@ -767,21 +787,27 @@ void ManualFitGraph::showResponseFunctionsLevels(int start)
         QVector<double> x2 = QVector<double>::fromStdVector(tmpHist->GetEnergyVectorD());
         QVector<double> y2 = QVector<double>::fromStdVector(tmpHist->GetAllDataD());
         double dziwnasuma = 0.0;
-        for(int ii=0; ii<y2.size(); ii++)
+/*mkout        for(int ii=0; ii<y2.size(); ii++)
         {
             dziwnasuma += y2.at(ii);
         }
         cout << " number of counts in resp fun after NORM: " << dziwnasuma << endl;
-        QVector<double> zero = y2;
-      for(int ii=0; ii !=zero.size(); ii++)zero[ii]=0.0;
+*/
+ //mkout        QVector<double> zero = y2;
+//mkout      for(int ii=0; ii !=zero.size(); ii++)zero[ii]=0.0;
         uiM->histogramPlot->addGraph();
     // set style for the graph
            uiM->histogramPlot->graph(i+start)->setLineStyle(QCPGraph::LineStyle::lsStepCenter);
             uiM->histogramPlot->graph(i+start)->selectable();
             uiM->histogramPlot->graph(i+start)->selectionDecorator()->setPen(QPen(Qt::yellow));
     // set data for the graph
-   if(displayStatus.at(i))uiM->histogramPlot->graph(i+start)->setData(x2, y2);
-   if(!displayStatus.at(i))uiM->histogramPlot->graph(i+start)->setData(x2, zero);
+   if(displayStatus.at(i))
+   {
+       uiM->histogramPlot->graph(i+start)->setData(x2, y2);
+       uiM->histogramPlot->graph(i+start)->setVisible(true);
+   }
+   if(!displayStatus.at(i))
+       uiM->histogramPlot->graph(i+start)->setVisible(false);
     i++;
     sumLevnorm += tmpHist->GetNrOfCounts();
     delete tmpHist;
@@ -807,8 +833,8 @@ void ManualFitGraph::ShowOtherLevelsContribution(int last)
 
     QVector<double> x2 = QVector<double>::fromStdVector(otherLevelsContr.GetEnergyVectorD());
     QVector<double> y2 = QVector<double>::fromStdVector(otherLevelsContr.GetAllDataD());
-    QVector<double> zero = y2;
-  for(int ii=0; ii !=zero.size(); ii++)zero[ii]=0.0;
+//mkout    QVector<double> zero = y2;
+//mkout  for(int ii=0; ii !=zero.size(); ii++)zero[ii]=0.0;
 //  for(int ii=0; ii !=y2.size(); ii++)y2[ii] *=100.;
 
   //    uiM->histogramPlot->addGraph();
@@ -821,8 +847,12 @@ void ManualFitGraph::ShowOtherLevelsContribution(int last)
 // set data for the graph
         cout << "isChecked otherlevels :" << uiM->checkContrOtherLevels->isChecked()
              << endl;
-if(uiM->checkContrOtherLevels->isChecked())uiM->histogramPlot->graph(last+1)->setData(x2, y2);
-if(!uiM->checkContrOtherLevels->isChecked())uiM->histogramPlot->graph(last+1)->setData(x2, zero);
+    if(uiM->checkContrOtherLevels->isChecked())
+    {
+        uiM->histogramPlot->graph(last+1)->setData(x2, y2);
+        uiM->histogramPlot->graph(last+1)->setVisible(true);
+    }
+    if(!uiM->checkContrOtherLevels->isChecked())uiM->histogramPlot->graph(last+1)->setVisible(false);
 cout << "ManualFitGraph::slotShowOtherLevelsContribution KONIEC " << endl;
 
 }
@@ -855,9 +885,9 @@ void ManualFitGraph::showResponseFunctionsGammas(int start)
         //std::cout<< norm_ << " W spec PLOt " << "a po normalizacji " << tmpHist->GetNrOfCounts() << std::endl;
         QVector<double> x2 = QVector<double>::fromStdVector(tmpHist.GetEnergyVectorD());
         QVector<double> y2 = QVector<double>::fromStdVector(tmpHist.GetAllDataD());
-        QVector<double> zero = y2;
-        for(int ii=0; ii !=zero.size(); ii++)
-            zero[ii]=0.0;
+//mkout        QVector<double> zero = y2;
+//mkout        for(int ii=0; ii !=zero.size(); ii++)
+//mkout            zero[ii]=0.0;
 
         uiM->histogramPlot->addGraph();
 
@@ -869,8 +899,12 @@ void ManualFitGraph::showResponseFunctionsGammas(int start)
             uiM->histogramPlot->graph(i+start)->selectable();
             uiM->histogramPlot->graph(i+start)->selectionDecorator()->setPen(QPen(Qt::yellow));
     // set data for the graph
-       if(displayStatus.at(i))uiM->histogramPlot->graph(i+start)->setData(x2, y2);
-       if(!displayStatus.at(i))uiM->histogramPlot->graph(i+start)->setData(x2, zero);
+       if(displayStatus.at(i))
+       {
+           uiM->histogramPlot->graph(i+start)->setData(x2, y2);
+           uiM->histogramPlot->graph(start+i)->setVisible(true);
+       }
+       if(!displayStatus.at(i))uiM->histogramPlot->graph(i+start)->setVisible(false);
        lastGraph_ =    i+start;
     }
     if(uiM->checkContrOtherLevels->isChecked())

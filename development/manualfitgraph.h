@@ -28,6 +28,10 @@ public:
     void setCurrentLevel(double energy);
     void setxMin(QString qstr);
     void setxMax(QString qstr);
+    void setXValues(QVector<double> X){ x = X;}
+    void setYValues(QVector<double> Y){ y = Y;}
+    void setY2Values(QVector<double> Y){ y2 = Y;}
+    void setDiffValues(QVector<double> Y){ diff = Y;}
     void initializeGraphs();
 
     Ui::ManualFitGraph *uiM;
@@ -67,15 +71,15 @@ private:
     std::vector<bool> displayStatus;
     bool  boolTableDataInitialised;
     Project* myProject;
-    string respType_;
+    string respType_;      // "l" - levels; "g" - gammas in 2D; "c" -
     int currentLevelIndex_;
         int lastGraph_;
      void ShowOtherLevelsContribution(int last);
-     double xMaxInitial_ , xMinInitial_ ;
+
      QAction* FittingStatusTrueAction_;
      QAction* FittingStatusFalseAction_;
-        //    Level *currentLevel_;
- //   Histogram* expHist = myProject->expHist();
+     QAction* DisplayStatusTrueAction_;
+     QAction* DisplayStatusFalseAction_;
 
       QPen blueDotPen,redDotPen,blackDotPen,blackPen;
 

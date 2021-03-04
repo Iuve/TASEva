@@ -2,9 +2,11 @@
 #define MAINWINDOW_H
 
 #include <project.h>
-//#include <DeclareHeaders.hh>
+#include <DeclareHeaders.hh>
 #include <histogramgraph.h>
 #include <manualfitgraph.h>
+#include "pseudoLevelsController.h"
+#include "transitionEditor.h"
 #include <decayPathEditor.h>
 #include "decaySpectrum.h"
 #include "analysis2d.h"

@@ -317,7 +317,6 @@ void TransitionRespProvider::sortFile()
 
 bool TransitionRespProvider::makeInputToSort()
 {
-    //int eMax = decay_->GetQVal() + 1000;
     int eMax = 9000; //?????
     QFile file(levelDir_.filePath(inputToSortName_));
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))

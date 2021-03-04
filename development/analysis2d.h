@@ -30,7 +30,9 @@ public slots:
      void slotSetLevelEnergy(QString qLevelEnergy);
      void slot2DFitControler();
      void slotShowGate1ExpVsSim(bool recalculateTransitions);
-
+    void slotClose();
+signals:
+    void signalClose2dUI();
 
 private:
      Ui::Analysis2D *ui2D;
@@ -42,7 +44,6 @@ private:
     void setComboBoxLevel();
     std::vector<double> gateOnX(int low, int high);
     std::vector<double> gateOnY(int low, int high);
-
 
     double Display2DXmin, Display2DXmax;
     double Display2DYmin, Display2DYmax;
@@ -56,6 +57,7 @@ private:
     unsigned int xSize_;
     unsigned int ySize_;   // size of the 2D spectrum
 
+    QCPColorMap* colorMap2D_;
      QCPItemRect *yRectGate1Item_;
      QCPItemRect *yRectGate12DItem_;
      QCPItemRect *yRectGate2Item_;
