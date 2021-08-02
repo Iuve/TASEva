@@ -38,6 +38,7 @@ public:
       * is calculated anly form energy (as E2 transition)
       **/
     void addSimplePseudoLevels();
+    void addCustomPseudoLevels();
     void addRemainingTransition(std::string method);
 //EVa    void addStatPseudoLevels();
 //Eva    double findTransitionIntensity
@@ -51,7 +52,7 @@ public:
     std::string getIntensityMethod(){return intensityMethod_;}
     void setNuclideIndex(int tabIndex){currentNuclideIndex_ = tabIndex;}
     void changeIntensitiesToChoosenMethod(Level*, std::string);
-
+    void createIntensityMethodList();
 
 private:
     double getE2Intensity(double atomicMass, double energy);
@@ -59,7 +60,10 @@ private:
     double getM2Intensity(double atomicMass, double energy);
     double getM1Intensity(double atomicMass, double energy);
     std::vector<SpinAndParity> findSpinAndParity(Level* parentLevel, double energy);
-    void createIntensityMethodList();
+    void applyModelM1();
+    double FindPreciseEnergyLvl(double, Level*);
+
+    //void createIntensityMethodList();
     DecayPath* decayPath_;
     double minEnergy_;
     double maxEnergy_;

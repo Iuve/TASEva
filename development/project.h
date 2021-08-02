@@ -108,6 +108,12 @@ public:
     double getGateNormFactor(){return gateNormFactor_;}
     //void setGateOtherLevelsNormFactor(double gateNorm){gateOtherLevelsNormFactor_ = gateNorm;}
     //double getGateOtherLevelsNormFactor(){return gateOtherLevelsNormFactor_;}
+    void setCustomTransitionIntensities(std::vector<double> customInt ) {customTransitionIntensities_ = customInt;}
+    std::vector<double>* getCustomTransitionIntensities() {return &customTransitionIntensities_;}
+    void setBinning2Dfactor(int bin){binning2Dfactor_ = bin;}
+    int getBinning2Dfactor(){return binning2Dfactor_;}
+    void setActiveCoresForSimulation(int number){activeCoresForSimulation_ = number;}
+    int getActiveCoresForSimulation(){return activeCoresForSimulation_;}
 
     QString getSortOutputFileName(){return sortOutputFileName_;}
     QString getSortOutputFileExtension(){return sortOutputFileExtension_;}
@@ -154,6 +160,7 @@ private:
 //Evaout    vector<double> conNorm_;
     std::vector<Contamination> contaminations_;
     std::map<int,Histogram> expHistMap_;
+    std::vector<double> customTransitionIntensities_;
 
     //autofit 1D results: beta intensities and uncertainties
     std::vector< std::pair<double, double> > fitResults_;
@@ -181,6 +188,8 @@ private:
     // in a choosen energy gate
     double gateNormFactor_;
     //double gateOtherLevelsNormFactor_;
+    int binning2Dfactor_;
+    int activeCoresForSimulation_;
 
     void operator=(Project const&);
     static Project* instance;//

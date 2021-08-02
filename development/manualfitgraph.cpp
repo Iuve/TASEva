@@ -79,11 +79,11 @@ ManualFitGraph::ManualFitGraph(QWidget *parent) :
 
 ManualFitGraph::~ManualFitGraph()
 {
-    delete uiM;
     delete FittingStatusTrueAction_;
     delete FittingStatusFalseAction_;
     delete DisplayStatusTrueAction_;
     delete DisplayStatusFalseAction_;
+    delete uiM;
 }
 
 void ManualFitGraph::setHeader(QStringList header)

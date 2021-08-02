@@ -90,6 +90,7 @@ DecayPathEditor::DecayPathEditor(QWidget *parent) :
 
 DecayPathEditor::~DecayPathEditor()
 {
+    delete pseudoLevelsController_;
     g1->close();
     delete g1;
     delete uiT;
@@ -370,6 +371,7 @@ void LevelEditor::slotUpdateFeedingData(int row, int column)
 void DecayPathEditor::slotEditTransitions(int tableIndex, int rowIndex)
 {
     g1->setTransitionEditorOpen(false);
+    g1->setComboBoxMethod();
     QStringList header;
     std::vector<RowData> rowData_;
     TableController* tableController_ = new TableController();

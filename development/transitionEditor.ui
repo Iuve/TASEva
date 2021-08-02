@@ -136,6 +136,13 @@
      </property>
     </widget>
    </item>
+   <item row="1" column="3">
+    <widget class="QPushButton" name="buttonSaveCustom">
+     <property name="text">
+      <string>SaveCustom</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>

@@ -2,6 +2,7 @@
 #include "pseudoLevelsController.h"
 #include "Exceptions.h"
 #include "qdebug.h"
+#include "project.h"
 #include <vector>
 #include <string>
 
@@ -28,15 +29,26 @@ PseudoLevelsController::PseudoLevelsController()
     }
 }
 
+PseudoLevelsController::~PseudoLevelsController()
+{
+
+}
 
 void PseudoLevelsController::createIntensityMethodList()
 {
+    intensityMethodList_.clear();
     intensityMethodList_.push_back("--choose--");
     intensityMethodList_.push_back("Equal");
     intensityMethodList_.push_back("AllE1");
     intensityMethodList_.push_back("AllE2");
     intensityMethodList_.push_back("AllM1");
     intensityMethodList_.push_back("AllM2");
+    intensityMethodList_.push_back("87Br");
+    intensityMethodList_.push_back("ModelM1"); // no pseudo lvls, but deexcitation model
+
+    Project *myProject = Project::get();
+    if( myProject->getCustomTransitionIntensities()->size() )
+        intensityMethodList_.push_back("Custom");
 }
 
 std::vector<string> PseudoLevelsController::getIntensityMethodList()
@@ -95,9 +107,13 @@ void PseudoLevelsController::addPseudoLevels(double stepEnergy, double minEn, do
     } else if (intensityMethod_ == intensityMethodList_.at(4)) //AllM1
     {   addSimplePseudoLevels();
         addRemainingTransition(intensityMethod_);
-    } else if (intensityMethod_ == intensityMethodList_.at(5)) //AllM@
+    } else if (intensityMethod_ == intensityMethodList_.at(5)) //AllM2
     {   addSimplePseudoLevels();
         addRemainingTransition(intensityMethod_);
+    } else if (intensityMethod_ == intensityMethodList_.at(6)) //87Br
+    {   addCustomPseudoLevels();
+    } else if (intensityMethod_ == intensityMethodList_.at(7)) //ModelM1
+    {   applyModelM1();
     } else cout << "method not on the list " << endl;
 }
 
@@ -120,6 +136,20 @@ void PseudoLevelsController::addSimplePseudoLevels()
     {
      double levelEnergy = minEnergy_ + i*deltaE_;
      decayPath_->GetAllNuclides()->at(currentNuclideIndex_).AddLevelEI(levelEnergy,singleIntensity/100.);
+    }
+}
+
+void PseudoLevelsController::addCustomPseudoLevels()
+{
+    int nrOfPseudolevels = (int)(maxEnergy_ - minEnergy_)/ deltaE_;
+
+    for(int i = 0; i<nrOfPseudolevels; i++)
+    {
+        double levelEnergy = minEnergy_ + i * deltaE_;
+        if(i == 0)
+            decayPath_->GetAllNuclides()->at(currentNuclideIndex_).AddCustomLevel(levelEnergy, 0.);
+        else
+            decayPath_->GetAllNuclides()->at(currentNuclideIndex_).AddCustomLevel(levelEnergy, deltaE_);
     }
 }
 
@@ -209,6 +239,77 @@ double PseudoLevelsController::getM2Intensity(double atomicMass, double energy)
     return  intensity;
 }
 
+void PseudoLevelsController::applyModelM1()
+{
+    Nuclide* currentNuclide = &decayPath_->GetAllNuclides()->at(currentNuclideIndex_);
+    double atomicMass = currentNuclide->GetAtomicMass();
+    for(auto il = currentNuclide->GetNuclideLevels()->begin(); il != currentNuclide->GetNuclideLevels()->end(); ++il)
+    {
+        double lvlEnergy = il->GetLevelEnergy();
+        if(lvlEnergy > minEnergy_ && lvlEnergy < maxEnergy_ && !il->GetNeutronLevelStatus())
+        {
+            /*
+            first 4 M1 transitions normalized to 1:
+                0.01
+                0.08
+                0.27
+                0.64
+            if they are to be F (part of total intensity from given lvl), then they should be
+            multiplied by F/(1 - F)
+            */
+            double m1intensities[4] = {0.01, 0.08, 0.27, 0.64};
+            double addedGammaSumIntensity = 0.3; // == F from above
+            for(int i = 1; i <= 4; i++)
+            {
+                m1intensities[i - 1] *= addedGammaSumIntensity / (1 - addedGammaSumIntensity);
+                double finalLvlEnergy = FindPreciseEnergyLvl(lvlEnergy - deltaE_ * i, &(*il));
+                double newGammaE = lvlEnergy - finalLvlEnergy;
+                bool transitionAlreadyExist = false;
+                for(auto it = il->GetTransitions()->begin(); it != il->GetTransitions()->end(); ++it)
+                {
+                    double transitionEnergy = (*it)->GetTransitionQValue();
+                    if((*it)->GetParticleType() == "G" && transitionEnergy == newGammaE)
+                    {
+                        transitionAlreadyExist = true;
+                        double currentIntensity = (*it)->GetIntensity();
+                        double newIntensity = currentIntensity + m1intensities[i - 1];
+                        (*it)->ChangeIntensity(newIntensity);
+                        cout << "Transition already exist. Level energy = " << lvlEnergy << endl;
+                        cout << "Transition type = " << (*it)->GetParticleType() << ", energy = " << transitionEnergy << endl;
+                        cout << "Previous intensity = "<< currentIntensity << ", new intensity = " << newIntensity << endl;
+                    }
+                }
+
+                //getM1Intensity(atomicMass, newGammaE);
+                if(!transitionAlreadyExist)
+                {
+                    double gammaIntensity = m1intensities[i - 1];
+                    il->AddTransition("G", newGammaE, gammaIntensity);
+                }
+            }
+            il->NormalizeTransitionIntensities();
+        }
+    }
+}
+
+double PseudoLevelsController::FindPreciseEnergyLvl(double newLevelEnergy, Level* forbiddenLevel)
+{
+    Nuclide* currentNuclide = &decayPath_->GetAllNuclides()->at(currentNuclideIndex_);
+    double energyPrecision = 0.1;
+    while(true)
+    {
+        for(auto il = currentNuclide->GetNuclideLevels()->begin(); il != currentNuclide->GetNuclideLevels()->end(); ++il)
+        {
+            if(il->GetNeutronLevelStatus() || forbiddenLevel == &(*il))
+                continue;
+            double newPotentialLvlEnergy = il->GetLevelEnergy();
+            if(abs(newPotentialLvlEnergy - newLevelEnergy) < energyPrecision)
+                return newPotentialLvlEnergy;
+        }
+        energyPrecision += 0.1;
+    }
+}
+
 void PseudoLevelsController::changeIntensitiesToChoosenMethod(Level* level, string method)
 {
     cout << "changeIntensitiesToChoosenMethod - start" << endl;
@@ -219,35 +320,53 @@ void PseudoLevelsController::changeIntensitiesToChoosenMethod(Level* level, stri
             if(level == &(*il))
                 atomicMass = in->GetAtomicMass();
 
-
     std::vector<Transition*>* transitionsFromLevel = level->GetTransitions();
-    for(auto it = transitionsFromLevel->begin(); it != transitionsFromLevel->end(); ++it)
+    if(method == "Custom")
     {
-        double newTransitionIntensity = 0.;
-        double transitionEnergy = (*it)->GetTransitionQValue();
-        if (method == "Equal"){
-            newTransitionIntensity = 1;
-        }
-        else if(method == "AllE1"){
-            newTransitionIntensity = getE1Intensity(atomicMass, transitionEnergy);
-        }
-        else if (method == "AllE2")
+        Project *myProject = Project::get();
+        vector<double>* customIntensities = myProject->getCustomTransitionIntensities();
+        int customIt = 0;
+        for(auto it = transitionsFromLevel->begin(); it != transitionsFromLevel->end(); ++it)
         {
-            newTransitionIntensity = getE2Intensity(atomicMass, transitionEnergy);
+            (*it)->ChangeIntensity(customIntensities->at(customIt));
+            customIt++;
+            if(customIt >= customIntensities->size())
+            {
+                cout << "End of Custom model. It is not very versatile." << endl;
+                return;
+            }
         }
-        else if (method == "AllM1")
+    }
+    else
+    {
+        for(auto it = transitionsFromLevel->begin(); it != transitionsFromLevel->end(); ++it)
         {
-            newTransitionIntensity = getM1Intensity(atomicMass, transitionEnergy);
+            double newTransitionIntensity = 0.;
+            double transitionEnergy = (*it)->GetTransitionQValue();
+            if (method == "Equal"){
+                newTransitionIntensity = 1;
+            }
+            else if(method == "AllE1"){
+                newTransitionIntensity = getE1Intensity(atomicMass, transitionEnergy);
+            }
+            else if (method == "AllE2")
+            {
+                newTransitionIntensity = getE2Intensity(atomicMass, transitionEnergy);
+            }
+            else if (method == "AllM1")
+            {
+                newTransitionIntensity = getM1Intensity(atomicMass, transitionEnergy);
+            }
+            else if (method == "AllM2")
+            {
+                newTransitionIntensity = getM2Intensity(atomicMass, transitionEnergy);
+            }
+            else
+            {
+                newTransitionIntensity = 1;
+            }
+            (*it)->ChangeIntensity(newTransitionIntensity);
         }
-        else if (method == "AllM2")
-        {
-            newTransitionIntensity = getM2Intensity(atomicMass, transitionEnergy);
-        }
-        else
-        {
-            newTransitionIntensity = 1;
-        }
-        (*it)->ChangeIntensity(newTransitionIntensity);
     }
 
     level->NormalizeTransitionIntensities();

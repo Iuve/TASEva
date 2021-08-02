@@ -22,6 +22,7 @@ public:
     void CheckTransitionsToLevel(Level*);
     void DeleteLevels();
     void AddLevelEI(double, double); //Energy,Intensity
+    void AddCustomLevel(double, double); //Energy
     void AddLevel(double, double, std::string, double, double intensity = 0.); //energy,spin,parity,T12,intensity
 
 private:

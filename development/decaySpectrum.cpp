@@ -6,6 +6,7 @@
 //Eva #include "MyTemplates.h"
 #include "levelRespProvider.h"
 #include "responsefunction.h"
+#include "project.h"
 
 #include <QFuture>
 #include "qtconcurrentrun.h"
@@ -99,6 +100,10 @@ bool DecaySpectrum::MakeSimulations()
         motherLevels = motherNuclide->GetNuclideLevels();
 
         bool allFilesReady = true;
+        //int coresNumber = 8;
+        Project* myProject = Project::get();
+        int coresNumber = myProject->getActiveCoresForSimulation();
+        cout << "Cores number: " << coresNumber << endl;
 
         for(std::vector<Level>::iterator itn = motherLevels->begin(); itn !=motherLevels->end(); ++itn)
         {
@@ -112,7 +117,6 @@ bool DecaySpectrum::MakeSimulations()
 
             std::chrono::milliseconds timespan2(60000);
 
-            int coresNumber = 4;
             int activeProcesses[coresNumber];
             for(int j = 0; j < coresNumber; j++)
                 activeProcesses[j] = 10000;

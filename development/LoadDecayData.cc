@@ -366,8 +366,8 @@ Level* LoadDecayData::FindPointerToLevel(int atomicNumber, int atomicMass, doubl
 	}
 	
 	// throw Exception
-    cout << "Pointer to level " << energy << " in " << atomicMass << " " << atomicNumber <<
-        " not found with default accuracy of " << energyLevelUncertainty << "keV." << endl;
+//    cout << "Pointer to level " << energy << " in " << atomicMass << " " << atomicNumber <<
+//        " not found with default accuracy of " << energyLevelUncertainty << "keV." << endl;
 	
 		// additional security
 	for ( auto it = allNuclides_.begin(); it != allNuclides_.end(); ++it )
@@ -382,7 +382,7 @@ Level* LoadDecayData::FindPointerToLevel(int atomicNumber, int atomicMass, doubl
 					double temp = jt->GetLevelEnergy();
 					if( ((temp - i) <= energy) && ((temp + i) >= energy) )
                     {
-                        cout << "Pointer to level " << energy << " found with accuracy of " << i << "keV." << endl;
+//                        cout << "Pointer to level " << energy << " found with accuracy of " << i << "keV." << endl;
 						return &(*jt);
                     }
 				}
@@ -390,7 +390,7 @@ Level* LoadDecayData::FindPointerToLevel(int atomicNumber, int atomicMass, doubl
 	}
 	
 	// throw Exception
-    cout << "Level " << energy << " STILL not found after 50keV threshold!" << endl;
+    cout << "Pointer to level " << energy << " STILL not found after 50keV threshold!" << endl;
 }
 
 void LoadDecayData::SortNuclidesVector()

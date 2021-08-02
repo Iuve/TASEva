@@ -11,10 +11,16 @@ TwoDimFitController::TwoDimFitController(QWidget *parent)
     decayPath = DecayPath::get();
     myProject = Project::get();
 
-    //histogramVisibilityFactor_ = 1;
     decayPath->FindAndMarkNeutronLevels();
     otherLevelsToFeedingsRatio_ = 0;
     normalizeStartPoint_ = 100;
+
+    //lines below are needed to fit/work without contributions from other levels
+    otherLevelsResponse_ = Histogram::GetEmptyHistogram();
+    myProject->setGate2DOtherLevelsContribution(otherLevelsResponse_);
+    neutronLevelsResponse_ = Histogram::GetEmptyHistogram();
+    //expSpectra2Dbinning_ should be defferent from 1 only when exp 2D spectrum is binned
+    expSpectra2Dbinning_ = myProject->getBinning2Dfactor();
 }
 
 TwoDimFitController::~TwoDimFitController()
@@ -90,9 +96,11 @@ void TwoDimFitController::PrepareNeutronLevelsResponse()
             neutronLevelsResponse.Add( &neutronOneLevelResponse, (*itb)->GetIntensity() );
         }
     }
+
+    neutronLevelsResponse.AdjustEnergyVectorTo2DBinFactor(expSpectra2Dbinning_);
+
     myProject->SetGate2DNeutronLevelsContribution(neutronLevelsResponse);
     neutronLevelsResponse_ = myProject->GetGate2DNeutronLevelsContribution();
-    //neutronResponseReady_ = true;
 }
 
 Histogram TwoDimFitController::prepareRestLevelsResponse()
@@ -137,6 +145,9 @@ Histogram TwoDimFitController::prepareRestLevelsResponse()
         }
         cout << "TwoDimFitController::prepareRestLevelsResponse() FINISHED LEVEL: " << tmpLevel->GetLevelEnergy() << endl;
     }
+
+    xGate.AdjustEnergyVectorTo2DBinFactor(expSpectra2Dbinning_);
+
     cout << "XGATE nr of Counts without neutrons contribution: " << xGate.GetNrOfCounts() << endl ;
     xGate.Add( neutronLevelsResponse_, 1. );
     cout << "FINAL XGATE nr of CouNTS: " << xGate.GetNrOfCounts() << endl ;
@@ -162,6 +173,9 @@ Histogram TwoDimFitController::prepareTransitionResponse(Transition* transition_
     }
     ResponseFunction* respFunction = ResponseFunction::get();
     Histogram transResp = respFunction->loadXGate(directory, histId_, minEn_, maxEn_);
+    // rebin for 2D fitting
+    transResp.Rebin(expSpectra2Dbinning_);
+
 //EVaout?    Histogram* totalResp = new Histogram(levelsResp);
     // we multiply by betafeeding for the sake of correct background estimate
 //    totalResp->Add(transResp, betaFeedingToLevel_);
@@ -218,6 +232,9 @@ void TwoDimFitController::calculateSimulatedHistogram()
       cout << "intensity: " << intensity << endl;
       simGate_.Add( &(gammaRespHist->at(i)), intensity );
   }
+
+  simGate_.AdjustEnergyVectorTo2DBinFactor(expSpectra2Dbinning_);
+
   cout << "Total number of Counts in SIM spectrum: " << simGate_.GetNrOfCounts() << endl;
   cout << "counts in levels resp function: " << otherLevelsResponse_->GetNrOfCounts() << endl;
   cout << "TwoDimFitController::calculateSimulatedHistogram - KONIEC" << endl;
@@ -389,6 +406,7 @@ void TwoDimFitController::makeFit()
 
         double bigCheckSum = 0.;
         for(int j = 0; j != nrOfHistograms + 1; j++)
+//        for(int j = 0; j != nrOfHistograms; j++)
         {
             double checkSum = 0.;
             double sum1 = 0.;
@@ -397,6 +415,7 @@ void TwoDimFitController::makeFit()
             {
                 double sum2 = 0.;
                 for(int k = 0; k !=nrOfHistograms + 1; ++k)
+//                for(int k = 0; k !=nrOfHistograms; ++k)
                 {
  //std::cout << "Fitting iteration #it " << it << " Hist#j: "<< j << " bin#i: "<<i << " drugi Hist#k "<<k<<"\r" << std::flush;
 
@@ -424,16 +443,16 @@ void TwoDimFitController::makeFit()
                     cout << "sum2 = " << sum2 << ", experiment = " << experimentForFit.at(i) << endl;
                 }
             }
-            cout << "At the end of histogram " << j << ": sum1 = " << sum1 << endl;
+            //cout << "At the end of histogram " << j << ": sum1 = " << sum1 << endl;
             if(j < nrOfHistograms)
             {
                 feedings.at(j) = oldFeedings.at(j) * exp(2./lambda_ * sum1);
-                cout << "j = " << j <<", zmieniam feeding." << endl;
+                //cout << "j = " << j <<", zmieniam feeding." << endl;
             }
-            cout << "At the end of histogram " << j << ": checkSum = " << checkSum << endl;
+            //cout << "At the end of histogram " << j << ": checkSum = " << checkSum << endl;
             bigCheckSum += checkSum;
         }
-        cout << "At the end of iteration " << it << ": bigCheckSum = " << bigCheckSum << endl;
+        // cout << "At the end of iteration " << it << ": bigCheckSum = " << bigCheckSum << endl;
 
         double feedingsDuringFitSum = 0.;
         for(int j = 0; j != nrOfHistograms; j++)

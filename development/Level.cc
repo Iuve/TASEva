@@ -115,6 +115,8 @@ void Level::RemoveTransition(std::string type, double energy)
                                 break;
                             }
                         }
+                        if(neutronsFromLvL_.size() == 0)
+                            neutronLevel_ = false;
                     }
                     if(type == "A")
                     {
@@ -241,6 +243,7 @@ void Level::AddTransition(std::string type, double transitionQValue, double inte
         neutronsFromLvL_.push_back(Neutron(type, transitionQValue, intensity,
             finalLevelEnergy, finalLevelAtomicMass, finalLevelAtomicNumber));
         transitions_.push_back(&neutronsFromLvL_.back());
+        neutronLevel_ = true;
     }
     else if(type == "A")
     {

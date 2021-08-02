@@ -36,6 +36,7 @@ void DecayPath::LoadDecay(std::string xmlFileName)
 	stopLevel_ = loadDecayData_->GetStopLevel();
 	cycleDurationInSeconds_ = loadDecayData_->GetCycleDurationInSeconds();
 	eventDurationInSeconds_ = loadDecayData_->GetEventDurationInSeconds();
+    FindAndMarkNeutronLevels();
 }
 
 void DecayPath::RecalculatePointers()

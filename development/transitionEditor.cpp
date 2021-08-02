@@ -4,6 +4,7 @@
 #include "histogram.h"
 #include "responsefunction.h"
 #include "ui_transitionEditor.h"
+#include "project.h"
 
 #include <QDialog>
 #include <QInputDialog>
@@ -30,6 +31,7 @@ TransitionEditor::TransitionEditor(QWidget *parent) :
       connect(uiL->tableTransition, SIGNAL(cellChanged(int,int)),this, SLOT(slotTableChanged(int,int)));
       connect(uiL->comboBoxIntensity, SIGNAL(currentTextChanged(QString)), this, SLOT(slotSetGammaIntensityMethod(QString)));
       connect(uiL->buttonMethod, SIGNAL(clicked(bool)), this, SLOT(slotChangeIntensitiesToMethod()));
+      connect(uiL->buttonSaveCustom, SIGNAL(clicked(bool)), this, SLOT(slotSaveCustomIntensities()));
       //Mouse right click actions
           setContextMenuPolicy(Qt::ActionsContextMenu);
           QAction* transitionAddAction = new QAction("Add transition");
@@ -54,11 +56,14 @@ TransitionEditor::~TransitionEditor()
 {
     setTransitionEditorOpen(false);
     uiL->tableTransition->close();
+    delete pseudoLevelsController_;
     delete uiL;
 }
 
 void TransitionEditor::setComboBoxMethod()
 {
+    uiL->comboBoxIntensity->clear();
+    pseudoLevelsController_->createIntensityMethodList();
     vector<string> methodList = pseudoLevelsController_->getIntensityMethodList();
     for (unsigned i=0; i< methodList.size(); i++)
     {
@@ -79,8 +84,8 @@ void TransitionEditor::slotChangeIntensitiesToMethod()
 {
     ResponseFunction* responseFunction = ResponseFunction::get();
     DecayPath* decayPath = DecayPath::get();
-    std::vector<Nuclide>* nuclides_=decayPath->GetAllNuclides();
-    std::vector <Level>* levels_ = nuclides_->at(currentNuclideIndex_).GetNuclideLevels();
+    std::vector<Nuclide>* nuclides_ = decayPath->GetAllNuclides();
+    std::vector<Level>* levels_ = nuclides_->at(currentNuclideIndex_).GetNuclideLevels();
     Level* level = (&levels_->at(currentLevelIndex_));
 
     string method = pseudoLevelsController_->getIntensityMethod();
@@ -91,6 +96,23 @@ void TransitionEditor::slotChangeIntensitiesToMethod()
 
    emit signalTransitionsEdited();
    emit signalUpdateTransitionTable(currentNuclideIndex_,  currentLevelIndex_);
+}
+
+void TransitionEditor::slotSaveCustomIntensities()
+{
+    DecayPath* decayPath = DecayPath::get();
+    std::vector<Nuclide>* nuclides_ = decayPath->GetAllNuclides();
+    std::vector<Level>* levels_ = nuclides_->at(currentNuclideIndex_).GetNuclideLevels();
+    Level* level = (&levels_->at(currentLevelIndex_));
+    std::vector<Transition*>* transitionsFromLvl = level->GetTransitions();
+    std::vector<double> intensities;
+
+    for(auto itt = transitionsFromLvl->begin(); itt != transitionsFromLvl->end(); itt++)
+        intensities.push_back((*itt)->GetIntensity());
+
+    std::cout << "Saving Custom intensities. Intensities size = " << intensities.size() << std::endl;
+    Project *myProject = Project::get();
+    myProject->setCustomTransitionIntensities(intensities);
 }
 
 void TransitionEditor::slotTableChanged(int row, int column)

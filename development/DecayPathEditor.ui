@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>542</width>
-    <height>459</height>
+    <width>545</width>
+    <height>656</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -106,31 +106,60 @@
        <string>Daughter</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="1" column="0">
-        <widget class="QLabel" name="labelDaughterT12">
+       <item row="0" column="0">
+        <widget class="QLabel" name="labelDaughterIsotope">
          <property name="text">
-          <string>T1/2:</string>
+          <string>Isotope:</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="labelDaughterQvalue">
-         <property name="text">
-          <string>Q (keV):</string>
+       <item row="0" column="1" rowspan="4">
+        <widget class="QFrame" name="frame_2">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
          </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <widget class="QLabel" name="label_2">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>141</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Deexcitation model</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="comboBoxModel">
+          <property name="geometry">
+           <rect>
+            <x>180</x>
+            <y>20</y>
+            <width>91</width>
+            <height>25</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="buttonApplyModel">
+          <property name="geometry">
+           <rect>
+            <x>180</x>
+            <y>50</y>
+            <width>89</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Apply</string>
+          </property>
+         </widget>
         </widget>
        </item>
-       <item row="4" column="0">
-        <widget class="QPushButton" name="buttonNormBetaFeeding">
-         <property name="toolTip">
-          <string>Normalizes beta feding to 100%</string>
-         </property>
-         <property name="text">
-          <string>Norm. beta feeding</string>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="0" colspan="2">
+       <item row="11" column="0" colspan="2">
         <widget class="QTableWidget" name="tableDaughterLevels">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -162,14 +191,7 @@
          <column/>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="labelDaughterIsotope">
-         <property name="text">
-          <string>Isotope:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0">
+       <item row="9" column="0">
         <widget class="QPushButton" name="buttonRemoveLevel">
          <property name="enabled">
           <bool>true</bool>
@@ -179,14 +201,31 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="labelTotalIntensity">
+       <item row="2" column="0">
+        <widget class="QLabel" name="labelDaughterQvalue">
          <property name="text">
-          <string>Total feeding intensity :</string>
+          <string>Q (keV):</string>
          </property>
         </widget>
        </item>
-       <item row="5" column="0">
+       <item row="7" column="0">
+        <widget class="QPushButton" name="buttonNormBetaFeeding">
+         <property name="toolTip">
+          <string>Normalizes beta feding to 100%</string>
+         </property>
+         <property name="text">
+          <string>Norm. beta feeding</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="labelDaughterT12">
+         <property name="text">
+          <string>T1/2:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
         <widget class="QPushButton" name="buttonAddLevel">
          <property name="toolTip">
           <string>Adds new level</string>
@@ -196,7 +235,7 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="1" rowspan="6">
+       <item row="6" column="1" rowspan="4">
         <widget class="QFrame" name="frame">
          <property name="enabled">
           <bool>true</bool>
@@ -261,7 +300,7 @@
              <string>Gamma intensity model to be used</string>
             </property>
             <property name="text">
-             <string>Intensity  model</string>
+             <string>Gamma intensity  model</string>
             </property>
            </widget>
           </item>
@@ -295,6 +334,13 @@
            </widget>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="labelTotalIntensity">
+         <property name="text">
+          <string>Total feeding intensity :</string>
+         </property>
         </widget>
        </item>
       </layout>

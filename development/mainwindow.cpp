@@ -212,6 +212,18 @@ MainWindow::MainWindow(QWidget *parent) :
 
 }
 
+MainWindow::~MainWindow()
+{
+    delete mainInstance;
+    mainInstance = NULL;
+    m1->close();
+    //delete m1;
+    t1->close();
+    delete t1;
+    delete ui;
+    //delete a2D_ui;
+}
+
 MainWindow* MainWindow::mainInstance = NULL;
 MainWindow* MainWindow::GetInstance(QWidget *parent)
 {
@@ -1310,7 +1322,8 @@ void MainWindow::openProject(bool trigered)
     //Histogram *tmphis2D = new Histogram( myProject->getExpFile(),std::stoi(myProject->getExp2DSpecID()) );
     //Dopisac automatyczne ustalanie wielkosci os Xi Y czyli Ysize i Xsize zeby
     // dobrze odczytywac widma
-     myProject->setExp2DHist( Histogram( myProject->getExpFile(),std::stoi(myProject->getExp2DSpecID()) ) );
+    Histogram tmp2DHist = Histogram( myProject->getExpFile(),std::stoi(myProject->getExp2DSpecID()) );
+     myProject->setExp2DHist( tmp2DHist );
 //Eva SPRAWDZIC    //mk    expHist->Rebin(BinningController::getBinningFactor());//10keV/ch
 
      ContaminationController *contaminationController = new ContaminationController();
@@ -1682,12 +1695,4 @@ void MainWindow::showLevelSchemePDF()
 }
 */
 
-MainWindow::~MainWindow()
-{
-    delete mainInstance;
-    mainInstance = NULL;
-    delete ui;
-    delete t1;
-    delete m1;
-    //delete a2D_ui;
-}
+

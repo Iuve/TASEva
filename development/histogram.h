@@ -225,6 +225,8 @@ public:
     void Add(Histogram* hist, int weight);
     void Add(Histogram* hist, double weight);
 
+    void AdjustEnergyVectorTo2DBinFactor(int binFactor);
+
 
 //    TH1F* GetRootHistogram(float multiFactor, std::string name="");
  private:

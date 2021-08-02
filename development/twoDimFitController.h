@@ -81,6 +81,7 @@ private:
     vector <double> errors;
     double otherLevelsToFeedingsRatio_;
     int normalizeStartPoint_;
+    int expSpectra2Dbinning_;
 
     void PrepareNeutronLevelsResponse();
     Histogram prepareTransitionResponse(Transition *transition_, Level *tmpLevel_);

@@ -69,7 +69,8 @@ void  Project::New()
     fitLevelTo_ = 5000.0;
     fitLambda_ = 1.0;
     noFitIterations_ = 100;
-
+    binning2Dfactor_ = 1;
+    activeCoresForSimulation_ = 4;
 }
 
 
@@ -112,6 +113,8 @@ void Project::Open(string fileName)
             con.push_back(b4);
             inputContamination_.push_back(con);
             }
+        else if (b1 == "Binning2D:") {binning2Dfactor_ = std::stoi(b2);}
+        else if (b1 == "SimulationActiveCores:") {activeCoresForSimulation_ = std::stoi(b2);}
         else {std::cout << "unknown text in input file " << b1 <<" i "<< b2 << std::endl; }
          }
         }

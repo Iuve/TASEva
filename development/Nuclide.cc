@@ -22,7 +22,7 @@ void Nuclide::RemoveLevel(double levelEnergy)
     //int levelsSize = nuclideLevels_.size();
     for( auto it = nuclideLevels_.begin(); it != nuclideLevels_.end(); ++it)
     {
-        if(fabs(levelEnergy - it->GetLevelEnergy()) <= 1.)
+        if(fabs(levelEnergy - it->GetLevelEnergy()) <= 0.1)
         {
             //Level* pointerToRemovedLevel = &(*it);
             //nuclideLevels_.erase(it);
@@ -156,7 +156,16 @@ void Nuclide::AddLevel(double energy, double spin, std::string parity, double T1
 }
 
 
-
+void Nuclide::AddCustomLevel(double energy, double deltaE)
+{
+    double spin = -1;
+    std::string parity = "";
+    double T12 = 1e-15;
+    nuclideLevels_.push_back( Level(energy, spin, parity, T12) );
+    nuclideLevels_.back().setAsPseudoLevel();
+    if(deltaE > 0.)
+        nuclideLevels_.back().AddTransition("G", deltaE, 1.);
+}
 
 
 

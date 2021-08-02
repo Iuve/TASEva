@@ -32,6 +32,7 @@ public:
     int  getCurrentLevel(){return  currentLevelIndex_;}
     void setCurrentNuclide(int currentNuclideIndex){currentNuclideIndex_ = currentNuclideIndex;}
     void setTransitionEditorOpen(bool b){transitionEditorOpen_ = b;}
+    void setComboBoxMethod();
 public slots:
 //    void slotEditGammas(int rowIndex);
     void slotAddTransition();
@@ -41,6 +42,7 @@ public slots:
      void slotTableChanged(int row, int column);
      void slotSetGammaIntensityMethod(QString method);
      void slotChangeIntensitiesToMethod();
+     void slotSaveCustomIntensities();
 signals:
     void signalUpdateTransitionTable(int currentNuclideIndex_, int currentLevelIndex_);
     void signalUpdateLevelTable();
@@ -48,7 +50,7 @@ signals:
 
 
 private:
-    void setComboBoxMethod();
+    //void setComboBoxMethod();
     void initializeRow(int rowNumber, RowData rowData);
     void initializeTable();
     void checkData();

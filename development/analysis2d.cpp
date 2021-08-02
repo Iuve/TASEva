@@ -177,19 +177,24 @@ void Analysis2D::setGraphics()
     colorMap2D_->data()->setSize(Display2DXmax,Display2DYmax);
     colorMap2D_->setBrush(Qt::NoBrush);
     colorMap2D_->setPen(QPen(Qt::black));
-    colorMap2D_->setDataScaleType(QCPAxis::stLogarithmic);  //stLinear
+    colorMap2D_->setDataScaleType(QCPAxis::stLogarithmic);  //stLinear or stLogarithmic
     colorMap2D_->setGradient(QCPColorGradient::gpPolar);
     colorMap2D_->setInterpolate(true);
     cout << "number of bins : " << myProject->getExp2DHist()->GetNrOfBins() << endl;
     cout << " Xmax: " << Display2DXmax << " Ymax: " <<Display2DYmax << " iloczyn: " <<  (Display2DXmax+1)*(Display2DYmax+1)<< endl;
 
+    int expSpectra2Dbinning = myProject->getBinning2Dfactor();
 
-    for (unsigned int x=0; x<xSize_; ++x){
-        unsigned int xpos = x*(xSize_+1);
-        for (unsigned int y=0; y<ySize_; ++y){
-          colorMap2D_->data()->setCell(x, y, myProject->getExp2DHist()->GetBinValue(xpos+y));
+    for (unsigned int x=0; x<xSize_; ++x)
+    {
+        unsigned int xpos = (x / expSpectra2Dbinning) * (xSize_+1);
+        for (unsigned int y=0; y<ySize_; ++y)
+        {
+            double cellValue = myProject->getExp2DHist()->GetBinValue(xpos + y / expSpectra2Dbinning);
+            colorMap2D_->data()->setCell(x, y, cellValue);
         }
     }
+
       colorMap2D_->rescaleDataRange(true);
       ui2D->Plot2D->rescaleAxes();
       ui2D->Plot2D->replot();
@@ -208,7 +213,7 @@ void Analysis2D::setGraphics()
       projectionOnY =  gateOnX(gateOnXLow_,gateOnXHigh_);
       //projectionOnY =  gateOnX(gateOnXLow_,gateOnXLow_ + 10);
 
-      for(unsigned int x=0; x<xSize_; x++)   channelProjectionOnX.push_back(static_cast<double>(x));
+      for(unsigned int x=0; x<xSize_; x++)   channelProjectionOnX.push_back(static_cast<double>(x * expSpectra2Dbinning));
 
       ui2D->PlotProjOnX->addGraph();
       ui2D->PlotProjOnX->graph(0)->setLineStyle(QCPGraph::LineStyle::lsStepCenter);
@@ -252,7 +257,7 @@ void Analysis2D::slot2DFitControler()
  if(!prepareRestLevelResponseDoneFlag_)
  {
      fit2DController_->prepareRestLevelsResponseFromOutside();
-     prepareRestLevelResponseDoneFlag_=true;
+//     prepareRestLevelResponseDoneFlag_=true;
  }
  cout << "=========================== NOW FIT================================" << endl;
  fit2DController_->makeXGammaFit();
@@ -282,10 +287,11 @@ void Analysis2D::slotMakeGate()
 {
     slotGate1Changed();
     slotGate2Changed();
+    int expSpectra2Dbinning = myProject->getBinning2Dfactor();
     double high = myProject->get2DGate1High();
     double low = myProject->get2DGate1Low();
     cout << "slotMakeGate " << "low: " <<low << " high: " << high << endl;
-    projectionOnX = gateOnY(low,high);
+    projectionOnX = gateOnY(low / expSpectra2Dbinning, high / expSpectra2Dbinning);
 
 
     float min = 0.0;
@@ -296,15 +302,19 @@ void Analysis2D::slotMakeGate()
         fvect.push_back(static_cast<float>(projectionOnX.at(k)));
     Histogram* tmpHist = new Histogram(min,max,fvect);
     tmpHist->Normalize(10.);
+    tmpHist->AdjustEnergyVectorTo2DBinFactor(expSpectra2Dbinning);
     myProject->setExpGate( *tmpHist );
-    delete tmpHist;
+
     fit2DController_->setExperimentalHistogram( myProject->getExpGate() );
 
     ui2D->PlotProjOnX->graph(0)->setData(QVector<double>::fromStdVector(channelProjectionOnX),QVector<double>::fromStdVector(projectionOnX));
+    //ui2D->PlotProjOnX->graph(0)->setData(QVector<double>::fromStdVector(tmpHist->GetEnergyVectorD()),QVector<double>::fromStdVector(projectionOnX));
     double high2 = ui2D->lineYGate2High->text().toDouble();
     double low2 = ui2D->lineYGate2Low->text().toDouble();
-    projection2OnX_ = gateOnY(low2,high2);
+    projection2OnX_ = gateOnY(low2 / expSpectra2Dbinning, high2 / expSpectra2Dbinning);
     ui2D->PlotProjOnX->graph(1)->setData(QVector<double>::fromStdVector(channelProjectionOnX),QVector<double>::fromStdVector(projection2OnX_));
+    //ui2D->PlotProjOnX->graph(1)->setData(QVector<double>::fromStdVector(tmpHist->GetEnergyVectorD()),QVector<double>::fromStdVector(projection2OnX_));
+    delete tmpHist;
 
     yRectGate1Item_ = new QCPItemRect(ui2D->PlotProjOnY );
 

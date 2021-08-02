@@ -400,4 +400,13 @@ vecFloat Histogram::GetAllData(float enMin, float enMax)
 //eva int Histogram::nrOfhist = 0;
 
 
+void Histogram::AdjustEnergyVectorTo2DBinFactor(int binFactor)
+{
+    //cout << "\n \n \n energy_.size() = " << energy_.size() << "\n \n \n";
+    for(unsigned int i = 0; i < energy_.size(); i++)
+    {
+        float tmpEnergy = energy_.at(i);
+        energy_.at(i) = tmpEnergy * binFactor;
+    }
 
+}
