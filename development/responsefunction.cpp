@@ -411,37 +411,29 @@ void ResponseFunction::UpdateWholeContainerIntensities()
 
 Histogram ResponseFunction::loadXGate(QDir dirName_, int histId, double xMin, double xMax)
 {
-    cout << "=======>ResponseFunction::loadXGate(int histId, double xMin, double xMax) POCZATEK" << endl;
     Project *myProject = Project::get();
     QString sortOutputFileNameFull = myProject->getSortOutputFileName() + myProject->getSortOutputFileExtension();
     qDebug() << "sortOutputFileNameFull: " << sortOutputFileNameFull;
     QString filename = dirName_.filePath(sortOutputFileNameFull);
     qDebug() << "dirName_ "  << dirName_ ;
     string filenameStr = filename.toStdString();
-    cout << "plik z symulacja: " << filenameStr << endl;
     TFile* dataFile = new TFile (filenameStr.c_str());
     std::string histName = num2string(histId);
     TH2F* matrix = (TH2F*) dataFile->Get(histName.c_str());
-  cout << "po wczytaniu macierzy" << endl;
-    int minBin = static_cast<int> (xMin/BinningController::get2DBinningFactor());
-    int maxBin = static_cast<int> (xMax/BinningController::get2DBinningFactor());
+    int minBin = static_cast<int> (xMin/myProject->getBinning2Dfactor() );
+    int maxBin = static_cast<int> (xMax/myProject->getBinning2Dfactor() );
     std::string projectionName = histName + "_xGate_" + num2string(xMin) + "_" + num2string(xMax);
-    cout << " nazwa widma " << projectionName << " minBin:maxBin " << minBin << ": " <<maxBin << endl;
     TH1F* projection = (TH1F*)matrix->ProjectionY(projectionName.c_str(), minBin, maxBin);
 
-    cout << "przed przed " << projection->GetXaxis()->GetXmin() << endl;
-    cout << "przed wyjsciem z GammaRespProvider::loadXGate" << endl;
     Histogram* projectionHist = new Histogram(projection);
     delete projection;
     delete matrix;
     delete dataFile;
-    cout << "=======>ResponseFunction::loadXGate(int histId, double xMin, double xMax) KONIEC" << endl;
     return *projectionHist;
 }
 
 Histogram ResponseFunction::loadYGate(QDir dirName_, int histId, double yMin, double yMax)
 {
-    cout << "ResponseFunction::loadYGate" << endl;
     Project *myProject = Project::get();
     QString sortOutputFileNameFull = myProject->getSortOutputFileName() + myProject->getSortOutputFileExtension();
     QString filename = dirName_.filePath(sortOutputFileNameFull);
@@ -451,8 +443,8 @@ Histogram ResponseFunction::loadYGate(QDir dirName_, int histId, double yMin, do
     std::string histName = num2string(histId);
     TH2F* matrix = (TH2F*) dataFile->Get(histName.c_str());
 
-    int minBin = static_cast<int> (yMin/BinningController::get2DBinningFactor());
-    int maxBin = static_cast<int> (yMax/BinningController::get2DBinningFactor());
+    int minBin = static_cast<int> (yMin/myProject->getBinning2Dfactor() );
+    int maxBin = static_cast<int> (yMax/myProject->getBinning2Dfactor() );
     std::string projectionName = histName + "_yGate_" + num2string(yMin) + "_" + num2string(yMax);
     TH1F* projection = (TH1F*)matrix->ProjectionY(projectionName.c_str(), minBin, maxBin);
     Histogram* projectionHist = new Histogram(projection);

@@ -317,6 +317,7 @@ void TransitionRespProvider::sortFile()
 
 bool TransitionRespProvider::makeInputToSort()
 {
+    Project *myProject = Project::get();
     int eMax = 9000; //?????
     QFile file(levelDir_.filePath(inputToSortName_));
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
@@ -329,7 +330,7 @@ bool TransitionRespProvider::makeInputToSort()
     out << "SortOutput " << outputPath << sortOutputFileExtension_ << "\n";
 //    out << "EMin " << 0 << "\n";
     out << "EMax " << eMax << "\n";
-    out << "2DbinningFactor " << BinningController::get2DBinningFactor() << "\n";
+    out << "2DbinningFactor " << myProject->getBinning2Dfactor() << "\n";
 //    out << "2DbinningFactor " <<  "1" << "\n";
     out << "siliThreshold " << 20 << "\n";
 
@@ -560,118 +561,5 @@ std::map<int, Histogram> TransitionRespProvider::loadHistograms()
 
     return allHistInFile;
 }
-
-
-
-
-
-
-
-
-/*
-void TransitionRespProvider::makeSimulation()
-{
-    try
-    {
-        makeInputToGeant( levelDir_);
-
-        if(isInputToGeantValid())
-        {
-//            cout << "checkSortFile(): " << checkSortFile() << endl;
-//            cout << "checkGeantFile(): " << checkGeantFile() << endl;
-            if (checkSortFile())
-            {
-                transition_->SetTransitionRespFlag(true);
-                return;
-            }
-            else if (checkGeantFile())
-            {
-                sortFile();
-                return;
-            }
-            else
-            {
-                runSimulation();
-                return;
-            }
-
-        }
-        else
-        {
-            int lastVersion = findLastVersion();
-            if(lastVersion >= 0)
-                renameFiles();
-            runSimulation();
-            return;
-
-        }
-    }
-    catch (GenError e)
-    {
-        cout << "TransitionRespProvider::makeSimulation() " << e.show() << endl;
-        throw e;
-    }
-}
-*/
-
-/*
-  TH2F* GammaRespProvider::load2DHistogram(int histId)
-{
-    QString filename = levelDir_.filePath(sortOutputFileName_ + sortOutputFileExtension_);
-    string filenameStr = filename.toStdString();
-    TFile* dataFile = new TFile (filenameStr.c_str());
-    std::string histName = num2string(histId);
-    TH2F* matrix = (TH2F*) dataFile->Get(histName.c_str());
-    return matrix;
-}*/
-/*Eva
-Histogram* TransitionRespProvider::loadXGate(int histId, double xMin, double xMax)
-{
-    cout << "=======>GammaRespProvider::loadXGate(int histId, double xMin, double xMax) POCZATEK" << endl;
-    QString filename = levelDir_.filePath(sortOutputFileName_ + sortOutputFileExtension_);
-    string filenameStr = filename.toStdString();
-    cout << "plik z symulacja: " << filenameStr << endl;
-    TFile* dataFile = new TFile (filenameStr.c_str());
-    std::string histName = num2string(histId);
-    TH2F* matrix = (TH2F*) dataFile->Get(histName.c_str());
-  cout << "po wczytaniu macierzy" << endl;
-    int minBin = static_cast<int> (xMin/BinningController::get2DBinningFactor());
-    int maxBin = static_cast<int> (xMax/BinningController::get2DBinningFactor());
-    std::string projectionName = histName + "_xGate_" + num2string(xMin) + "_" + num2string(xMax);
-    cout << " nazwa widma " << projectionName << " minBin:maxBin " << minBin << ": " <<maxBin << endl;
-    TH1F* projection = (TH1F*)matrix->ProjectionY(projectionName.c_str(), minBin, maxBin);
-
-    cout << "przed przed " << projection->GetXaxis()->GetXmin() << endl;
-    cout << "przed wyjsciem z GammaRespProvider::loadXGate" << endl;
-    Histogram* projectionHist = new Histogram(projection);
-    delete projection;
-    delete matrix;
-    delete dataFile;
-    cout << "=======>GammaRespProvider::loadXGate(int histId, double xMin, double xMax) KONIEC" << endl;
-
-    return projectionHist;
-}
-
-Histogram* TransitionRespProvider::loadYGate(int histId, double yMin, double yMax)
-{
-    cout << "GammaRespProvider::loadYGate" << endl;
-    QString filename = levelDir_.filePath(sortOutputFileName_ + sortOutputFileExtension_);
-    string filenameStr = filename.toStdString();
-
-    TFile* dataFile = new TFile (filenameStr.c_str());
-    std::string histName = num2string(histId);
-    TH2F* matrix = (TH2F*) dataFile->Get(histName.c_str());
-
-    int minBin = static_cast<int> (yMin/BinningController::get2DBinningFactor());
-    int maxBin = static_cast<int> (yMax/BinningController::get2DBinningFactor());
-    std::string projectionName = histName + "_yGate_" + num2string(yMin) + "_" + num2string(yMax);
-    TH1F* projection = (TH1F*)matrix->ProjectionX(projectionName.c_str(), minBin, maxBin);
-    Histogram* projectionHist = new Histogram(projection);
-    delete projection;
-    delete matrix;
-    delete dataFile;
-    return projectionHist;
-}
-*/
 
 

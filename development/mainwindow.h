@@ -2,11 +2,9 @@
 #define MAINWINDOW_H
 
 #include <project.h>
-#include <DeclareHeaders.hh>
+//#include <DeclareHeaders.hh>
 #include <histogramgraph.h>
 #include <manualfitgraph.h>
-#include "pseudoLevelsController.h"
-#include "transitionEditor.h"
 #include <decayPathEditor.h>
 #include "decaySpectrum.h"
 #include "analysis2d.h"
@@ -95,7 +93,8 @@ public slots:
     void WriteTableData(QTableWidget *table, int row, int column, string item);
 // Analisis 2D panel
     void slotOpen2DAnalysis();     /**< Opens 2D analysis panel*/
-
+    void set1DFittingMethod(QString method){ fittingMethod_ = fittingMethodList_.indexOf(method);}
+    void slot1DFittingMethod(QString method);
     //Fitting panel
     void slotAutoFit();         /**< Starts automatic fitting routine */
     void slotManualFit();      /**< Displays spectra with all level response functions and allows to change feedings with mouse clicks*/
@@ -139,10 +138,16 @@ private:
 
     bool levelEditorOpen_;
     bool projectOpen_;
+    QStringList fittingMethodList_ = {"select", "MaxLikelyHood" , "BayesianMultiSpec"};
+    int fittingMethod_;
+    QStringList fittingMethodToolTips_ = {"Please select a method",
+                                          "Maximum Likelyhood method as used by A.Fijalkowska",
+                                          "Bayesian method as described in P.Shuai paper on 88Rb"};
 
     std::vector<float> cutVector (std::vector<float> data, int min, int max);
 
     void OpenLevelSchemeEditor(); /**<  Opens new window with the level scheme editor*/
+    void SetcomboBoxFit();  /**<  Sets table of 1D fitting methods to choose from*/
 signals:
     void signalUpdateSpecPlot();
     void signalUpdateDecSpec();

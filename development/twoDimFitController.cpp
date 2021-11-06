@@ -15,19 +15,17 @@ TwoDimFitController::TwoDimFitController(QWidget *parent)
     otherLevelsToFeedingsRatio_ = 0;
     normalizeStartPoint_ = 100;
 
-    //lines below are needed to fit/work without contributions from other levels
-    otherLevelsResponse_ = Histogram::GetEmptyHistogram();
-    myProject->setGate2DOtherLevelsContribution(otherLevelsResponse_);
-    neutronLevelsResponse_ = Histogram::GetEmptyHistogram();
     //expSpectra2Dbinning_ should be defferent from 1 only when exp 2D spectrum is binned
     expSpectra2Dbinning_ = myProject->getBinning2Dfactor();
+    //lines below are needed to fit/work without contributions from other levels
+    otherLevelsResponse_ = Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_);
+    myProject->setGate2DOtherLevelsContribution(otherLevelsResponse_);
+    neutronLevelsResponse_ = Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_);
+
 }
 
 TwoDimFitController::~TwoDimFitController()
 {
-    //if(levelsResp != 0L)
-    //    delete levelsResp;
-    //gammaRespHist->clear();
 }
 
 void TwoDimFitController::setExperimentalHistogram(Histogram* hist)
@@ -38,11 +36,10 @@ void TwoDimFitController::setExperimentalHistogram(Histogram* hist)
 
 void TwoDimFitController::findCorrespondingLevel()
 {
-    //cout << "TwoDimFitController::findCorrespondingLevel() BEGIN" << endl;
     Level *finalLevel = 0L;
     double tmpFeeding = 0.0;
     double minDeltaEnergy = energy_;
-    //cout << "energy_: " << energy_ << endl;
+
     std::vector<Transition*>* betaTransitions_ = decayPath->GetBetaTransitionsFromFirstNuclide();
     std::vector <bool>  futureResults_;
     for(auto it = betaTransitions_->begin(); it != betaTransitions_->end(); ++it)
@@ -58,18 +55,14 @@ void TwoDimFitController::findCorrespondingLevel()
     betaFeedingToLevel_ = tmpFeeding;
     level_ = finalLevel;
     myProject->setCurrent2DFitLevel(level_);
-
-    //cout << "TwoDimFitController::findCorrespondingLevel() END" << endl;
 }
 
 void TwoDimFitController::prepareRestLevelsResponseFromOutside()
 {
-    cout << "==>TwoDimFitController::prepareRestLevelsResponseFromOutside() POCZATEK " << endl;
     PrepareNeutronLevelsResponse();
     Histogram otherLevelsResp = prepareRestLevelsResponse();
     myProject->setGate2DOtherLevelsContribution(otherLevelsResp);
     otherLevelsResponse_ = myProject->getGate2DOtherLevelsContribution();
-    cout << "==>TwoDimFitController::prepareRestLevelsResponseFromOutside() KONIEC " << endl;
 }
 
 void TwoDimFitController::PrepareNeutronLevelsResponse()
@@ -77,14 +70,14 @@ void TwoDimFitController::PrepareNeutronLevelsResponse()
     //WARNING: what if neutron level is the one fitted? All of neutrons levels would be
     //prepared anyway!!!
     // Function potentially for further development
-    Histogram neutronLevelsResponse = *Histogram::GetEmptyHistogram();
+    Histogram neutronLevelsResponse = *Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_);
     std::vector<Transition*>* betaTransitions = decayPath->GetBetaTransitionsFromFirstNuclide();
 
     for(auto itb = betaTransitions->begin(); itb != betaTransitions->end(); ++itb)
     {
         Level* tmpLevel = (*itb)->GetPointerToFinalLevel();
         std::vector<Transition*>* transitionsFromLevel = tmpLevel->GetTransitions();
-        Histogram neutronOneLevelResponse = *Histogram::GetEmptyHistogram();
+        Histogram neutronOneLevelResponse = *Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_);
 
         if( tmpLevel->GetNeutronLevelStatus() )
         {
@@ -97,22 +90,17 @@ void TwoDimFitController::PrepareNeutronLevelsResponse()
         }
     }
 
-    neutronLevelsResponse.AdjustEnergyVectorTo2DBinFactor(expSpectra2Dbinning_);
-
     myProject->SetGate2DNeutronLevelsContribution(neutronLevelsResponse);
     neutronLevelsResponse_ = myProject->GetGate2DNeutronLevelsContribution();
 }
 
 Histogram TwoDimFitController::prepareRestLevelsResponse()
 {
-    //Xgate!
-    cout << "===>TwoDimFitController::prepareRestLevelsResponse() POCZATEK" << endl;
-
     //we take every level with energy above (energy_ - subtractFromEnergy), without THE level
-    double subtractFromEnergy = 500.;
+    //double subtractFromEnergy = 500.;
     std::vector<Transition*>* transitions_ = decayPath->GetBetaTransitionsFromFirstNuclide();
 
-    Histogram xGate = *Histogram::GetEmptyHistogram(); // jesli zadziala zrobicporzadnie -AUTOMATYCZNIE
+    Histogram xGate = *Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_); // jesli zadziala zrobicporzadnie -AUTOMATYCZNIE
 
     for(auto it = transitions_->begin(); it != transitions_->end(); ++it)
     {
@@ -123,36 +111,21 @@ Histogram TwoDimFitController::prepareRestLevelsResponse()
         if( tmpLevel != level_ )
         {
             std::vector<Transition*>* transitionsFromLevel = tmpLevel->GetTransitions();
-            if( ( tmpLevel->GetLevelEnergy() > energy_ - subtractFromEnergy ) )
+            //if( ( tmpLevel->GetLevelEnergy() > energy_ - subtractFromEnergy ) )
+            if( ( tmpLevel->GetLevelEnergy() > 10. ) )
             {
-                Histogram* levelXGate = Histogram::GetEmptyHistogram();
-                cout << "liczba przejsc w poziomie " << transitionsFromLevel->size() << endl;
-
+                Histogram* levelXGate = Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_);
                 for(auto itt = transitionsFromLevel->begin(); itt != transitionsFromLevel->end(); ++itt)
                 {
-                   cout << "szukamy dla przejscia: " << (*itt)->GetTransitionQValue()
-                         << " z poziomu " << tmpLevel->GetLevelEnergy()
-                          << " i wolamay preapreTransitinoREsponse: " << endl;
                    Histogram tmpGate = prepareTransitionResponse((*itt), tmpLevel);
                    levelXGate->Add(&tmpGate, (*itt)->GetIntensity());
-                   cout << "ADDING ONE TRANSITION COUNTS: " << tmpGate.GetNrOfCounts()
-                         << " multiplied by (transition intensity):" <<   (*itt)->GetIntensity() << endl;
                 }
-                  cout << " So we have in levelXGate spectrum: " << levelXGate->GetNrOfCounts() << " counts."
-                       << " to mulitiplied by (beta intensity) " << (*it)->GetIntensity() << endl;
                  xGate.Add(levelXGate, (*it)->GetIntensity() );
             }
         }
-        cout << "TwoDimFitController::prepareRestLevelsResponse() FINISHED LEVEL: " << tmpLevel->GetLevelEnergy() << endl;
     }
 
-    xGate.AdjustEnergyVectorTo2DBinFactor(expSpectra2Dbinning_);
-
-    cout << "XGATE nr of Counts without neutrons contribution: " << xGate.GetNrOfCounts() << endl ;
     xGate.Add( neutronLevelsResponse_, 1. );
-    cout << "FINAL XGATE nr of CouNTS: " << xGate.GetNrOfCounts() << endl ;
-    cout << "===>TwoDimFitController::prepareRestLevelsResponse() KONIEC" << endl;
-
     return xGate;
 }
 
@@ -169,12 +142,12 @@ Histogram TwoDimFitController::prepareTransitionResponse(Transition* transition_
 //    qDebug() << "directory w twoDimFit: " << directory   ;
     if(!directory.exists())
     {
-        return Histogram::GetEmptyHistogram();
+        return Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_);
     }
     ResponseFunction* respFunction = ResponseFunction::get();
     Histogram transResp = respFunction->loadXGate(directory, histId_, minEn_, maxEn_);
     // rebin for 2D fitting
-    transResp.Rebin(expSpectra2Dbinning_);
+    //transResp.Rebin(expSpectra2Dbinning_);
 
 //EVaout?    Histogram* totalResp = new Histogram(levelsResp);
     // we multiply by betafeeding for the sake of correct background estimate
@@ -195,9 +168,6 @@ void TwoDimFitController::prepareTransitionResponses()
         Histogram transitionResp = prepareTransitionResponse ( (*it), level_ );
         transitionResp.Scale( betaFeedingToLevel_ );
         tmpGammaRespHist.push_back(transitionResp);
-        cout << "gamma " << (*it)->GetTransitionQValue() << " has Nr " << nr++ << endl;
-
-//        responses.push_back(gammaResp->GetAllData(minEn_, maxEn_));
         responses.push_back(transitionResp.GetAllDataD());
     }
     myProject->setTransitionResponseHist(tmpGammaRespHist);
@@ -219,84 +189,42 @@ void TwoDimFitController::prepareFeedings()
 
 void TwoDimFitController::calculateSimulatedHistogram()
 {//   calculates reconstrusted spectrum: sum of transition response + contribution from other levels
-    simGate_ = *Histogram::GetEmptyHistogram(); // jesli zadziala zrobicporzadnie -AUTOMATYCZNIE
-    cout << "TwoDimFitController::calculateSimulatedHistogram - POCZATEK" << endl;
-
-    //gammaRespHist->clear();
+    simGate_ = *Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_);
     std::vector <Histogram>* gammaRespHist = myProject->getTransitionResponseHist();
-//    cout << "gammaRespHist.size = " << gammaRespHist.size() << " feedings.size() = " << feedings.size() << endl;
   for(unsigned i = 0; i != gammaRespHist->size(); i++)
   {
       double intensity = feedings.at(i);
-      cout << "counts in gamma resp function: " << gammaRespHist->at(i).GetNrOfCounts() << endl;
-      cout << "intensity: " << intensity << endl;
       simGate_.Add( &(gammaRespHist->at(i)), intensity );
   }
 
-  simGate_.AdjustEnergyVectorTo2DBinFactor(expSpectra2Dbinning_);
-
-  cout << "Total number of Counts in SIM spectrum: " << simGate_.GetNrOfCounts() << endl;
-  cout << "counts in levels resp function: " << otherLevelsResponse_->GetNrOfCounts() << endl;
-  cout << "TwoDimFitController::calculateSimulatedHistogram - KONIEC" << endl;
   calculateRecHistogram();
 }
 
 void TwoDimFitController::calculateRecHistogram()
 {
-      cout << "TwoDimFitController::calculateRecHistogram - START" << endl;
-      cout << "Total number of Counts in SIM spectrum: " << simGate_.GetNrOfCounts() << endl;
-      cout << "counts in otherLevelsResponse_ function: " << otherLevelsResponse_->GetNrOfCounts() << endl;
       double xMin = normalizeStartPoint_;  // to avoid channel 0
-      //double xMax = expGate_->GetXMax();
       double xMax = maxEn_;
-      //float xMax = ui2D->lineDisplayXmax->text().toDouble() ;  //expHist->GetNrOfBins();
-      recGate_ = *Histogram::GetEmptyHistogram();
-
-      cout << "BEFORE CALCULATIONS OF SIMULATED AND RECONSTRUCTED SPECTRA:" << endl;
-      cout << "xMin: " << xMin << endl;
-      cout << "xMax: " << xMax << endl;
-      cout << "simGate_.GetNrOfCounts(xMin,xMax): " << simGate_.GetNrOfCounts(xMin,xMax) << endl;
-      cout << "otherLevelsResponse_->GetNrOfCounts(xMin,xMax): " << otherLevelsResponse_->GetNrOfCounts(xMin,xMax) << endl;
-      cout << "expGate_->GetNrOfCounts(xMin,xMax): " << expGate_->GetNrOfCounts(xMin,xMax) << endl;
+      recGate_ = *Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_);
 
     double scaleRatio;
     if(otherLevelsToFeedingsRatio_ == 0.)
         otherLevelsToFeedingsRatio_ = otherLevelsResponse_->GetNrOfCounts(xMin,xMax) / ( simGate_.GetNrOfCounts(xMin,xMax) + otherLevelsResponse_->GetNrOfCounts(xMin,xMax) );
 
     scaleRatio = expGate_->GetNrOfCounts(xMin,xMax) / ( simGate_.GetNrOfCounts(xMin,xMax) + otherLevelsResponse_->GetNrOfCounts(xMin,xMax) );
-    cout << "otherLevelsToFeedingsRatio_: " << otherLevelsToFeedingsRatio_ << endl;
 
-    cout << "scaleRatio = " << scaleRatio << endl;
     myProject->setGateNormFactor(scaleRatio);
-    //myProject->setGateOtherLevelsNormFactor(scaleRatio);
     recGate_.Add( &simGate_, scaleRatio );
     recGate_.Add(otherLevelsResponse_, scaleRatio);
-    cout << "AFTER CALCULATIONS OF SIMULATED AND RECONSTRUCTED SPECTRA:" << endl;
-    cout << "simGate_.GetNrOfCounts(xMin,xMax): " << simGate_.GetNrOfCounts(xMin,xMax) << endl;
-    cout << "otherLevelsResponse_->GetNrOfCounts(xMin,xMax): " << otherLevelsResponse_->GetNrOfCounts(xMin,xMax) << endl;
-    cout << "recGate_.GetNrOfCounts(xMin,xMax): " << recGate_.GetNrOfCounts(xMin,xMax) << endl;
-    cout << "expGate_->GetNrOfCounts(xMin,xMax): " << expGate_->GetNrOfCounts(xMin,xMax) << endl;
-
-    cout << "TwoDimFitController::calculateRecedHistogram - STOP" << endl;
 }
 
 void TwoDimFitController::calculateDiffHistogram()
 {
-    cout << "TwoDimFitController::calculatedDiffHistogram() - POCZATEK" << endl;
-    //cout << "EXP-wlasciwosci" << expGate_->GetXMin()<<" " << expGate_->GetXMax() <<" " << expGate_->GetNrOfBins() << endl;
-//    diffHist_->Histogram::GetEmptyHistogram(expHist->GetXMin(), expHist->GetXMax(), expHist->GetNrOfBins());
-    diffHist_ = *Histogram::GetEmptyHistogram(); // jesli zadziala zrobicporzadnie -AUTOMATYCZNIE
-    //double xMin = 10.0;
-    //double xMax = 4000;
-    //double expNorm_ = expGate_->GetNrOfCounts(xMin,xMax);
-    //cout << "DiffHisto: Norm exp spec 0-4000: " << expNorm_ << endl;
+    diffHist_ = *Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_);
    double fact;
     fact = 1.0;
     diffHist_.Add( expGate_, fact );
     fact = -1.0;
     diffHist_.Add( &recGate_, fact );   //subtracting histograms
-    cout << " liczba zliczen w diff: " << diffHist_.GetNrOfCounts() << endl;
-    cout << "TwoDimFitController::calculatedDiffHistogram() - KONIEC" << endl;
 
 }
 
@@ -305,29 +233,17 @@ void TwoDimFitController::makeXGammaFit()
     if(experiment_.size() == 0)
         cout << "no experimental points!" << endl;
     findCorrespondingLevel();
-    cout << "1->" ;
     prepareFeedings();
-    cout << "----------2--------->" ;
-    //prepareTransitionResponses(); /* petla po gammach (bez branchingu),
-//    ale poszczegolne funkcje odpowiedzi mnozone przez feeding beta dopoziou */
-//    cout << "----------3-------->" << endl;
 //EVa    saveResponses();
-    cout << "--------------4---------->" << endl;
     makeFit();
-    cout << "-----------5---------->" ;
     findErrors();
-    cout << "6->" ;
     notifyObservers();
-
-    cout << "7->" ;
     printResults();
-    cout << "8->END" << endl;
 
 }
 
 void TwoDimFitController::makeFit()
 {
-    cout << " ===> TwoDimFitController::makeFit() POCZATEK" << endl;
 
     int nrOfHistograms = feedings.size();
     int nrOfPoints = experiment_.size();
@@ -343,21 +259,18 @@ void TwoDimFitController::makeFit()
     responsesForFit.push_back(otherLevelsContribution);
 
     int minPoint = normalizeStartPoint_;
-    int maxPoint = maxEn_;
-/*    int maxPoint = nrOfPoints;
-    for(int j = 0; j != nrOfHistograms + 1; j++)
+    int maxPoint = nrOfPoints;
+//    for(int j = 0; j != nrOfHistograms + 1; j++)
+    for(int j = 0; j != nrOfHistograms; j++)
     {
-        cout << "responsesForFit.at(j).size, j =  " << j << ": " << (responsesForFit.at(j)).size() << endl;
         if( (responsesForFit.at(j)).size() < maxPoint )
             maxPoint = (responsesForFit.at(j)).size();
     }
-*/
-    cout << "maxPoint: " << maxPoint << endl;
+
 
     double expNorm = 0;
     for(int i = minPoint; i != maxPoint; i++)
         expNorm += experiment_.at(i);
-    cout << "expNorm = " << expNorm << endl;
 
     //Two ways to go with contribiutions:
     //FIRST: subtraction from experimental data, not fitted; normalization is tricky
@@ -371,12 +284,9 @@ void TwoDimFitController::makeFit()
             responseNrOfCounts += (responsesForFit.at(i)).at(j);
         sumForNormalization += responseNrOfCounts * feedings.at(i);
     }
-    cout << "sumForNormalization 1 = " << sumForNormalization << endl;
     sumForNormalization += otherLevelsResponse_->GetNrOfCounts(minPoint,maxPoint);
 
-    cout << "sumForNormalization 2 = " << sumForNormalization << endl;
     double responseMultiplier = expNorm / sumForNormalization;
-    cout << "responseMultiplier (including otherLevelsContribution) = " << responseMultiplier << endl;
     feedings.push_back( 1. );
     vector<double> oldFeedings = feedings;
 
@@ -395,13 +305,9 @@ void TwoDimFitController::makeFit()
             for(int j = minPoint; j < maxPoint; j++)
                 responseNrOfCounts += (responsesForFit.at(i)).at(j);
             sumForNormalization += responseNrOfCounts * feedings.at(i);
-            cout << "i=" << i <<", responseNrOfCounts=" << responseNrOfCounts <<
-                    ", feedings.at(i)=" << feedings.at(i) << endl;
         }
         sumForNormalization += otherLevelsResponse_->GetNrOfCounts(minPoint,maxPoint);
-        cout << "sumForNormalization = " << sumForNormalization << endl;
         responseMultiplier = expNorm / sumForNormalization;
-        cout << "responseMultiplier = " << responseMultiplier << endl;
 
 
         double bigCheckSum = 0.;
@@ -427,32 +333,18 @@ void TwoDimFitController::makeFit()
                 {
                     sum1 += (responsesForFit.at(j)).at(i) * responseMultiplier * (experimentForFit.at(i) - sum2)/experimentForFit.at(i);  
                     checkSum += experimentForFit.at(i) - sum2;
-/*
-                        cout << "i=" << i << ", sum1 = " << sum1 << endl;
-                        cout << "(responsesForFit.at(j)).at(i) = " << (responsesForFit.at(j)).at(i) <<
-                                ", responseMultiplier = " << responseMultiplier << endl;
-                        cout << "experimentForFit.at(i) = " << experimentForFit.at(i) <<
-                                ", sum2 = " << sum2 << endl;
-                        cout << "whole expr = " << (responsesForFit.at(j)).at(i) * responseMultiplier * (experimentForFit.at(i) - sum2)/experimentForFit.at(i) << endl;
-*/
                 }
                 else
                 {
                     checkSum += experimentForFit.at(i) - sum2;
-                    cout << "FitController::makeFit: zero count for " << i << "bin" << "\r" << endl; //<< flush;
-                    cout << "sum2 = " << sum2 << ", experiment = " << experimentForFit.at(i) << endl;
                 }
             }
-            //cout << "At the end of histogram " << j << ": sum1 = " << sum1 << endl;
             if(j < nrOfHistograms)
             {
                 feedings.at(j) = oldFeedings.at(j) * exp(2./lambda_ * sum1);
-                //cout << "j = " << j <<", zmieniam feeding." << endl;
             }
-            //cout << "At the end of histogram " << j << ": checkSum = " << checkSum << endl;
             bigCheckSum += checkSum;
         }
-        // cout << "At the end of iteration " << it << ": bigCheckSum = " << bigCheckSum << endl;
 
         double feedingsDuringFitSum = 0.;
         for(int j = 0; j != nrOfHistograms; j++)
@@ -466,25 +358,20 @@ void TwoDimFitController::makeFit()
 
     feedings.pop_back();
 
-    //double feedingSumWithOtherLevelsContr = 0.;
     double feedingSum = 0.; //without other levels contribution
     for(unsigned i =0; i<feedings.size(); ++i)
     {
-        cout << feedings.at(i) << endl;
+        //cout << feedings.at(i) << endl;
         feedingSum += feedings.at(i);
     }
-    cout << "feedingSum = " << feedingSum << endl;
 
     //normalization
     for(unsigned i =0; i < feedings.size(); ++i)
     {
         double tempFeeding = feedings.at(i) / feedingSum;
         feedings.at(i) = tempFeeding;
-        cout << feedings.at(i) << endl;
+        //cout << feedings.at(i) << endl;
     }
-
-    cout << " ===> TwoDimFitController::makeFit() KONIEC" << endl;
-
 }
 
 void TwoDimFitController::BinForFitting(std::vector<double>* experimentForFit, std::vector< vector<double> >* responsesForFit)
@@ -532,7 +419,6 @@ void TwoDimFitController::findErrors()
     int maxPoint = nrOfPoints;
     for(int j = 0; j != nrOfHistograms; j++)
     {
-        //cout << "responses.at(j).size, j =  " << j << ": " << (responses.at(j)).size() << endl;
         if( (responses.at(j)).size() < maxPoint )
             maxPoint = (responses.at(j)).size();
     }
@@ -551,11 +437,9 @@ void TwoDimFitController::findErrors()
 void TwoDimFitController::notifyObservers()
 {
     ResponseFunction* responseFunction = ResponseFunction::get();
-    cout <<" notify level " << endl;
     vector<Transition*>* transitions_ = level_->GetTransitions();
     int transitionIndex = -1;
 
-    cout << "set new intensities " << endl;
     for(auto it = transitions_->begin(); it != transitions_->end(); ++it)
     {
         transitionIndex++;

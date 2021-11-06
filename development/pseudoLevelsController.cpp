@@ -242,7 +242,7 @@ double PseudoLevelsController::getM2Intensity(double atomicMass, double energy)
 void PseudoLevelsController::applyModelM1()
 {
     Nuclide* currentNuclide = &decayPath_->GetAllNuclides()->at(currentNuclideIndex_);
-    double atomicMass = currentNuclide->GetAtomicMass();
+    int atomicMass = currentNuclide->GetAtomicMass();
     for(auto il = currentNuclide->GetNuclideLevels()->begin(); il != currentNuclide->GetNuclideLevels()->end(); ++il)
     {
         double lvlEnergy = il->GetLevelEnergy();
@@ -257,9 +257,14 @@ void PseudoLevelsController::applyModelM1()
             if they are to be F (part of total intensity from given lvl), then they should be
             multiplied by F/(1 - F)
             */
-            double m1intensities[4] = {0.01, 0.08, 0.27, 0.64};
-            double addedGammaSumIntensity = 0.3; // == F from above
-            for(int i = 1; i <= 4; i++)
+            //double m1intensities[4] = {0.01, 0.08, 0.27, 0.64};
+
+            double range = 500;
+            int nrOfNewGammas = range / deltaE_;
+            std::vector<double> m1intensities = CalculateModelIntensities("M1", atomicMass, nrOfNewGammas, deltaE_);
+            double addedGammaSumIntensity = 0.6; // == F from above
+
+            for(int i = 1; i <= nrOfNewGammas; i++)
             {
                 m1intensities[i - 1] *= addedGammaSumIntensity / (1 - addedGammaSumIntensity);
                 double finalLvlEnergy = FindPreciseEnergyLvl(lvlEnergy - deltaE_ * i, &(*il));
@@ -290,6 +295,26 @@ void PseudoLevelsController::applyModelM1()
             il->NormalizeTransitionIntensities();
         }
     }
+}
+
+std::vector<double> PseudoLevelsController::CalculateModelIntensities(string model, int atMass, int nrOfGammas, double deltaE)
+{
+    std::vector<double> intensitiesVector;
+    double intensitiesSum = 0.;
+    if(model == "M1")
+    {
+        for(int i = 1; i <= nrOfGammas; i++)
+        {
+            double tempIntensity = getM1Intensity(atMass, deltaE * i);
+            intensitiesSum += tempIntensity;
+            intensitiesVector.push_back(tempIntensity);
+        }
+    }
+
+    for(auto ii = intensitiesVector.begin(); ii != intensitiesVector.end(); ++ii)
+        *ii /= intensitiesSum;
+
+    return intensitiesVector;
 }
 
 double PseudoLevelsController::FindPreciseEnergyLvl(double newLevelEnergy, Level* forbiddenLevel)

@@ -33,7 +33,7 @@ public:
     static Histogram* GetEmptyHistogram(float xMin, float xMax, int nrOfBins);
     static Histogram *GetEmptyHistogram()
     {
-        return GetEmptyHistogram(0.,10*BinningController::getBinningFactor() , 10);
+        return GetEmptyHistogram(0.,10 , 10);
     }
 
     ~Histogram()

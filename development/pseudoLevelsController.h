@@ -61,6 +61,7 @@ private:
     double getM1Intensity(double atomicMass, double energy);
     std::vector<SpinAndParity> findSpinAndParity(Level* parentLevel, double energy);
     void applyModelM1();
+    std::vector<double> CalculateModelIntensities(std::string, int, int, double);
     double FindPreciseEnergyLvl(double, Level*);
 
     //void createIntensityMethodList();

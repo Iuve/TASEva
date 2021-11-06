@@ -7,20 +7,6 @@
 #include "histogramgraph.h"
 #include "histogramOutputController.h"
 
-//Eva #include "levelEditor.h"
-//Eva #include "hisdrr.h"
-//Eva #include "Exceptions.h"
-//Eva #include "histogram.h"
-//Eva #include "qlogging.h"
-//Eva #include "histogramGraphController.h"
-//Eva #include "outputFileController.h"
-//------------------------------------
-//Eva MS start from loadDecayData
-//Eva #include "loadDecayData.h"
-//-----------------------------
-//Eva #include "betaFeedingFdition.h"
-//Eva #include "AF.h"
-
 #include "tablecontroller.h"
 
 // GUI includes
@@ -31,7 +17,6 @@
 #include "ui_analysis2d.h"
 #include "ui_status.h"
 #include "ui_manualfitgraph.h"
-
 
 // Qt INCLUDES
 #include <QApplication>
@@ -77,6 +62,8 @@ MainWindow::MainWindow(QWidget *parent) :
     levelEditorOpen_ = false;
     projectOpen_ = false;
     s_ui = 0L;
+    fittingMethod_ = 0;
+    SetcomboBoxFit();
 
     slotUpdateProjectPanel(true);
 
@@ -151,7 +138,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->buttonUploadAndCalculateResponse->setEnabled(false);
     ui->buttonCalculateSIMSpec->setEnabled(false);
     ui->buttonUpdateResponseContainer->setEnabled(false);
-    ui->frame_2->setEnabled(false);
+    ui->frameFit->setEnabled(false);
+    ui->frameFitParam->setEnabled(false);
     connect(ui->buttonMakeDirsAndCheckFiles, SIGNAL(clicked()), this, SLOT(slotMakeDirsAndCheckFiles() ) );
     connect(ui->buttonMakeSimulations, SIGNAL(clicked(bool)), this, SLOT(slotMakeSimulations()));
     connect(ui->buttonUploadAndCalculateResponse, SIGNAL(clicked()), this, SLOT(slotUploadAndCalculateResponse() ) );
@@ -183,6 +171,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //2D Analysis panel
     connect(ui->buttonAnalysis2D, SIGNAL(clicked()), this, SLOT(slotOpen2DAnalysis()));
+    connect(ui->comboBoxFit1D, SIGNAL(activated(QString)), this, SLOT(slot1DFittingMethod(QString)));
 
     connect(m1, SIGNAL(signalRecalculateLevel()), this, SLOT(slotCalculateDECSpectrum()));
 //    connect(this, SIGNAL(signalUpdateSpecPlot()), m1, SLOT(takesMySignal()));
@@ -445,35 +434,53 @@ void MainWindow::slotAutoFit()
 //    int     nrOfIterations = ui->lineEditNoFitIterations->text().toInt();
 //    int     histId = ui->lineEditFitHistId->text().toInt();
 
+    if(maxEnergy<=minEnergy)
+    {
+        int r = QMessageBox::warning(this, tr("Error"),
+                                     tr("Max energy must be higher than min energy"),
+                                     QMessageBox::Ok);
+        if (r == QMessageBox::Ok)
+            return;
+    }
 
-     if(maxEnergy<=minEnergy)
-     {
-         int r = QMessageBox::warning(this, tr("Error"),
-                                      tr("Max energy must be higher than min energy"),
-                                      QMessageBox::Ok);
-         if (r == QMessageBox::Ok)
-             return;
-     }
+    std::vector< std::pair<double, double> > fitResults;
+    std::vector <float> errors;
 
-    try
-     {
-//MS June 2020         checkHistogram(expHist);
-         checkHistogram( myProject->getExpHist() );
-     }
-     catch(GenError e)
-     {
-         return;
-     }
+    switch (fittingMethod_)
+    {case 1: { //Maximum likely hood method
+   try
+    {
+        checkHistogram( myProject->getExpHist() );
+    }
+    catch(GenError e)
+    {
+        return;
+    }
 
 
-     FitController* fitController = new FitController();
-//MS June 2020     fitController->applyFit(expHist);
-     fitController->applyFit( myProject->getExpHist() );
-     ui->buttonErrorCal->setEnabled(true);
-     std::vector <float> errors = fitController->getErrors();
-     std::vector< std::pair<double, double> > fitResults;
+    FitController* fitController = new FitController();
 
-//Eva     std::vector<Level*> levels = decay->GetAllLevels();
+    fitController->applyFit( myProject->getExpHist() );
+    ui->buttonErrorCal->setEnabled(true);
+    errors = fitController->getErrors();
+    break;
+    }
+    case 2: {  //Baysian multi spectrum fit
+        int r = QMessageBox::warning(this, tr("Error"),
+                                                     tr("Baysian multi spectrum fitt will be executed, whe fitted"),
+                                                     QMessageBox::Ok);
+                        if (r == QMessageBox::Ok)
+                         return;
+                            break;
+    }
+    default:  {int r = QMessageBox::warning(this, tr("Error"),
+                                            tr("Please select fitting method first"),
+                                            QMessageBox::Ok);
+               if (r == QMessageBox::Ok)
+                   return;
+                break;
+    }
+    }
 
      ResponseFunction* responseFunction = ResponseFunction::get();
      //responseFunction->UpdateStructure();
@@ -696,11 +703,13 @@ void MainWindow::slotCalculateDECSpectrum()
     Histogram tmpDecHist = new Histogram();
     tmpDecHist = *responseFunction->GetResponseFunction(motherLevel, histId);
 
-    ui->frame_2->setEnabled(true);
+    ui->frameFit->setEnabled(true);
     ui->buttonAutoFit->setEnabled(true);
     ui->buttonAnalysis2D->setEnabled(true);
     ui->buttonManualFit->setEnabled(true);
     ui->actionCompare_Spectra->setEnabled(true);
+    ui->comboBoxFit1D->setEnabled(true);
+    ui->labelFitMethod->setEnabled(true);
 
        std::vector<Contamination>* contaminations = myProject->getContaminations();
         float sumNormCont = 0.0;
@@ -1695,4 +1704,46 @@ void MainWindow::showLevelSchemePDF()
 }
 */
 
+void MainWindow::SetcomboBoxFit()
+{
+    ui->comboBoxFit1D->setToolTip("Please select fitting method for 1D spectra");
+    ui->labelFitMethod->setToolTip("Please select fitting method for 1D spectra");
 
+    for(int i = 0; i != fittingMethodList_.size(); ++i)
+    {
+        ui->comboBoxFit1D->addItem(fittingMethodList_.at(i));
+        ui->comboBoxFit1D->setItemData(i, fittingMethodToolTips_.at(i), Qt::ToolTipRole);
+    }
+}
+
+void MainWindow::slot1DFittingMethod(QString method)
+{
+    ui->frameFitParam->setEnabled(true);
+    ui->lineEditFitLambda->setEnabled(false);
+    ui->labelFitLambda->setEnabled(false);
+    ui->lineEditFitHistId->setEnabled(false);
+    ui->labelFitHistId->setEnabled(false);
+    ui->labelFittingMethod->clear();
+    ui->labelFitLambda->setToolTip("Fitting procedure parameter. Set close to 1 for small changes and far away from 1 for larger jumps");
+    ui->labelFitHistId->setToolTip("Give coma separated hist IDs for multi spectra fit.");
+    set1DFittingMethod(method);
+    switch(fittingMethod_)
+    {
+    case 1 : {
+        ui->labelFittingMethod->setText("Maximum LikelyHood");
+        ui->lineEditFitLambda->setEnabled(true);
+        ui->labelFitLambda->setEnabled(true);
+        break;
+    }
+    case 2 : {
+        ui->labelFittingMethod->setText("Bayesian multi spec");
+        ui->lineEditFitHistId->setEnabled(true);
+        ui->labelFitHistId->setEnabled(true);
+        break;
+    }
+    default : {
+        ui->labelFittingMethod->setText("--to be selected--");
+        break;
+    }
+    }
+}

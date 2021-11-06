@@ -144,11 +144,11 @@ void Histogram::Add(Histogram* hist, int weight)
 
 void Histogram::Add(Histogram* hist, double weight)
 {
-/*    cout << "--->Histogram::Add : POCZATEK" << endl;
-    cout << " HISTbase NrOfBins:  " << this->GetNrOfBins() << " HIST to be added: " <<hist->GetNrOfBins() << endl;
-    cout << " HISTbase xMIN:  " << this->GetXMin() << " HIST to be added: " <<hist->GetXMin() << endl;
-    cout << " HISTbase xMAX:  " << this->GetXMax() << " HIST to be added: " <<hist->GetXMax() << endl;
-*/    //first chcek if nr of keV per channel is the same for both histograms
+    //cout << "--->Histogram::Add : POCZATEK" << endl;
+    //cout << " HISTbase NrOfBins:  " << this->GetNrOfBins() << " HIST to be added: " <<hist->GetNrOfBins() << endl;
+    //cout << " HISTbase xMIN:  " << this->GetXMin() << " HIST to be added: " <<hist->GetXMin() << endl;
+    //cout << " HISTbase xMAX:  " << this->GetXMax() << " HIST to be added: " <<hist->GetXMax() << endl;
+    //first chcek if nr of keV per channel is the same for both histograms
     float calFactor1 = this->GetBinCenter(2) - this->GetBinCenter(1);
     float calFactor2 = hist->GetBinCenter(2) - hist->GetBinCenter(1);
 
@@ -165,10 +165,10 @@ void Histogram::Add(Histogram* hist, double weight)
     float calFactor = calFactor1;
     float xMin = (this->GetXMin() < hist->GetXMin()) ? this->GetXMin():hist->GetXMin();
     float xMax = (this->GetXMax() > hist->GetXMax()) ? this->GetXMax():hist->GetXMax();
-//    std::cout << xMin << " " << xMax << " " << calFactor << endl;
+    //std::cout << xMin << " " << xMax << " " << calFactor << endl;
     int nrOfBins = static_cast<int> (xMax - xMin)/calFactor +1;
 
-//    cout << "Histogram::Add FINAL nrOfBins: " <<nrOfBins << endl;
+    //cout << "Histogram::Add FINAL nrOfBins: " <<nrOfBins << endl;
     vecFloat energyNew(nrOfBins);
     for(int i=0; i<nrOfBins; i++)
     {
@@ -177,7 +177,7 @@ void Histogram::Add(Histogram* hist, double weight)
 
     vecFloat nrOfCountsNew(nrOfBins);
     int firstBin = this->FindBin(this->GetBinCenter(0));
-//    cout << "Histogram::Add FINAL firstBin: " << firstBin << endl;
+    //cout << "Histogram::Add FINAL firstBin: " << firstBin << endl;
     for(int i=firstBin; i<this->GetNrOfBins(); i++)
     {
         nrOfCountsNew.at(i) +=this->GetBinValue(i);
@@ -193,7 +193,7 @@ void Histogram::Add(Histogram* hist, double weight)
     nrOfCounts_ = nrOfCountsNew ;
     energy_.clear();
     energy_ = energyNew;
-//    cout << "--->Histogram::Add : KONIEC" << endl;
+    //cout << "--->Histogram::Add : KONIEC" << endl;
 
 }
 
@@ -277,10 +277,9 @@ void Histogram::Rebin(int group)
         }
     }
     nrOfCounts_.clear();
-    nrOfCounts_ .swap(newCounts);
+    nrOfCounts_.swap(newCounts);
     energy_.clear();
     energy_ = FindEnergyVector2(xMin,group, nrOfCounts_.size());
-
 }
 
 void Histogram::Recalibrate(std::vector<double> &calParam)

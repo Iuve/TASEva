@@ -388,9 +388,9 @@ void ManualFitGraph::slotSetAxisRange()
 //    double xMaxEn = x.size();
     double yMin =  uiM->lineEditYAxisMin->text().toDouble();
     double yMax =  uiM->lineEditYAxisMax->text().toDouble();
-   if(xMaxEn > x.size())
+   if(xMaxEn > x.back())
     {
-        xMaxEn =x.size();
+        xMaxEn = x.back();
         QMessageBox msgBox;
         QString info;
         QString qstrxMax = QString::number(xMaxEn);
@@ -505,8 +505,9 @@ void ManualFitGraph::showDataExpSimDiff(QVector<double> xx, QVector<double> yy, 
     if(xMinEn == 0.0)
 		xMinEn = 1;
     double yMax = vectorMax(y,xMinEn,xMaxEn);
+    double yMax2 = vectorMax(y2,xMinEn,xMaxEn);
     yMax = std::min(yMax,yMaxUser);
-    yMax = yMax*1.1; //adding 10% to the scale
+    //yMax = yMax*1.1; //adding 10% to the scale
     uiM->histogramPlot->yAxis->setRange(yMin,yMax);
 
 
@@ -645,10 +646,11 @@ void ManualFitGraph::slotNormaliseTransitionsFeeding(bool ok)
 
   for(unsigned int i = 0; i != futureResults.size(); ++i)
   {
-  QString QDisplayStatus_ = displayStatus.at(i) ? "true" : "false";
-  QString QEnergy_ = QString::number(transitions_->at(i)->GetFinalLevelEnergy());
-  QString QIntensity_ = QString::number(transitions_->at(i)->GetIntensity()*100);
-  rowData_.push_back(RowData(QDisplayStatus_, QEnergy_, QIntensity_));
+      QString QFittingFlag_ = transitions_->at(i)->GetIntensityFitFlag() ? "true" : "false";
+      QString QDisplayStatus_ = displayStatus.at(i) ? "true" : "false";
+      QString QEnergy_ = QString::number(transitions_->at(i)->GetFinalLevelEnergy());
+      QString QIntensity_ = QString::number(transitions_->at(i)->GetIntensity()*100);
+      rowData_.push_back(RowData(QDisplayStatus_, QEnergy_, QFittingFlag_, QIntensity_));
   }
   initializeTable(rowData_);
 }
