@@ -13,6 +13,7 @@ class PeriodicTable {
 public:
 	static int GetAtomicNumber(std::string name);
 	static std::string GetAtomicNameCap(int atomicNumber);
+    static std::string GetAtomicName(int atomicNumber);
 	static void UpToLow(std::string &str);
 private:
     PeriodicTable();

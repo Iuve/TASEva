@@ -8,6 +8,7 @@
 #include "histogramOutputController.h"
 
 #include "tablecontroller.h"
+#include "PeriodicTable.hh"
 
 // GUI includes
 #include "ui_mainwindow.h"
@@ -17,6 +18,7 @@
 #include "ui_analysis2d.h"
 #include "ui_status.h"
 #include "ui_manualfitgraph.h"
+#include "ui_tableinput.h"
 
 // Qt INCLUDES
 #include <QApplication>
@@ -98,6 +100,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->export_ENS_File, SIGNAL(triggered(bool)), this, SLOT(exportENSFile(bool)));
     connect(ui->exportXML_Decay_Files, SIGNAL(triggered(bool)), this, SLOT(exportXMLDecayFiles(bool)));
     connect(ui->exportRecHis, SIGNAL(triggered(bool)), this, SLOT(exportRecSpec(bool)));
+    connect(ui->exportDecay_information, SIGNAL(triggered(bool)), this, SLOT(exportDecayInfo(bool)));
 //contaminations
     connect(ui->actionSignal_Signal, SIGNAL(triggered(bool)), this, SLOT(slotPileupSignalSignal()));
     connect(ui->actionSignal_Bkg, SIGNAL(triggered(bool)), this, SLOT(slotPileupSignalBackground()));
@@ -182,6 +185,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->buttonErrorCal->setEnabled(false);
     ui->buttonAnalysis2D->setEnabled(false);
     ui->buttonManualFit->setEnabled(false);
+    ui->lineEditFitBinning->setText("10");
     connect(ui->buttonAutoFit, SIGNAL(clicked(bool)), this, SLOT(slotAutoFit()));
     connect(ui->buttonManualFit, SIGNAL(clicked(bool)), this, SLOT(slotManualFit()));
     connect(ui->lineEditFitEnergyFrom, SIGNAL(returnPressed()), this, SLOT(slotProjectFitEnergyFrom()));
@@ -190,12 +194,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->lineEditFitLevelsTo, SIGNAL(returnPressed()), this, SLOT(slotProjectFitLevelsTo()));
     connect(ui->lineEditFitLambda, SIGNAL(returnPressed()), this, SLOT(slotProjectFitLambda()));
     connect(ui->lineEditNoFitIterations, SIGNAL(returnPressed()), this, SLOT(slotProjectNoFitIterations()));
+    connect(ui->lineEditFitBinning, SIGNAL(returnPressed()), this, SLOT(slotProjectFitBinning()));
+
     connect(ui->lineEditFitEnergyFrom, SIGNAL(editingFinished()), this, SLOT(slotProjectFitEnergyFrom()));
     connect(ui->lineEditFitEnergyTo, SIGNAL(editingFinished()), this, SLOT(slotProjectFitEnergyTo()));
     connect(ui->lineEditFitLevelsFrom, SIGNAL(editingFinished()), this, SLOT(slotProjectFitLevelsFrom()));
     connect(ui->lineEditFitLevelsTo, SIGNAL(editingFinished()), this, SLOT(slotProjectFitLevelsTo()));
     connect(ui->lineEditFitLambda, SIGNAL(editingFinished()), this, SLOT(slotProjectFitLambda()));
     connect(ui->lineEditNoFitIterations, SIGNAL(editingFinished()),this, SLOT(slotProjectNoFitIterations()));
+    connect(ui->lineEditFitBinning, SIGNAL(editingFinished()), this, SLOT(slotProjectFitBinning()));
     //    connect(ui->lineEditFitHistId, SIGNAL(returnPressed()), this, SLOT(slotProjectExpSpecIDUpdate()));
     connect(ui->openHistogramGraph, SIGNAL(clicked()), this, SLOT(openHistogramGraph()));
 
@@ -248,14 +255,13 @@ void MainWindow::createDecayInstance(const string DecayFileName)
 }
 
 
-/* Eva
+
 void MainWindow::slotEnergyCalibration(bool trigered)
 {
-   cal_ui = new Calibration();
-   cal_ui->show();
-//MainWindow::slotEnergyCalibration()
+   calE = new CalibrateEnergy();
+//   cal_ui->show();
 }
-
+/*
 void MainWindow::slotFWHMCalibration(bool trigered)
 {
 
@@ -282,7 +288,8 @@ void MainWindow::slotCompareSpectra(bool trigered)
     std::string expFileName = myProject->getExpFile();
     std::vector<string> expID = myProject->getExpSpecIDVec();
 //simID to be filled based on the available data in the memory.
-    std::vector<string> simID = {"6300","6310","6320","6330","6340"};
+//    std::vector<string> simID = {"6300","6310","6320","6330","6340"};
+    std::vector<string> simID = myProject->getExpSpecIDVec(); // so simID corresponds to ExpID
 
 //---------Table-------------
 
@@ -327,9 +334,9 @@ void MainWindow::slotCompareSpectra(bool trigered)
     specComp_ui->setResponseType(respType);
     specComp_ui->initializeGraphs();
     specComp_ui->setXValues(x);  //sets X value vector so rang is correctly calculated
-    specComp_ui->setYValues(y1);
-    specComp_ui->setY2Values(y2);
-    specComp_ui->setDiffValues(d12);
+//    specComp_ui->setYValues(y1);
+//    specComp_ui->setY2Values(y2);
+//   specComp_ui->setDiffValues(d12);
     //    specComp_ui->showDataExpSimDiff(x, y1, y2, d12);
     specComp_ui->showResponseFunctions();
 //-----spectra display code ------
@@ -357,21 +364,23 @@ void MainWindow::slotOpen2DAnalysis()
  void MainWindow::slotAddContamination()
 {
 //    std::cout << "MainWindow::slotAddContamination" << endl;
+     QString qExpId;
     QString qFileName;
-    QString qHistId ;
+    QString qHistId;
     QString qIntensity;
     bool ok;
      QString text = QInputDialog::getText(this, tr("New Contamination"),
-                                           tr("FileName : HistID : Intensity(%)"), QLineEdit::Normal,
-                                           "FileName : HistID : Intensity", &ok);
+                                           tr("ExpID : FileName : HistID : Intensity(%)"), QLineEdit::Normal,
+                                           "ExpID : FileName : HistID : Intensity", &ok);
      QStringList stringList= text.split(":",QString::SkipEmptyParts);
 //     for (int i = 0; i < stringList.size(); i++) qDebug(stringList.at(i).toUtf8());
 //     qDebug()<<stringList;
-     if(ok && stringList.size() == 3)
+     if(ok && stringList.size() == 4)
      {
-         qFileName = stringList.at(0);
-         qHistId = stringList.at(1);
-         qIntensity = stringList.at(2);
+         qExpId = stringList.at(0);
+         qFileName = stringList.at(1);
+         qHistId = stringList.at(2);
+         qIntensity = stringList.at(3);
      } else
      {
          QMessageBox msgBox;
@@ -380,7 +389,7 @@ void MainWindow::slotOpen2DAnalysis()
          return;
      }
     ContaminationController *contaminationController = new ContaminationController();
-    contaminationController->addContamination(qFileName, qHistId, qIntensity);
+    contaminationController->addContamination(qExpId, qFileName, qHistId, qIntensity);
     contaminationController->SaveAll();
     delete contaminationController;
 
@@ -432,7 +441,6 @@ void MainWindow::slotAutoFit()
 //    double  maxLevelEn = ui->lineEditFitLevelsTo->text().toDouble();
 //    double  lambda = ui->lineEditFitLambda->text().toDouble();
 //    int     nrOfIterations = ui->lineEditNoFitIterations->text().toInt();
-//    int     histId = ui->lineEditFitHistId->text().toInt();
 
     if(maxEnergy<=minEnergy)
     {
@@ -447,39 +455,69 @@ void MainWindow::slotAutoFit()
     std::vector <float> errors;
 
     switch (fittingMethod_)
-    {case 1: { //Maximum likely hood method
-   try
-    {
-        checkHistogram( myProject->getExpHist() );
-    }
-    catch(GenError e)
-    {
-        return;
-    }
+    {case 1:
+        { //Maximum likely hood method
+           try
+            {
+                checkHistogram( myProject->getExpHist() );
+            }
+            catch(GenError e)
+            {
+                return;
+            }
 
 
-    FitController* fitController = new FitController();
+            FitController* fitController = new FitController();
 
-    fitController->applyFit( myProject->getExpHist() );
-    ui->buttonErrorCal->setEnabled(true);
-    errors = fitController->getErrors();
-    break;
-    }
-    case 2: {  //Baysian multi spectrum fit
-        int r = QMessageBox::warning(this, tr("Error"),
-                                                     tr("Baysian multi spectrum fitt will be executed, whe fitted"),
-                                                     QMessageBox::Ok);
-                        if (r == QMessageBox::Ok)
-                         return;
-                            break;
-    }
-    default:  {int r = QMessageBox::warning(this, tr("Error"),
-                                            tr("Please select fitting method first"),
-                                            QMessageBox::Ok);
-               if (r == QMessageBox::Ok)
-                   return;
-                break;
-    }
+            fitController->applyMaximumLikelyhoodFit( myProject->getExpHist() );
+            ui->buttonErrorCal->setEnabled(true);
+            errors = fitController->getErrors();
+            break;
+        }
+    case 2:
+        {  //Baysian multi spectrum fit
+            try
+             {
+                 checkHistogram( myProject->getExpHist() );
+             }
+             catch(GenError e)
+             {
+                 return;
+             }
+             QString idString = ui->lineEditFitHistId->text();
+             QStringList idList = idString.split(";",QString::SkipEmptyParts);
+
+             FitController* fitController = new FitController();
+             std::vector< std::pair<Histogram*, int> > bayesianHistograms;
+
+             for(int i = 0; i < idList.size(); i++)
+             {
+                 int histId = idList.at(i).toInt();
+                 Histogram* tmpHis = myProject->getHistFromExpMap(histId);
+                 cout << tmpHis->GetNrOfBins() << endl;
+                 if(tmpHis == 0L)
+                 {
+                     myProject->addExpHist(histId, Histogram(myProject->getExpFile(), histId));
+                     myProject->addExpSpecID(std::to_string(histId));
+                     tmpHis = myProject->getHistFromExpMap(histId);
+                     cout << tmpHis->GetNrOfBins() << endl;
+                 }
+                 bayesianHistograms.emplace_back( tmpHis, histId );
+             }
+
+             fitController->applyBayesianFit( bayesianHistograms );
+             //ui->buttonErrorCal->setEnabled(true);
+             errors = fitController->getErrors();
+             break;
+        }
+    default:
+        {int r = QMessageBox::warning(this, tr("Error"),
+                                      tr("Please select fitting method first"),
+                                      QMessageBox::Ok);
+                   if (r == QMessageBox::Ok)
+                       return;
+                   break;
+        }
     }
 
      ResponseFunction* responseFunction = ResponseFunction::get();
@@ -512,11 +550,11 @@ void MainWindow::slotAutoFit()
      cout << "<File name>  :  intensity " << endl;
 //    for(unsigned int i = 0; i < contaminationController_->getContaminations().size(); i++)
 
-     std::vector<Contamination>* contaminations = myProject->getContaminations();
+     std::vector< std::pair<int, Contamination> >* contaminations = myProject->getContaminations();
     for(unsigned int i = 0; i < contaminations->size(); i++)
     {
-        std::cout << contaminations->at(i).filename << " : " <<
-                     contaminations->at(i).intensity << std::endl;
+        std::cout << contaminations->at(i).second.filename << " : " <<
+                     contaminations->at(i).second.intensity << std::endl;
     }
     std::cout << "-------------MainWindow::AutoFit------END-------------" <<std::endl;
 
@@ -544,39 +582,91 @@ void MainWindow::OpenLevelSchemeEditor()
     std::vector<RowData> rowDataMother_;
     std::vector<RowData> rowDataDaughter_;
     std::vector<RowData> rowDataGrandDaughter_;
+    std::vector <bool>  futureResults;
 
     DecayPath* decayPath= DecayPath::get();
     TableController *tableController_ = new TableController();
 
 //    cout << "QValue: "<< decayPath->GetAllNuclides()->at(tabIndex).GetNuclideLevels()->at(0).GetTransitions()->at(0)->GetTransitionQValue() << endl;
 
-//    t1->show();
-
     std::vector<Nuclide>* nuclides_=decayPath->GetAllNuclides();
     for(unsigned int n =0; n !=nuclides_->size(); ++n)
     {
         std::vector<Level>* levels_ = nuclides_->at(n).GetNuclideLevels();
-        for (unsigned int i = 0; i!=levels_->size(); ++i)
+
+        int atomicNumber_ = nuclides_->at(n).GetAtomicNumber();
+        QString QAtomicNumber = QString::number(atomicNumber_);
+        QString QMassNumber = QString::number(nuclides_->at(n).GetAtomicMass());
+        QString QElementName = QString::fromStdString(PeriodicTable::GetAtomicName(atomicNumber_));
+        QString QQBeta = QString::number(nuclides_->at(n).GetQBeta());
+        QString QT12 = QString::number(levels_->at(0).GetHalfLifeTime());
+
+        if(n == 0)
         {
+            for (unsigned int i = 0; i!=levels_->size(); ++i)
+            {
             QString QEnergy_ = QString::number(levels_->at(i).GetLevelEnergy());
             QString QIntensity_ = QString::number(levels_->at(i).GetLevelEnergy());
             QString QTransitionsFrom_ = QString::number(levels_->at(i).GetTransitions()->size());
             QString QTransitionsTo_ = QString::number(levels_->at(i).GetLevelEnergy());
+            rowDataMother_.push_back(RowData(QEnergy_, QIntensity_, QTransitionsFrom_, QTransitionsTo_));
+            }
+            t1->uiT->labelMotherT12->setText("T1/2 : " + QT12 +" s");
+            t1->uiT->labelMotherIsotope ->setText("Isotope : " +QElementName+"-"+QMassNumber + "(Z = " +QAtomicNumber+")");
+            t1->uiT->labelMotherQvalue->setText("QBeta : " +QQBeta + " keV");
 
-            if(n == 0)rowDataMother_.push_back(RowData(QEnergy_, QIntensity_, QTransitionsFrom_, QTransitionsTo_));
-            if(n == 1)rowDataDaughter_.push_back(RowData(QEnergy_, QIntensity_, QTransitionsFrom_, QTransitionsTo_));
-            if(n == 2)rowDataGrandDaughter_.push_back(RowData(QEnergy_, QIntensity_, QTransitionsFrom_, QTransitionsTo_));
-            if(n > 2)cout <<" TOO many nuclides cutting to 3" << endl;
+         } else if(n == 2)
+             {
+            for (unsigned int i = 0; i!=levels_->size(); ++i)
+            {
+              QString QEnergy_ = QString::number(levels_->at(i).GetLevelEnergy());
+              QString QIntensity_ = QString::number(levels_->at(i).GetLevelEnergy());
+              QString QTransitionsFrom_ = QString::number(levels_->at(i).GetTransitions()->size());
+              QString QTransitionsTo_ = QString::number(levels_->at(i).GetLevelEnergy());
+                rowDataGrandDaughter_.push_back(RowData(QEnergy_, QIntensity_, QTransitionsFrom_, QTransitionsTo_));
+            }
+            t1->uiT->labelGrandDaughterT12->setText("T1/2 : " + QT12 +" s");
+            t1->uiT->labelGrandDaughterIsotope ->setText("Isotope : " +QElementName+"-"+QMassNumber + "(Z = " +QAtomicNumber+")");
+            t1->uiT->labelGrandDaughterQValue->setText("QBeta : " +QQBeta + " keV");
+         } else if (n==1)
+             {
+            std::vector <Level>* motherLevels = nuclides_->at(0).GetNuclideLevels();
+            std::vector <Transition*>transitionsUsed;
+            std::vector<Transition*>* transitions_ = motherLevels->at(0).GetTransitions();
+            for(std::vector<Transition*>::iterator it = transitions_->begin(); it != transitions_->end(); ++it)
+              {
+                futureResults.push_back(true);
+                transitionsUsed.push_back(*it);
+               }
 
-        }
+            for(unsigned int i = 0; i != futureResults.size(); ++i)
+              {
+                Transition* tmpTransition = transitionsUsed.at(i);
+                Level* currentLevel = tmpTransition->GetPointerToFinalLevel();
+                QString QEnergy_ = QString::number(currentLevel->GetLevelEnergy());
+                QString QIntensity_ = QString::number(tmpTransition->GetIntensity()*100);
+                QString QFittingFlag_ = tmpTransition->GetIntensityFitFlag() ? "true" : "false";
+                QString QTransitionsFrom_ = QString::number(levels_->at(i).GetTransitions()->size());
+                QString QTransitionsTo_ = QString::number(levels_->at(i).GetLevelEnergy());
+                rowDataDaughter_.push_back(RowData(QEnergy_, QIntensity_, QFittingFlag_, QTransitionsFrom_, QTransitionsTo_));
+              }
+            t1->uiT->labelDaughterT12->setText("T1/2 : " + QT12 +" s");
+            t1->uiT->labelDaughterIsotope ->setText("Isotope : " +QElementName+"-"+QMassNumber + "(Z = " +QAtomicNumber+")");
+            t1->uiT->labelDaughterQvalue->setText("QBeta : " +QQBeta + " keV");
+
+           }
+        if(n > 2)cout <<" TOO many nuclides cutting to 3" << endl;
+
     }
        tableController_->initializeTable(t1->uiT->tableMotherLevels,rowDataMother_);
        tableController_->initializeTable(t1->uiT->tableDaughterLevels,rowDataDaughter_);
        tableController_->initializeTable(t1->uiT->tableGrandDaughterLevels,rowDataGrandDaughter_);
        header << "Energy" << "Beta Feeding [%]" << "#Transitions from" << "# Transitions to";
        tableController_->setHeader(t1->uiT->tableMotherLevels,header);
-       tableController_->setHeader(t1->uiT->tableDaughterLevels,header);
        tableController_->setHeader(t1->uiT->tableGrandDaughterLevels,header);
+       QStringList header2;
+       header2 << "Energy" << "Beta Feeding [%]" << "Fit" << "#Transitions from" << "# Transitions to";
+       tableController_->setHeader(t1->uiT->tableDaughterLevels,header2);
 
        t1->show();
 
@@ -691,6 +781,7 @@ void MainWindow::slotCalculateDECSpectrum()
     std::cout << "---------------DECAY spectrum calculation---------------" << std::endl;
 
     Project* myProject = Project::get();
+    int expSpectrumID = std::stoi(myProject->getExpSpecID());
     ResponseFunction* responseFunction = ResponseFunction::get();
     DecayPath* decayPath = DecayPath::get();
 
@@ -711,11 +802,12 @@ void MainWindow::slotCalculateDECSpectrum()
     ui->comboBoxFit1D->setEnabled(true);
     ui->labelFitMethod->setEnabled(true);
 
-       std::vector<Contamination>* contaminations = myProject->getContaminations();
+       std::vector< std::pair<int, Contamination> >* contaminations = myProject->getContaminations();
         float sumNormCont = 0.0;
         for (unsigned int i = 0; i !=  contaminations->size(); i++)
         {
-            sumNormCont += contaminations->at(i).intensity;
+            if(contaminations->at(i).first == expSpectrumID)
+                sumNormCont += contaminations->at(i).second.intensity;
         }
         float norm = myProject->getExpHist()->GetNrOfCounts()*(1-sumNormCont);
         std::cout << " Normalize DECAY spectrum to: " << norm <<std::endl;
@@ -732,6 +824,7 @@ void MainWindow::slotCalculateTotalRECSpectrum()
 {
 
     Project* myProject = Project::get();
+    int expSpectrumID = std::stoi(myProject->getExpSpecID());
 
     cout << "---------------Calculating TOTAL reconstructed spectrum--------------- " << endl;
 //Evaout    Histogram *recHist = Histogram::GetEmptyHistogram();  //why we crate rec his jest zdefiniowane w proj.h
@@ -746,22 +839,25 @@ void MainWindow::slotCalculateTotalRECSpectrum()
         recHist->Add( decHist, 1.);
     }
 
-    std::vector<Contamination> contaminations = *(myProject->getContaminations());
+    std::vector< std::pair<int, Contamination> > contaminations = *(myProject->getContaminations());
     cout << "Contaminations to be added = " << contaminations.size() <<endl;
     for (unsigned int i = 0; i !=  contaminations.size(); i++)
     {
-    std::cout << "i= " << i << " " << contaminations.at(i).filename
+/*    std::cout << "i= " << i << " " << contaminations.at(i).filename
                  << " " << &contaminations.at(i).hist
                  << " " << contaminations.at(i).intensity
                  << " " << contaminations.at(i).normalization
                  << " " << contaminations.at(i).hist.GetNrOfCounts()
               << std::endl;
-
-     double fact = contaminations.at(i).intensity * myProject->getExpHist()->GetNrOfCounts();
-         Histogram *tmpCont = new Histogram(contaminations.at(i).hist);
-         tmpCont->Normalize(fact);
-         recHist->Add(tmpCont, 1.0);
-         delete tmpCont;
+*/
+        if(contaminations.at(i).first == expSpectrumID)
+        {
+            double fact = contaminations.at(i).second.intensity * myProject->getExpHist()->GetNrOfCounts();
+            Histogram *tmpCont = new Histogram(contaminations.at(i).second.hist);
+            tmpCont->Normalize(fact);
+            recHist->Add(tmpCont, 1.0);
+            delete tmpCont;
+        }
     }
 
     float norm = myProject->getExpHist()->GetNrOfCounts();
@@ -849,53 +945,70 @@ void MainWindow::WriteTableData(QTableWidget* table, int row, int column, string
                 table->item(row, column)->setText(QString::fromStdString(item));
 }
 
+void MainWindow::ClearTable(QTableWidget* table)
+{
+    const QSignalBlocker blocker(table);
+    table->clear();
 
+}
 void MainWindow::slotUpdateContaminationPanel()
 {
     Project* myProject = Project::get();
+    ClearTable(ui->tableContamination);
+    int expSpectrumID = std::stoi(myProject->getExpSpecID());
 
     QStringList header;
     header << "File Name" << "Norm (%)" << "free param" << "histID" ;
     ui->tableContamination->setHorizontalHeaderLabels(header);
 
 
-    std::vector<Contamination> contaminations = *(myProject->getContaminations());
-    {
+//    std::vector< std::pair<int, Contamination> > contaminations = *(myProject->getContaminations());
+    std::vector<Contamination> contaminations = myProject->getContaminationsSpecID(expSpectrumID);
     string str;
+  //  int row = 0;
 //    std:: cout << "contaminations size " << contaminations.size() << endl;
-    for(unsigned int row = 0; row != contaminations.size(); ++row )
+    for(unsigned int con = 0; con != contaminations.size(); ++con )
     {
-        for (int column = 0; column != 4; ++column)
-        {
-            if (column == 0) {
-                string fileName = contaminations.at(row).filename;
-                int dirLength = myProject->getWorkingDir().length();
-                if (fileName.substr(0,dirLength) == myProject->getWorkingDir()){
-                    int a = dirLength -   fileName.length();
-                str = contaminations.at(row).filename.substr(dirLength,a) + ".his" ;
-//            cout << "fileName : " <<fileName;
-//            cout << "dirLength: " << dirLength;
-//            cout << "filename-str: " << str;
+  //      if(contaminations.at(con).first == expSpectrumID)
+            for (int column = 0; column != 4; ++column)
+            {
+                if (column == 0) {
+//                    string fileName = contaminations.at(con).second.filename;
+                    string fileName = contaminations.at(con).filename;
+                    int dirLength = myProject->getWorkingDir().length();
+                    if (fileName.substr(0,dirLength) == myProject->getWorkingDir()){
+                        int a = dirLength -   fileName.length();
+//                    str = contaminations.at(con).second.filename.substr(dirLength,a) + ".his" ;
+                    str = contaminations.at(con).filename.substr(dirLength,a) + ".his" ;
+    //            cout << "fileName : " <<fileName;
+    //            cout << "dirLength: " << dirLength;
+    //            cout << "filename-str: " << str;
+                    }
+//                    else {str = contaminations.at(con).second.filename;}
+                    else {str = contaminations.at(con).filename;}
                 }
-                else {str = contaminations.at(row).filename;}
+
+//                if (column == 3) str = std::to_string(contaminations.at(con).second.id);
+//                if (column == 1) str = std::to_string(contaminations.at(con).second.intensity*100) ;
+//                if (column == 2) str =contaminations.at(con).second.GetIntensityFitFlag() ? "true" : "false";
+                if (column == 3) str = std::to_string(contaminations.at(con).id);
+                if (column == 1) str = std::to_string(contaminations.at(con).intensity*100) ;
+                if (column == 2) str =contaminations.at(con).GetIntensityFitFlag() ? "true" : "false";
+                cout << "string to be added" << str << endl;
+                WriteTableData(ui->tableContamination, con, column, str);
+    //            row++;
             }
+    }
 
-            if (column == 3) str = std::to_string(contaminations.at(row).id);
-            if (column == 1) str = std::to_string(contaminations.at(row).intensity*100) ;
-            if (column == 2) str =contaminations.at(row).GetIntensityFitFlag() ? "true" : "false";
-            cout << "string to be added" << str << endl;
-            WriteTableData(ui->tableContamination, row, column, str);
-        }
-    }
-    }
+/*    //It probably works only if expSpectrumID contaminations are first in .tas file!!!!
+    int k=0;
     for(unsigned int row = 0; row != contaminations.size(); ++row )
-     {
-      for (int column = 0; column != 4; ++column)
-        {
-            slotUpdateContaminationData(row, column);
-        }
-     }
-
+//        if(contaminations.at(row).first == expSpectrumID)
+            for (int column = 0; column != 4; ++column){
+                slotUpdateContaminationData(row, column);
+            k++;
+            }
+*/
 }
 
 
@@ -906,55 +1019,55 @@ void MainWindow::slotUpdateContaminationData(int xtab, int ytab)
     int row = xtab;
     int column = ytab;
     string str = slotReadTableData(ui->tableContamination, row, column);
-    std::vector<Contamination> contaminations = *(myProject->getContaminations());
+    std::vector< std::pair<int, Contamination> > contaminations = *(myProject->getContaminations());
     bool readNewSpectrum_ = false;
     if (column == 0)
     {
-        if (str != contaminations.at(row).filename)
+        if (str != contaminations.at(row).second.filename)
         {
-          contaminations.at(row).filename = str;
+          contaminations.at(row).second.filename = str;
           readNewSpectrum_ = true;
          }
     }
     else if (column == 1)
     {
-        if (str != std::to_string(contaminations.at(row).intensity*100))
+        if (str != std::to_string(contaminations.at(row).second.intensity*100))
         {
-           contaminations.at(row).intensity = stof(str)/100;
-           double value = contaminations.at(row).intensity * myProject->getExpHist()->GetNrOfCounts();
-           contaminations.at(row).normalization =  value;
+           contaminations.at(row).second.intensity = stof(str)/100;
+           double value = contaminations.at(row).second.intensity * myProject->getExpHist()->GetNrOfCounts();
+           contaminations.at(row).second.normalization =  value;
         }
     }
     else if (column == 3)
         {
-           if (str != std::to_string(contaminations.at(row).id))
+           if (str != std::to_string(contaminations.at(row).second.id))
            {
-            contaminations.at(row).id = stoi(str);
+            contaminations.at(row).second.id = stoi(str);
             readNewSpectrum_ = true;
            }
         }
     else if (column == 2)
         {
-            if(str != std::to_string(contaminations.at(row).GetIntensityFitFlag()))
+            if(str != std::to_string(contaminations.at(row).second.GetIntensityFitFlag()))
             {
                 bool flag;
-                if (str == "true")flag = true;
-                if (str == "flase")flag = false;
-                contaminations.at(row).SetIntensityFitFlag(flag);
+                if (str == "true") flag = true;
+                if (str == "false") flag = false;
+                contaminations.at(row).second.SetIntensityFitFlag(flag);
             }
         }
      else   std::cout << "ERROR IN TABLE " << std::endl;
 
 
-    myProject->setOneContamination(row,contaminations.at(row)); // zmiana contaminations w myProject
+    myProject->setOneContamination(row,contaminations.at(row).second); // zmiana contaminations w myProject
 
     if (readNewSpectrum_)
     {
-       string fileName = contaminations.at(row).filename;
-        int histId =contaminations.at(row).id;
+       string fileName = contaminations.at(row).second.filename;
+        int histId =contaminations.at(row).second.id;
         Histogram *tmpHist = new Histogram(fileName,histId);
-        contaminations.at(row).hist = *tmpHist;
-        myProject->setOneContamination(row,contaminations.at(row)); // efektywniezmiana widma w contaminations w myProject
+        contaminations.at(row).second.hist = *tmpHist;
+        myProject->setOneContamination(row,contaminations.at(row).second); // efektywniezmiana widma w contaminations w myProject
         delete tmpHist;
         readNewSpectrum_ =false;
     }
@@ -970,12 +1083,12 @@ void MainWindow::slotContaminationTableClicked(int row, int column)
         Project* myProject = Project::get();
 
         string str = slotReadTableData(ui->tableContamination, row, column);
-        std::vector<Contamination>* contaminations_ = myProject->getContaminations();
+        std::vector< std::pair<int, Contamination> >* contaminations_ = myProject->getContaminations();
         bool flag;
-        if (str == "true")flag = true;
-        if (str == "false")flag = false;
+        if (str == "true") flag = true;
+        if (str == "false") flag = false;
         flag = !flag;
-        contaminations_->at(row).SetIntensityFitFlag(flag);
+        contaminations_->at(row).second.SetIntensityFitFlag(flag);
     const QSignalBlocker blocker(ui->tableContamination);
     ui->tableContamination->setItem(row, 2, new QTableWidgetItem(flag ? "true" : "false"));
 //    ui->tableContamination->setItem(row, 2, new QTableWidgetItem(flag ? "1" : "0"));
@@ -1003,6 +1116,7 @@ void MainWindow::slotUpdateProjectPanel(bool checked)
     ui->lineEditFitLevelsTo->setText(QString::number(myProject->getFitLevelsTo()));
     ui->lineEditFitLambda->setText(QString::number(myProject->getFitLambda()));
     ui->lineEditNoFitIterations->setText(QString::number(myProject->getNoFitIterations()));
+    ui->lineEditFitBinning->setText(QString::number(myProject->getFitBinning()));
 
 }
 
@@ -1013,6 +1127,9 @@ void MainWindow::slotProjectExpFileUpdate()  {Project* myProject = Project::get(
 void MainWindow::slotProjectExpSpecIDUpdate()  {Project* myProject = Project::get();
                                                 myProject->setExpSpecID(ui->lineExpSpecID->text().toUtf8().constData());
                                                 myProject->setExpHist();
+                                                emit signalUpdateContaminationPanel();
+                                                emit signalUpdateDecSpec();
+                                                slotCalculateTotalRECSpectrum();
                                                 emit signalUpdateSpecPlot();}
 void MainWindow::slotProjectExp2DSpecIDUpdate()  {Project* myProject = Project::get(); myProject->setExp2DSpecID(ui->lineExp2DSpecID->text().toUtf8().constData()); }
 void MainWindow::slotProjectInputDecayFileUpdate()  {Project* myProject = Project::get(); myProject->setInputDecayFile(ui->lineInputDecayFile->text().toUtf8().constData()); }
@@ -1026,7 +1143,11 @@ void MainWindow::slotProjectFitLevelsFrom() {Project* myProject = Project::get()
 void MainWindow::slotProjectFitLevelsTo() {Project* myProject = Project::get(); myProject->setFitLevelsTo(ui->lineEditFitLevelsTo->text().toDouble()); }
 void MainWindow::slotProjectFitLambda() {Project* myProject = Project::get(); myProject->setFitLambda(ui->lineEditFitLambda->text().toDouble()); }
 void MainWindow::slotProjectNoFitIterations() {Project* myProject = Project::get(); myProject->setNoFitIterations(ui->lineEditNoFitIterations->text().toInt()); }
-
+void MainWindow::slotProjectFitBinning()
+{
+    Project* myProject = Project::get();
+    myProject->setFitBinning(ui->lineEditFitBinning->text().toInt());
+}
 
 void MainWindow::slotUpdateSpecPlot()
 {
@@ -1137,7 +1258,7 @@ void MainWindow::slotUpdateSpecPlot()
         //Histogram* decHist1 = myProject->getDecHist();
         QVector<double> x3 = QVector<double>::fromStdVector(myProject->getDecHist()->GetEnergyVectorD());
         QVector<double> y3 = QVector<double>::fromStdVector(myProject->getDecHist()->GetAllDataD());
-        ui->specPlot->graph(1)->setData(x, y3);
+        ui->specPlot->graph(1)->setData(x3, y3);
     }
 
 
@@ -1159,32 +1280,31 @@ void MainWindow::slotUpdateSpecPlot()
         ui->specPlot->graph(2)->selectable();
         ui->specPlot->graph(2)->selectionDecorator()->setPen(QPen(Qt::yellow));
     }
-    std::vector<Contamination>* contaminations = myProject->getContaminations();
+    std::vector< std::pair<int, Contamination> >* contaminations = myProject->getContaminations();
+    int expSpectrumID = std::stoi(myProject->getExpSpecID());
+    int k =0;
     for (unsigned int i = 0; i !=  contaminations->size(); i++)
     {
+        if(contaminations->at(i).first == expSpectrumID)
+        {
+            Histogram tmpHist = contaminations->at(i).second.hist;
+            double norm = contaminations->at(i).second.intensity * myProject->getExpHist()->GetNrOfCounts();
+            tmpHist.Normalize(norm); // ,xMin,xMax);
+            QVector<double> x4 = QVector<double>::fromStdVector(tmpHist.GetEnergyVectorD());
+            QVector<double> y4 = QVector<double>::fromStdVector(tmpHist.GetAllDataD());
 
-        Histogram tmpHist = contaminations->at(i).hist;
-        //double xMax = tmpHist.GetXMax();
-        //double xMin = tmpHist.GetXMin();
-        //double aa = contaminations->at(i).intensity * 1;
-//        std::cout << "INtensity przed normalize w plot: " << aa << endl;
-//MS July 2020        double norm = contaminations.at(i)->intensity * expHist->GetNrOfCounts();  //expHist->GetNrOfCounts(xMin,xMax);
-        double norm = contaminations->at(i).intensity * myProject->getExpHist()->GetNrOfCounts();
-        tmpHist.Normalize(norm); // ,xMin,xMax);
-        QVector<double> x4 = QVector<double>::fromStdVector(tmpHist.GetEnergyVectorD());
-        QVector<double> y4 = QVector<double>::fromStdVector(tmpHist.GetAllDataD());
-
-        ui->specPlot->addGraph();
-// set style for the graph
-        string conName ="Contamination " + std::to_string(i+1);
-        ui->specPlot->graph(i+3)->setName(QString::fromStdString(conName));
-        ui->specPlot->graph(i+3)->setPen(bluePen);
-        ui->specPlot->graph(i+3)->setLineStyle(QCPGraph::LineStyle::lsStepCenter);
-        ui->specPlot->graph(i+3)->selectable();
-        ui->specPlot->graph(i+3)->selectionDecorator()->setPen(QPen(Qt::yellow));
-// set data for the graph
-        ui->specPlot->graph(i+3)->setData(x4, y4);
-
+            ui->specPlot->addGraph();
+    // set style for the graph
+            string conName ="Contamination " + std::to_string(k+1);
+            ui->specPlot->graph(k+3)->setName(QString::fromStdString(conName));
+            ui->specPlot->graph(k+3)->setPen(bluePen);
+            ui->specPlot->graph(k+3)->setLineStyle(QCPGraph::LineStyle::lsStepCenter);
+            ui->specPlot->graph(k+3)->selectable();
+            ui->specPlot->graph(k+3)->selectionDecorator()->setPen(QPen(Qt::yellow));
+    // set data for the graph
+            ui->specPlot->graph(k+3)->setData(x4, y4);
+            k++;
+        }
     }
 
     // synchronize selection of graphs with selection of corresponding legend items:
@@ -1289,12 +1409,10 @@ void MainWindow::openProject(bool trigered)
 //    qDebug() << "Project file name: " << qfileName;
 
     if(qfileName.isEmpty()&& qfileName.isNull())
-    {
-    return;
-    }
+        return;
 
     myProject->New();
-    slotClearContaminations();
+    //slotClearContaminations();
 
     string sfileName = qfileName.toStdString();
     myProject->Open(sfileName);
@@ -1313,6 +1431,7 @@ void MainWindow::openProject(bool trigered)
     {
       int histId = stoi(IDVec.at(i));
       Histogram tmpHis = new Histogram(myProject->getExpFile(),histId);
+      //tmpHis.Rebin(10);
       myProject->addExpHist(histId,tmpHis);
     }
 
@@ -1336,13 +1455,15 @@ void MainWindow::openProject(bool trigered)
 //Eva SPRAWDZIC    //mk    expHist->Rebin(BinningController::getBinningFactor());//10keV/ch
 
      ContaminationController *contaminationController = new ContaminationController();
-     for (unsigned int i = 0; i !=  myProject->getInputContaminations().size(); i++){
-        string fileName = myProject->getInputContaminations().at(i).at(0) ;
-        int hisId = std::stoi(myProject->getInputContaminations().at(i).at(2));
-        double inten = std::stod(myProject->getInputContaminations().at(i).at(1));
+     for (unsigned int i = 0; i !=  myProject->getInputContaminations().size(); i++)
+     {
+         int expId = std::stoi(myProject->getInputContaminations().at(i).at(0));
+        string fileName = myProject->getInputContaminations().at(i).at(1);
+        int hisId = std::stoi(myProject->getInputContaminations().at(i).at(3));
+        double inten = std::stod(myProject->getInputContaminations().at(i).at(2));
         std::cout << "contam(file,ID): (" << fileName <<","<< hisId<< ")" << endl;
 
-        contaminationController->addContamination(QString::fromStdString(fileName), QString::number(hisId), QString::number(inten));
+        contaminationController->addContamination(QString::number(expId),QString::fromStdString(fileName), QString::number(hisId), QString::number(inten));
      }
      contaminationController->SaveAll();
      delete contaminationController;
@@ -1475,6 +1596,14 @@ void MainWindow::exportRecSpec(bool trigered)
     int histId = std::stoi(myProject->getExpSpecID());
     saveLevelResp(histId, fileName);  // All components should be included not ONLY simulated
 
+}
+
+void MainWindow::exportDecayInfo(bool triggered)
+{
+    QDir currentDir = QDir::current();
+    string currentPath = currentDir.absolutePath().toStdString();
+    SaveDecayData* tempSaveDecayData = new SaveDecayData();
+    tempSaveDecayData->SaveGeneralDecayInfo(currentPath);
 }
 
 
@@ -1618,12 +1747,13 @@ void MainWindow::slotManualFit()
 //MS July 2020    QVector<double> y1 = QVector<double>::fromStdVector(expHist->GetAllDataD());
     QVector<double> y1 = QVector<double>::fromStdVector(myProject->getExpHist()->GetAllDataD());
     QVector<double> y2 = QVector<double>::fromStdVector(myProject->getRecHist()->GetAllDataD());
+    QVector<double> x2 = QVector<double>::fromStdVector(myProject->getRecHist()->GetEnergyVectorD());
     QVector<double> d12 = QVector<double>::fromStdVector(myProject->getDifHist()->GetAllDataD());
 
     string respType = "l";
     m1->setResponseType(respType);
     m1->initializeGraphs();
-    m1->showDataExpSimDiff(x, y1, y2, d12);
+    m1->showDataExpSimDiff(x, y1, x2, y2, d12);
     m1->showResponseFunctions();
 
     m1->show();
@@ -1643,13 +1773,14 @@ void MainWindow::updateHistogram()
         QVector<double> x = QVector<double>::fromStdVector(myProject->getExpHist()->GetEnergyVectorD());
     //MS July 2020    QVector<double> y1 = QVector<double>::fromStdVector(expHist->GetAllDataD());
         QVector<double> y1 = QVector<double>::fromStdVector(myProject->getExpHist()->GetAllDataD());
+        QVector<double> x2 = QVector<double>::fromStdVector(myProject->getRecHist()->GetEnergyVectorD());
         QVector<double> y2 = QVector<double>::fromStdVector(myProject->getRecHist()->GetAllDataD());
         QVector<double> d12 = QVector<double>::fromStdVector(myProject->getDifHist()->GetAllDataD());
 
         string respType = "l";
         m1->setResponseType(respType);
         m1->initializeGraphs();
-        m1->showDataExpSimDiff(x, y1, y2, d12);
+        m1->showDataExpSimDiff(x, y1, x2, y2, d12);
         m1->showResponseFunctions();
 
     //-----spectra display code ------
@@ -1736,9 +1867,11 @@ void MainWindow::slot1DFittingMethod(QString method)
         break;
     }
     case 2 : {
+        Project* myProject = Project::get();
         ui->labelFittingMethod->setText("Bayesian multi spec");
         ui->lineEditFitHistId->setEnabled(true);
         ui->labelFitHistId->setEnabled(true);
+        ui->lineEditFitHistId->setText( QString::fromStdString(myProject->getExpSpecID()) );
         break;
     }
     default : {

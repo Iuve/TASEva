@@ -358,14 +358,14 @@
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="labelGrandDaughteT12">
+        <widget class="QLabel" name="labelGrandDaughterT12">
          <property name="text">
           <string>T1/2 : </string>
          </property>
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="labelGranDaughterQvalue">
+        <widget class="QLabel" name="labelGrandDaughterQValue">
          <property name="text">
           <string>Q : </string>
          </property>

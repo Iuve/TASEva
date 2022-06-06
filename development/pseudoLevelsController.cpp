@@ -37,14 +37,23 @@ PseudoLevelsController::~PseudoLevelsController()
 void PseudoLevelsController::createIntensityMethodList()
 {
     intensityMethodList_.clear();
+    intensityMethodListToolTip_.clear();
     intensityMethodList_.push_back("--choose--");
+    intensityMethodListToolTip_.push_back("");
     intensityMethodList_.push_back("Equal");
+    intensityMethodListToolTip_.push_back("All intensities are equal");
     intensityMethodList_.push_back("AllE1");
+    intensityMethodListToolTip_.push_back("All intensitites are of E1 type");
     intensityMethodList_.push_back("AllE2");
+    intensityMethodListToolTip_.push_back("All intensitites are of E2 type");
     intensityMethodList_.push_back("AllM1");
+    intensityMethodListToolTip_.push_back("All intensitites are of M1 type");
     intensityMethodList_.push_back("AllM2");
+    intensityMethodListToolTip_.push_back("All intensitites are of M2 type");
     intensityMethodList_.push_back("87Br");
+    intensityMethodListToolTip_.push_back("");
     intensityMethodList_.push_back("ModelM1"); // no pseudo lvls, but deexcitation model
+    intensityMethodListToolTip_.push_back("");
 
     Project *myProject = Project::get();
     if( myProject->getCustomTransitionIntensities()->size() )

@@ -22,6 +22,7 @@ public:
     virtual ~FermiDistribution();
 
     double GetRandomBetaEnergy();
+    double GetAverageBetaEnergy(){return averageBetaEnergy_;}
 private:
     void CalculateBetaEnergyDistribution();
     double FindProbabilityDensityValue(double x);
@@ -32,7 +33,8 @@ private:
     
     
     std::vector<double> betaEnergy_;
-    std::vector<double> energProbability_; 
+    std::vector<double> energProbability_;
+    double averageBetaEnergy_;
     
     int nrOfSteps_ ;
     

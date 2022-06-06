@@ -9,7 +9,8 @@
 //class Transition;
 /*
   Maximum entropy method taken from J.L.Tain, D. Cano-Ott, NIM 571 (2007) 728-738
-  TODO move it to separate class
+
+  Bayesian method taken from P.Shuai et al. (2021)
   */
 
 class FitController : public QWidget
@@ -19,29 +20,34 @@ public:
     explicit FitController();
     std::vector <float> getBetaIntensities() ;
     std::vector<float> getErrors();
-    void applyFit (Histogram* expHist);
+    void applyMaximumLikelyhoodFit (Histogram* expHist);
+    void applyBayesianFit (std::vector< std::pair<Histogram*, int> > bayesianHistograms);
+    double GetAverageBetaEnergy(){return averageBetaEnergy_;}
 
 signals:
 
 public slots:
 private:
     void prepareExperiment(Histogram* expHist);
-    void prepareLevelsPart();
-    void prepareContaminationPart();
+    void prepareLevelsPart(int simID);
+    void prepareContaminationPart(std::vector< std::pair<int, Contamination> > contaminations, int hisID);
     void normalizeToExperiment();
-    void makeFit();
-    float findNormalisation();
+    void BinForFitting();
+    void makeLikelyhoodFit();
+    void makeBayesianFit();
     void findErrors();
     void notifyContaminations();
     void notifyDecay();
 
     double minEnergy;
     double maxEnergy;
+    double averageBetaEnergy_;
     //double minLevelEn;
     //double maxLevelEn;
     double expNorm;
     double lambda;
-    int histId;
+    int binning;
+    int expHistId;
     int nrOfIterations;
     int nrOfLevels;
     int nrOfContaminations;
@@ -55,8 +61,13 @@ private:
     std::vector<Transition*> transitionsUsed;
     vector<bool> intensityFitFlags;
     double normalizationFactor_;
-    double feedingsToFitSum_;
 
+    vector< vector< vector<float> > > bayesianResponses;
+    vector< vector<float> > bayesianFeedings;
+    vector< vector<float> > bayesianExperiments;
+    vector<double> bayesianNormalizationFactors;
+    vector<double> bayesianExpNorms;
+    vector<double> bayesianContaminationNormalization;
 };
 
 #endif // FITCONTROLLER_H

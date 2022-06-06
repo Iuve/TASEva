@@ -5,11 +5,12 @@
 #include "ui_DecayPathEditor.h"
 #include "tablecontroller.h"
 #include "responsefunction.h"
+#include "PeriodicTable.hh"
 
 #include "QDebug"
 #include <QDialog>
 #include <QInputDialog>
-
+#include <QAction>
 
 
 class DialogOptionsWidget;
@@ -32,6 +33,8 @@ DecayPathEditor::DecayPathEditor(QWidget *parent) :
     connect(uiT->tableGrandDaughterLevels->verticalHeader(), SIGNAL(sectionDoubleClicked(int)), this, SLOT(slotEditGDTransitions(int)));
 
 //EVa     connect(uiT->tableFeeding, SIGNAL(cellChanged(int,int)),  SLOT(slotUpdateFeedingData(int,int)) );
+    connect(uiT->tableDaughterLevels, SIGNAL(cellClicked(int,int)), this, SLOT(slotDaughterTableCellClicked(int,int)));
+    connect(uiT->tableDaughterLevels, SIGNAL(cellChanged(int,int)), this, SLOT(slotDaughterTableChanged(int,int)));
     connect(uiT->buttonClose, SIGNAL(clicked(bool)), this, SLOT(close()));
     connect(uiT->buttonNormBetaFeeding, SIGNAL(clicked(bool)), this, SLOT(slotNormalizeBetaIntensity()));
     connect(uiT->buttonAddLevel, SIGNAL(clicked(bool)), this, SLOT(slotAddLevelEI()));
@@ -46,14 +49,20 @@ DecayPathEditor::DecayPathEditor(QWidget *parent) :
 
 //Mouse right click actions
     setContextMenuPolicy(Qt::ActionsContextMenu);
+    QAction* FittingStatusTrueAction_ = new QAction("Set Fitting status TRUE");
+    QAction* FittingStatusFalseAction_ = new QAction("Set Fitting status FALSE");
     QAction* levelAddAction = new QAction("Add level");
     QAction* levelRemoveAction = new QAction("Remove level");
     QAction* normAction = new QAction("Norm. Beta intensity");
     QAction* closeAction = new QAction("Cancel");
+    connect(FittingStatusTrueAction_, SIGNAL(triggered()), this, SLOT(slotFittingStatusTrue()));
+    connect(FittingStatusFalseAction_, SIGNAL(triggered()), this, SLOT(slotFittingStatusFalse()));
     connect(normAction, SIGNAL(triggered()), this, SLOT(slotNormalizeBetaIntensity()));
     connect(levelAddAction, SIGNAL(triggered()), this, SLOT(slotAddLevelEI()));
     connect(levelRemoveAction, SIGNAL(triggered()), this, SLOT(slotRemoveLevel()));
     connect(closeAction, SIGNAL(triggered()), this, SLOT(close()));
+    addAction(FittingStatusTrueAction_);
+    addAction(FittingStatusFalseAction_);
     addAction(normAction);
     addAction(levelAddAction);
     addAction(levelRemoveAction);
@@ -67,25 +76,13 @@ DecayPathEditor::DecayPathEditor(QWidget *parent) :
     uiT->linePseudoLevEnMax->setText(QString::number(pseudoLevelEnergyMax_));
     uiT->linePseudoLevTotInten->setText(QString::number(pseudoLevelTotInten_));
 
-
-    //Initialising Levels tables MOther,Daughter,GrandDaughter
     uiT->tableMotherLevels->setMinimumHeight(150);
     uiT->tableDaughterLevels->setMinimumHeight(150);
     uiT->tableGrandDaughterLevels->setMinimumHeight(150);
-// Setting Labels
-    //Mother
-    uiT->labelMotherIsotope->setText("Isotope : ");
-    uiT->labelMotherT12->setText("T1/2 :");
-    uiT->labelMotherQvalue->setText("QBeta (keV) : ");
-    uiT->labelMotherSpinParity->setText("I : ");
-    //Daughter
-    uiT->labelDaughterIsotope->setText("Isotope : ");
-    uiT->labelDaughterT12->setText("T1/2 :");
-    uiT->labelDaughterQvalue->setText("QBeta (keV) : ");
-    //GrandDaughter
-    uiT->labelGrandDaughterIsotope->setText("Isotope : ");
-    uiT->labelGrandDaughteT12->setText("T1/2 :");
-    uiT->labelGranDaughterQvalue->setText("QBeta (keV) : ");
+
+
+//    InitLabels();
+    boolDaughterTableDataInitialised = true;
 }
 
 DecayPathEditor::~DecayPathEditor()
@@ -97,6 +94,43 @@ DecayPathEditor::~DecayPathEditor()
 }
 
 
+void DecayPathEditor::InitLabels()
+{
+    //Initialising Levels tables MOther,Daughter,GrandDaughter
+
+    DecayPath* decayPath= DecayPath::get();
+
+    for (unsigned int i=1; i<3; i++)
+    {
+    std::vector<Nuclide>* nuclides_=decayPath->GetAllNuclides();
+    std::vector<Level>* levels_ = nuclides_->at(i).GetNuclideLevels();
+    int atomicNumber_ = nuclides_->at(i).GetAtomicNumber();
+    QString QAtomicNumber = QString::number(atomicNumber_);
+    QString QMassNumber = QString::number(nuclides_->at(i).GetAtomicMass());
+    QString QElementName = QString::fromStdString(PeriodicTable::GetAtomicName(atomicNumber_));
+    QString QQBeta = QString::number(nuclides_->at(i).GetQBeta());
+
+// Setting Labels
+    //Mother
+    if( i == 0)
+    {
+    uiT->labelMotherIsotope->setText("Isotope : " +QElementName+"-"+QMassNumber);
+    uiT->labelMotherT12->setText("T1/2 :");
+    uiT->labelMotherQvalue->setText("QBeta (keV) : "+QQBeta);
+    uiT->labelMotherSpinParity->setText("I : ");
+    } else if (i==1)
+    {//Daughter
+    uiT->labelDaughterIsotope->setText("Isotope : ");
+    uiT->labelDaughterT12->setText("T1/2 :");
+    uiT->labelDaughterQvalue->setText("QBeta (keV) : ");
+    } else if (i==2)
+        {//GrandDaughter
+    uiT->labelGrandDaughterIsotope->setText("Isotope : ");
+    uiT->labelGrandDaughterT12->setText("T1/2 :");
+    uiT->labelGrandDaughterQValue->setText("QBeta (keV) : ");
+    }
+    }
+}
 void DecayPathEditor::setComboBoxMethod()
 {
     vector<string> methodList = pseudoLevelsController_->getIntensityMethodList();
@@ -122,6 +156,8 @@ void DecayPathEditor::slotAddPseudoLevel()
 {
 //    gammaIntensityMethod_ = pseudoLevelsController_->getIntensityMethod();
     cout << "method: " <<  gammaIntensityMethod_ << endl;
+
+    ResponseFunction* responseFunction = ResponseFunction::get();
 
     slotUpdatePseudoLevelData();
 
@@ -150,6 +186,7 @@ void DecayPathEditor::slotAddPseudoLevel()
    pseudoLevelsController_->addPseudoLevels(pseudoLevelEnergyStep_,pseudoLevelEnergyMin_,pseudoLevelEnergyMax_,
                                           pseudoLevelTotInten_, gammaIntensityMethod_);
    emit signalDecayPathEdited();
+   responseFunction->UpdateStructure();
    emit signalUpdateTables();
 
 
@@ -217,14 +254,15 @@ void DecayPathEditor::slotAddLevelEI()
     std::cout << "LevelEditor::slotAddLevel" << std::endl;
     bool ok;
     DecayPath* decayPath = DecayPath::get();
+    ResponseFunction* responseFunction = ResponseFunction::get();
     int tabIndex = uiT->tabDecay->currentIndex();
     double QValue;
     //if(tabIndex >0)QValue = decayPath->GetAllNuclides()->at(tabIndex-1).GetNuclideLevels()->at(0).GetTransitions()->at(0)->GetTransitionQValue();
     if(tabIndex >0) QValue = decayPath->GetAllNuclides()->at(tabIndex-1).GetQBeta();
-    if(tabIndex == 0) QValue = 20000; //setting largeenough to have all decaing isomers in mothernuclei
+    if(tabIndex == 0) QValue = 20000; //setting largeenough to have all decaying isomers in mothernuclei
 
     QString text = QInputDialog::getText(this, tr("New Level"),
-                                          tr("Energy(keV : Intensity(%)"), QLineEdit::Normal,
+                                          tr("Energy(keV : Feeding Intensity(%)"), QLineEdit::Normal,
                                           "energy:intensity", &ok);
     QStringList stringList= text.split(":",QString::SkipEmptyParts);
 
@@ -253,13 +291,14 @@ void DecayPathEditor::slotAddLevelEI()
     decayPath->GetAllNuclides()->at(tabIndex).AddLevelEI(energy,intensity/100.);
 
     emit signalDecayPathEdited();
+    responseFunction->UpdateStructure();
     emit signalUpdateTables();
 
 }
 
 void DecayPathEditor::slotNormalizeBetaIntensity()
 {
-    std:cout << "LevelEditor::slotNormalizeBetaIntensity" << std::endl;
+    std::cout << "LevelEditor::slotNormalizeBetaIntensity" << std::endl;
 
     DecayPath* decayPath= DecayPath::get();
     ResponseFunction* responseFunction = ResponseFunction::get();
@@ -383,8 +422,13 @@ void DecayPathEditor::slotEditTransitions(int tableIndex, int rowIndex)
         cout << "row INdex: "  << rowIndex << endl;
     std::vector<Level>* levels_ = nuclides_->at(tableIndex).GetNuclideLevels();
     QString QEnergy_ = QString::number(levels_->at(rowIndex).GetLevelEnergy());
-    QString qstr = "Transtion Editor for Level: "+ QEnergy_ + "keV in Z="
-                    + nuclides_->at(tableIndex).GetAtomicNumber()  + " nuclide";
+    int atomicNumber_ = nuclides_->at(tableIndex).GetAtomicNumber();
+    QString QAtomicNumber = QString::number(atomicNumber_);
+    QString QMassNumber = QString::number(nuclides_->at(tableIndex).GetAtomicMass());
+    QString QElementName = QString::fromStdString(PeriodicTable::GetAtomicName(atomicNumber_));
+    QString qstr = "Transtion Editor for Level: "+ QEnergy_ + " keV in "
+            + QElementName + "-" +QMassNumber +
+            " (Z= "+  QAtomicNumber + ") nuclide";
 //    g1->setTransitionLabel("TEst");
 
     g1->setTransitionLabel(qstr);
@@ -431,4 +475,81 @@ void DecayPathEditor::slotUpdateTablesForward()
     emit signalUpdateTables();
 }
 
+void DecayPathEditor::setColumnStatus(bool status, int column)
+{
+//similar to setColumnStatus in ManualFitGraph
+    QTableWidget *pointerToTable_ = 0L;
+    pointerToTable_ = uiT->tableDaughterLevels;
 
+    QModelIndexList selection = pointerToTable_->selectionModel()->selectedRows();
+
+    for(int i=0; i< selection.count(); i++)
+    {
+        QModelIndex index = selection.at(i);
+//        pointerToTable_->setItem(index.row(),column, new QTableWidgetItem(status ? "true": "false"));
+        slotStatusClicked(status, index.row(),column);
+    }
+
+}
+void DecayPathEditor::slotStatusClicked(bool status, int row, int column)
+{
+     QTableWidget *pointerToTable_ = 0L;
+     QTableWidgetItem* tempQTableWidgetItem = new QTableWidgetItem(status ? "true" : "false");
+     pointerToTable_ = uiT->tableDaughterLevels;
+     if(column == 2){
+     pointerToTable_->setItem(row, 2, tempQTableWidgetItem);
+     pointerToTable_->show();
+    }
+
+    //delete tempQTableWidgetItem;
+}
+void DecayPathEditor::slotDaughterTableCellClicked(int row, int column)
+{
+    bool status;
+    if(column ==0)
+    { return;
+    } else if(column ==2 ){
+        QString qstatus = uiT->tableDaughterLevels->item(row,column)->text();
+        if(qstatus == "true") status = false;
+        if(qstatus == "false") status = true;
+      slotStatusClicked(status, row, column);
+    }}
+
+void DecayPathEditor::slotDaughterTableChanged(int row,int column)
+{
+    if(boolDaughterTableDataInitialised){
+
+        ResponseFunction* responseFunction = ResponseFunction::get();
+
+        DecayPath* decayPath= DecayPath::get();
+        std::vector<Nuclide>* nuclides_ = decayPath->GetAllNuclides();
+        std::vector<Level>* motherLevels_ = nuclides_->at(0).GetNuclideLevels();
+        std::vector<Transition*>* betaTransitions = motherLevels_->at(0).GetTransitions();
+
+
+        QString qstr = uiT->tableDaughterLevels->item(row,column)->text();
+        string str = qstr.toUtf8().constData();
+        if(column==0){ //Energy
+            return;
+         } else if (column==1){ //BetaFeeding
+            double feeding = qstr.toDouble()/100;
+
+            betaTransitions->at(row)->ChangeIntensity(feeding);
+            responseFunction->ChangeContainerDaughterLevelIntensity( betaTransitions->at(row)->GetPointerToFinalLevel(), feeding );
+            responseFunction->RefreshFlags();
+                    return;
+        }  else if(column==2){
+            if(qstr=="true")betaTransitions->at(row)->SetIntensityFitFlag(true);
+            if(qstr=="false")betaTransitions->at(row)->SetIntensityFitFlag(false);
+            return;
+        }  else if(column==3) {
+                    return;
+        }  else if(column==4) {
+                    return;
+        }else {
+
+            return;
+        }
+
+    }
+}

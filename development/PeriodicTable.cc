@@ -65,3 +65,10 @@ std::string PeriodicTable::GetAtomicNameCap(int atomicNumber)
 		std::cout << "PeriodicTable::getAtomicNameCap - invalid agrument" << std::endl;
 	return elementsCap[atomicNumber - 1];
 }
+std::string PeriodicTable::GetAtomicName(int atomicNumber)
+{
+    if (atomicNumber < 1 || atomicNumber > nrOfElements)
+//		throw new Exception("PeriodicTable::getAtomicNameCap - invalid agrument");
+        std::cout << "PeriodicTable::getAtomicNameCap - invalid agrument" << std::endl;
+    return elements[atomicNumber - 1];
+}

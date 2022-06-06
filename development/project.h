@@ -31,6 +31,7 @@ public:
     string getExpFile() {return expFile_;}         /**< Experimental HIS File Name */
     string getExpSpecID() {return expSpecID_;}     /**< MTAS Total Spetrum ID from Experimental HIS File*/
     vector<string> getExpSpecIDVec() {return expSpecIDVec_;}
+    void addExpSpecID(string id) {expSpecIDVec_.push_back(id);}
     string getExp2DSpecID() {return exp2DSpecID_;} /**< 2D spectrum ID for 2D fit */
     string getInputDecayFile() {return inputDecayFile_;}   /**<  Decay path data file name  */
     string getOutputDecayFile() {return outputDecayFile_;}  /**< Levelscheme output file  */
@@ -39,11 +40,13 @@ public:
     string getCodeGEANTName() {return codeGEANT_ ;}        /**< GEANT4 simulation program file name to be used */
 //c    string contamination(int row, int column) {return contamination_[row].at(column);} /**< Returns string value from the contamination table (fileName,normalization,SpecID) */
     vector<vector <string> > getInputContaminations() {return inputContamination_;} /**< Returns Contamination matrix  (vec(vec()) */
+    //vector<vector <string> > getInputContaminationsBayesian() {return inputContaminationBayesian_;}
     double getFitEnergyFrom() { return fitEnergyFrom_ ;}
     double getFitEnergyTo() { return fitEnergyTo_ ;}
     double getFitLevelsFrom() {return fitLevelsFrom_ ;}
     double getFitLevelsTo() {return fitLevelTo_ ;}
     double getFitLambda() {return fitLambda_ ;}
+    int getFitBinning() {return fitBinning_ ;}
     int getNoFitIterations() {return noFitIterations_ ;}
     Histogram* getExpHist() {return &expHist_;}
     Histogram* getExp2DHist() {return &exp2DHist_;}
@@ -52,9 +55,9 @@ public:
     Histogram* getDifHist() {return &difHist_;}
 //    vector<Histogram*> conHist() {return conHist_;}
 //    vector<double> getConNorm() {return conNorm_;}
-    std::vector<Contamination>* getContaminations() {return &contaminations_;}
+    std::vector< std::pair<int, Contamination> >* getContaminations() {return &contaminations_;}
 //Eva    Contamination* getOneContamination(int row) {return contaminations_.at(row);}
-
+    std::vector<Contamination> getContaminationsSpecID(int HistID);
     void removeContamination(QString name, QString id);
     void removeAllContaminations();
 
@@ -78,6 +81,7 @@ public:
     void setFitLevelsFrom(double d) {fitLevelsFrom_ =d;}
     void setFitLevelsTo(double d) {fitLevelTo_ = d;}
     void setFitLambda(double d) {fitLambda_ = d;}
+    void setFitBinning(int d) {fitBinning_ = d;}
     void setNoFitIterations(int i) {noFitIterations_ = i;}
     void setExpHist(Histogram h) {expHist_ = h;}
     void setExpHist();
@@ -87,8 +91,8 @@ public:
     void setDifHist(Histogram h) {difHist_ = h;}
 //Eva    void setConHist(vector<Histogram*> con) {conHist_ = con;}
 //Eva    void setConNorm(vector<double> vec) {conNorm_ = vec;}
-    void setContaminations(std::vector<Contamination> newContaminations ) {contaminations_ = newContaminations;}
-    void setOneContamination(int row, Contamination newContamination) {contaminations_.at(row) = newContamination;}
+    void setContaminations(std::vector< std::pair<int, Contamination> > newContaminations ) {contaminations_ = newContaminations;}
+    void setOneContamination(int row, Contamination newContamination) {contaminations_.at(row).second = newContamination;}
     void Open(string fileName);
     void set2DGate1Low(double d){gate1Low = d;}
     void set2DGate1High(double d){gate1High = d;}
@@ -121,7 +125,8 @@ public:
     void SetLastAutofitResults( std::vector< std::pair<double, double> > results ){ fitResults_ = results; }
     std::vector< std::pair<double, double> > GetLastAutofitResults(){ return fitResults_; }
     void addExpHist(int Id, Histogram hist);
-    Histogram getHistFromExpMap(int Id);
+    void replaceExpHistInMap(int Id, Histogram hist);
+    Histogram* getHistFromExpMap(int Id);
 
     //public slots:
     void New();
@@ -150,6 +155,7 @@ private:
     double fitLevelsFrom_;
     double fitLevelTo_;
     double fitLambda_;
+    int fitBinning_;
     int noFitIterations_;
     Histogram expHist_;
     Histogram exp2DHist_;
@@ -158,7 +164,7 @@ private:
     Histogram difHist_;
 //Evaout    vector<Histogram*> conHist_;
 //Evaout    vector<double> conNorm_;
-    std::vector<Contamination> contaminations_;
+    std::vector< std::pair<int, Contamination> > contaminations_;
     std::map<int,Histogram> expHistMap_;
     std::vector<double> customTransitionIntensities_;
 
@@ -182,12 +188,8 @@ private:
     // Gate2DOtherLevelsContribution_ = Gate2DNeutronLevelsContribution_ + OTHER
     Histogram Gate2DNeutronLevelsContribution_; //contribution from neutrons levels, all transitions
     Histogram Gate2DOtherLevelsContribution_;  //keeps contribution from levels of higier energy to the get set
-    // otherLevelsToFeedingsRatio_ = N_otherContributions / (N_otherContributions + N_simulation)
-    // gateNormFactor_ = (1 - otherLevelsToFeedingsRatio_) * N_experiment / N_simulation
-    // gateOtherLevelsNormFactor_ = otherLevelsToFeedingsRatio_ * N_experiment / N_otherContributions
-    // in a choosen energy gate
+
     double gateNormFactor_;
-    //double gateOtherLevelsNormFactor_;
     int binning2Dfactor_;
     int activeCoresForSimulation_;
 

@@ -16,7 +16,7 @@ class ManualFitGraph : public QWidget
 public:
     explicit ManualFitGraph(QWidget *parent = 0);
     ~ManualFitGraph();
-    void showDataExpSimDiff(QVector<double> x, QVector<double> y, QVector<double> y2, QVector<double> diff);
+    void showDataExpSimDiff(QVector<double> x, QVector<double> y, QVector<double> x2, QVector<double> y2, QVector<double> diff);
     double vectorMax(QVector<double> yM, double minEn, double maxEn);
     void setHeader(QStringList header);
     void setResponseType(string respType){respType_ =  respType;}
@@ -67,7 +67,7 @@ public slots:
     void signalRecalculateLevel();
 
 private:
-    QVector<double> x, y, y2, diff;
+    QVector<double> x, y,x2, y2, diff;
     std::vector<bool> displayStatus;
     bool  boolTableDataInitialised;
     Project* myProject;

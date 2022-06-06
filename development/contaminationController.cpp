@@ -6,8 +6,8 @@
 
 ContaminationController::ContaminationController()
 {
-    Project *myProject = Project::get();
-    contaminations_ = *(myProject->getContaminations());
+    //Project *myProject = Project::get();
+    //contaminations_ = *(myProject->getContaminations());
   /*    connect(contaminationPanel,
             SIGNAL(contaminationAdded(QString, QString, QString)),
             SLOT(addContamination(QString, QString, QString)));
@@ -22,8 +22,8 @@ ContaminationController::ContaminationController()
 
 ContaminationController::~ContaminationController()
 {
-    Project *myProject = Project::get();
-    myProject->setContaminations(contaminations_);
+    //Project *myProject = Project::get();
+    //myProject->setContaminations(contaminations_);
     cout << "Contaminations saved in ContaminationController destructor." << endl;
 //    contaminations_.clear();
 }
@@ -34,6 +34,7 @@ void ContaminationController::SaveAll()
        myProject->setContaminations(contaminations_);
        cout << "contaminations saved" << endl;
 }
+
 /*
 void ContaminationController::removeAll()
 {
@@ -97,8 +98,9 @@ Histogram* ContaminationController::getTotalContamination()
     return totalContamination;
 }
 */
-void ContaminationController::addContamination(QString name, QString id, QString intensity)
+void ContaminationController::addContamination(QString expID, QString name, QString id, QString intensity)
 {
+    int expIDvalue = expID.toInt();
     std::string filename = name.toStdString();
     int idValue = id.toInt();
     float intensityValue = intensity.toFloat()/100.;
@@ -118,7 +120,7 @@ void ContaminationController::addContamination(QString name, QString id, QString
     std::cout << "intensityValue: " <<test->intensity <<std::endl;
     std::cout << "Normalization: " <<test->normalization <<std::endl;
     std::cout << "histnr of counts: " << test->hist.GetNrOfCounts() <<std::endl;
-    contaminations_.push_back(*test);
+    contaminations_.emplace_back( expIDvalue, *test );
     std::cout << "size: " << contaminations_.size() << std::endl;
     std::cout << "----------------------------------" << std::endl;
 

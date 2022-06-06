@@ -65,6 +65,10 @@ public:
         std::cout << "I'm inside virtual GetShellElectronConversionCoefficient, that should never happen! Something went wrong." <<std::endl;
         return 0;
         }
+    virtual double GetAverageBetaEnergy() {
+        std::cout << "I'm inside virtual GetShellElectronConversionCoefficient, that should never happen! Something went wrong." <<std::endl;
+        return 0;
+        }
 
 private:
 	std::string particleType_;

@@ -487,6 +487,7 @@ void Analysis2D::slotShowGate1ExpVsSim(bool recalculateTransitions)
 
     QVector<double> x1 = QVector<double>::fromStdVector(fit2DController_->getExperimentalHistogram()->GetEnergyVectorD());
     QVector<double> y1 = QVector<double>::fromStdVector(fit2DController_->getExperimentalHistogram()->GetAllDataD());
+    QVector<double> x2 = QVector<double>::fromStdVector(fit2DController_->getRecalculatedHistogram()->GetEnergyVectorD());
     QVector<double> y2 = QVector<double>::fromStdVector(fit2DController_->getRecalculatedHistogram()->GetAllDataD());
     QVector<double> d12 = QVector<double>::fromStdVector(fit2DController_->getDiffHistogram()->GetAllDataD());
 
@@ -495,7 +496,7 @@ void Analysis2D::slotShowGate1ExpVsSim(bool recalculateTransitions)
     m1->setxMax(ui2D->lineDisplayXmax->text());
     m1->setxMin(ui2D->lineDisplayXmin->text());
     m1->initializeGraphs();
-    m1->showDataExpSimDiff(x1, y1, y2, d12);
+    m1->showDataExpSimDiff(x1, y1, x2, y2, d12);
     m1->showResponseFunctions();
 
 //-----spectra display code ------

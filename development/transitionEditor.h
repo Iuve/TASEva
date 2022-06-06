@@ -39,6 +39,9 @@ public slots:
     void slotRemoveTransition();
     void slotNormalizeTransitionIntensity();
      void slotFittingStatusClicked(int row, int column);
+     void slotFittingStatusTrue(){setColumnStatus(true, 3);}
+     void slotFittingStatusFalse(){setColumnStatus(false, 3);}
+     void setColumnStatus(bool status, int column);
      void slotTableChanged(int row, int column);
      void slotSetGammaIntensityMethod(QString method);
      void slotChangeIntensitiesToMethod();
@@ -63,6 +66,10 @@ private:
 
     PseudoLevelsController* pseudoLevelsController_;
     //std::string gammaIntensityMethod_;
+
+    QAction* FittingStatusTrueAction_;
+    QAction* FittingStatusFalseAction_;
+
 };
 
 #endif // TRANSITIONEDITOR_H

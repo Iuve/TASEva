@@ -5,6 +5,7 @@
 //#include <DeclareHeaders.hh>
 #include <histogramgraph.h>
 #include <manualfitgraph.h>
+#include <calibrateenergy.h>
 #include <decayPathEditor.h>
 #include "decaySpectrum.h"
 #include "analysis2d.h"
@@ -49,6 +50,7 @@ public slots:
     void exportXMLDecayFiles(bool triggered);
     string checkAndPreparePath();
     void exportRecSpec(bool trigered);
+    void exportDecayInfo(bool triggered);
 //Eva    void showLevelSchemePDF();
     void slotProjectNameUpdate();
     void slotProjectExpFileUpdate();
@@ -66,9 +68,11 @@ public slots:
     void slotProjectFitLevelsTo();
     void slotProjectFitLambda();
     void slotProjectNoFitIterations();
+    void slotProjectFitBinning();
     void slotPileupSignalSignal();
     void slotPileupSignalBackground();
     void slotCompareSpectra(bool);
+    void slotEnergyCalibration(bool);
 
 
     void slotSetMainLogScale(bool checked);
@@ -91,6 +95,7 @@ public slots:
     void slotSelectionChanged();
     string slotReadTableData(QTableWidget *table, int row, int column);
     void WriteTableData(QTableWidget *table, int row, int column, string item);
+    void ClearTable( QTableWidget *table);
 // Analisis 2D panel
     void slotOpen2DAnalysis();     /**< Opens 2D analysis panel*/
     void set1DFittingMethod(QString method){ fittingMethod_ = fittingMethodList_.indexOf(method);}
@@ -121,6 +126,7 @@ private:
     HistogramGraph *w1;
     ManualFitGraph *m1;
     ManualFitGraph *specComp_ui;
+    CalibrateEnergy *calE;
 //Evaout    PileupController *p1;
     DecayPathEditor *t1;
     Analysis2D *a2D_ui;

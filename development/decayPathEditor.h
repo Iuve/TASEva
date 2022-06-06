@@ -54,6 +54,11 @@ public slots:
     void slotEditGDTransitions(int rowIndex){return slotEditTransitions(2, rowIndex);}
 //EVa    void slotUpdateFeedingData(int row, int column);
 //EVa    void slotRecalculateDECSpectrum(bool);
+   void slotDaughterTableCellClicked(int row, int column);
+   void slotFittingStatusTrue(){setColumnStatus(true, 2);}
+   void slotFittingStatusFalse(){setColumnStatus(false, 2);}
+   void setColumnStatus(bool status, int column);
+   void slotStatusClicked(bool status, int row, int column);
     void slotNormalizeBetaIntensity();
     void slotAddLevelEI();
     void slotRemoveLevel();
@@ -61,6 +66,9 @@ public slots:
     void slotAddPseudoLevel();
     void slotSetGammaIntensityMethod(QString method);
     void slotUpdateTablesForward();
+    void slotDaughterTableChanged( int row, int column);
+
+    void InitLabels();
 
 signals:
     void signalUpdateTables();
@@ -79,7 +87,7 @@ private:
 
 //Eva    DecaySpectrum *decaySpectrum;
     Project* myProject;
-
+    bool  boolDaughterTableDataInitialised;
    PseudoLevelsController* pseudoLevelsController_;
 
     double pseudoLevelEnergyStep_=100;

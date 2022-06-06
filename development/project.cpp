@@ -106,11 +106,13 @@ void Project::Open(string fileName)
         else if (b1 == "CodeGEANT:") {codeGEANT_ = b2;}
         else if (b1 == "Contamination:")
             {
-            a  >> b3 >> b4;
+            std::string b5;
+            a  >> b3 >> b4 >> b5;
             vector<string> con;
             con.push_back(b2);
             con.push_back(b3);
             con.push_back(b4);
+            con.push_back(b5);
             inputContamination_.push_back(con);
             }
         else if (b1 == "Binning2D:") {binning2Dfactor_ = std::stoi(b2);}
@@ -172,9 +174,21 @@ void Project::setExpHist()
     setExpHist(tmp);
 }
 
-Histogram Project::getHistFromExpMap(int Id)
+void Project::replaceExpHistInMap(int Id, Histogram hist)
 {
-   return expHistMap_.find(Id)->second;
+   std::map<int,Histogram>::iterator it;
+   it = expHistMap_.find(Id);
+   if (it != expHistMap_.end())expHistMap_.erase(it);
+   expHistMap_.insert(std::pair<int,Histogram>(Id,hist));
+}
+
+Histogram* Project::getHistFromExpMap(int Id)
+{
+    for(int i = 0; i < expSpecIDVec_.size(); i++)
+        if( std::stoi(expSpecIDVec_.at(i)) == Id)
+            return &(expHistMap_.find(Id)->second);
+
+    return 0L;
 }
 
 void Project::removeAllContaminations()
@@ -189,10 +203,10 @@ void Project::removeContamination(QString name, QString id)
     std::string filename = name.toStdString();
     int idVal = id.toInt();
     cout << filename << " : " << idVal <<endl;
-    std::vector <Contamination>::iterator it;
-    for(it = contaminations_.begin(); it != contaminations_.end(); ++it)
+    //std::vector <Contamination>::iterator it;
+    for(auto it = contaminations_.begin(); it != contaminations_.end(); ++it)
     {
-        if( (*it).filename == filename && (*it).id == idVal)
+        if( (*it).second.filename == filename && (*it).second.id == idVal)
         {
             contaminations_.erase(it);
             std::cout << "Project::removeContamination() Found to ERASE" << endl;
@@ -202,3 +216,16 @@ void Project::removeContamination(QString name, QString id)
     }
 }
 
+std::vector<Contamination> Project::getContaminationsSpecID(int HistID)
+{
+    std::vector<Contamination> contaminationsSpecID_;
+    for(unsigned int con = 0; con != contaminations_.size(); ++con )
+    {
+        if(contaminations_.at(con).first == HistID){
+        contaminationsSpecID_.push_back(contaminations_.at(con).second);
+        }
+    }
+
+
+    return contaminationsSpecID_;
+}

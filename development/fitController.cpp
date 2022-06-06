@@ -7,14 +7,14 @@ FitController::FitController()
 {
 
     myProject = Project::get();
-    transitionsUsed.clear();
     minEnergy = myProject->getFitEnergyFrom();
     maxEnergy = myProject->getFitEnergyTo();
 //    minLevelEn = myProject->getFitLevelsFrom();
 //    maxLevelEn = myProject->getFitLevelsTo();
     lambda = myProject->getFitLambda();
     nrOfIterations = myProject->getNoFitIterations();
-    histId = std::stoi(myProject->getExpSpecID());
+    binning = myProject->getFitBinning();
+    expHistId = std::stoi(myProject->getExpSpecID());
 }
 
 std::vector <float> FitController::getBetaIntensities()
@@ -27,8 +27,55 @@ std::vector<float> FitController::getErrors()
     return errors;
 }
 
+void FitController::applyMaximumLikelyhoodFit (Histogram* expHist)
+{
+    cout<<"Fit...."<<endl;
+    prepareExperiment(expHist);
+    std::cout << "1.." << std::endl;
+    prepareLevelsPart(expHistId);
+    std::cout << "2.." << std::endl;
+    prepareContaminationPart( *(myProject->getContaminations()), expHistId );
+    std::cout << "2.5." << std::endl;
+    BinForFitting();
+    std::cout << "3.." << std::endl;
+    makeLikelyhoodFit();
+    std::cout << "4.." << std::endl;
+    findErrors();
+    std::cout << "5.." << std::endl;
+    notifyDecay();
+    std::cout << "6.." << std::endl;
+    notifyContaminations();
+    std::cout << "7.. end" << std::endl;
+}
+
+void FitController::applyBayesianFit (std::vector< std::pair<Histogram*, int> > bayesianHistograms)
+{
+    cout << "BayesianFit start." << endl;
+    for(auto ih = bayesianHistograms.begin(); ih != bayesianHistograms.end(); ++ih)
+    {
+        cout << (*ih).second << endl;
+        prepareExperiment((*ih).first);
+        prepareLevelsPart((*ih).second);
+        prepareContaminationPart( *(myProject->getContaminations()), (*ih).second );
+
+        BinForFitting();
+
+        bayesianExperiments.push_back(experiment);
+        bayesianFeedings.push_back(feedings);
+        bayesianResponses.push_back(responses);
+        bayesianNormalizationFactors.push_back(normalizationFactor_);
+        bayesianExpNorms.push_back(expNorm);
+    }
+
+    makeBayesianFit();
+    findErrors(); //to be corrected
+    notifyDecay();
+    //contaminations shouldn't be fitted here
+}
+
 void FitController::prepareExperiment(Histogram* expHist)
 {
+    experiment.clear();
     Histogram tempHist = *expHist;
     tempHist.Normalize(1.);
     experiment = tempHist.GetAllData(minEnergy, maxEnergy);
@@ -43,8 +90,15 @@ void FitController::prepareExperiment(Histogram* expHist)
     cout << "Number of counts within fitting limits ("<< minEnergy <<":"<<maxEnergy<<") : " <<expNorm << endl;
 }
 
-void FitController::prepareLevelsPart()
+void FitController::prepareLevelsPart(int simID)
 {
+    //In current approach feedings, intensityFitFlags and transitionsUsed are filled
+    //with data for every ID, which is not necessary but correct
+    feedings.clear();
+    responses.clear();
+    intensityFitFlags.clear();
+    transitionsUsed.clear();
+
     cout << "--------------Prepare Transitions to Levels-----------"<< endl;
 
     DecayPath* decayPath = DecayPath::get();
@@ -59,15 +113,14 @@ void FitController::prepareLevelsPart()
     Level* motherLevel = &motherLevels->at(0);
     std::vector<Transition*>* transitions = motherLevel->GetTransitions();  // getting transitions
 
-    cout << "Collecting data from spectrum ID="<<histId<< " for energies between "<<minEnergy<<" and "<<maxEnergy<< endl;
+    cout << "Collecting data from spectrum ID="<<simID<< " for energies between "<<minEnergy<<" and "<<maxEnergy<< endl;
 
     double simNrOfCounts = 0.;
     for(auto itt = transitions->begin(); itt != transitions->end(); ++itt)
     {
         intensityFitFlags.push_back( (*itt)->GetIntensityFitFlag() );
         transitionsUsed.push_back(*itt);
-        Histogram tmpHistogram = *(responseFunction->GetLevelRespFunction( (*itt)->GetPointerToFinalLevel(), histId ));
-        //tmpHistogram.Normalize(1.);
+        Histogram tmpHistogram = *(responseFunction->GetLevelRespFunction( (*itt)->GetPointerToFinalLevel(), simID ));
         responses.push_back(tmpHistogram.GetAllData(minEnergy, maxEnergy));
         feedings.push_back((*itt)->GetIntensity() );
         cout << "Added to the fitting vector: Energy = " << (*itt)->GetFinalLevelEnergy()
@@ -86,13 +139,18 @@ void FitController::prepareLevelsPart()
    cout << "--------------Prepare Level----END-------"<< endl;
 }
 
-void FitController::prepareContaminationPart()
+void FitController::prepareContaminationPart( std::vector< std::pair<int, Contamination> > contaminations, int histID )
 {
     cout << "--------------Prepare Contaminations-----------"<< endl;
+    if (contaminations.size() == 0)
+    {
+        normalizationFactor_ = 1.;
+        nrOfContaminations = 0;
+        cout << "--------------Prepare Contaminations----END-------"<< endl;
+        return;
+    }
 
-    std::vector<Contamination> contaminations = *(myProject->getContaminations());
-    nrOfContaminations = contaminations.size();
-    std::cout << "nrOfContaminations: " << nrOfContaminations << endl;
+    int nrOfCont = 0;
     double contNrOfCounts = 0.;
 
     double betaFeedingSum = 0.;
@@ -102,45 +160,119 @@ void FitController::prepareContaminationPart()
     }
 
     double contFeedingSum = 0.;
-    for(int i = 0; i != nrOfContaminations; ++i)
+    int normIterator = 0;
+    for(unsigned int i = 0; i < contaminations.size(); ++i)
     {
-        intensityFitFlags.push_back( contaminations.at(i).GetIntensityFitFlag() );
-        contaminations.at(i).hist.Normalize(1.0);
-        responses.push_back(contaminations.at(i).hist.GetAllData(minEnergy, maxEnergy));
-        feedings.push_back(contaminations.at(i).intensity);
-        contFeedingSum += contaminations.at(i).intensity;
-        cout << "Added to the fitting vector: Cont nr = " << i
-             << ", Intensity = " << feedings.back()
-             << ", Number of counts  = " << contaminations.at(i).hist.GetNrOfCounts(minEnergy,maxEnergy)
-             << ", FitParam: " << intensityFitFlags.back()
-             << ", Size = " << responses.back().size() << endl;
-        contNrOfCounts += contaminations.at(i).hist.GetNrOfCounts(minEnergy,maxEnergy);
+        if(contaminations.at(i).first == histID)
+        {
+            nrOfCont++;
+            intensityFitFlags.push_back( contaminations.at(i).second.GetIntensityFitFlag() );
+            contaminations.at(i).second.hist.Normalize(1.0);
+            responses.push_back(contaminations.at(i).second.hist.GetAllData(minEnergy, maxEnergy));
+
+            //preparing uniform contamination normalization throughout all bayesian histograms
+            if(histID == expHistId)
+            {
+                bayesianContaminationNormalization.push_back(contaminations.at(i).second.intensity);
+            }
+            else
+            {
+                double factor = contaminations.at(i).second.intensity / bayesianContaminationNormalization.at(normIterator);
+                contaminations.at(i).second.intensity = bayesianContaminationNormalization.at(normIterator);
+                for(int k = 0; k < responses.back().size(); k++)
+                    responses.back().at(k) *= factor;
+                normIterator++;
+            }
+
+            feedings.push_back(contaminations.at(i).second.intensity);
+            contFeedingSum += contaminations.at(i).second.intensity;
+            cout << "Added to the fitting vector: Cont nr = " << i
+                 << ", Intensity = " << feedings.back()
+                 << ", Number of counts  = " << contaminations.at(i).second.hist.GetNrOfCounts(minEnergy,maxEnergy)
+                 << ", FitParam: " << intensityFitFlags.back()
+                 << ", Size = " << responses.back().size() << endl;
+            contNrOfCounts += contaminations.at(i).second.hist.GetNrOfCounts(minEnergy,maxEnergy);
+        }
     }
 
     cout << "betaFeedingSum = " << betaFeedingSum << endl;
     normalizationFactor_ = 1. - contFeedingSum;
     cout << "contFeedingSum = " << contFeedingSum << endl;
     cout << "normalizationFactor_ = " << normalizationFactor_ << endl;
+    nrOfContaminations = nrOfCont;
     int maxIt = feedings.size() - nrOfContaminations;
+    cout << "feeding.size() = " << feedings.size() <<  endl;
+    cout << " nrOfContaminations " << nrOfContaminations << endl;
+    cout << "maxIt = " << maxIt << endl;
     for(int i = 0; i < maxIt; ++i)
     {
         feedings.at(i) *= normalizationFactor_ / betaFeedingSum;
     }
 
-    feedingsToFitSum_ = 0.;
-    for(int i = 0; i < feedings.size(); i++)
-    {
-        if( intensityFitFlags.at(i) )
-            feedingsToFitSum_ += feedings.at(i);
-    }
+    //std::cout << "nrOfContaminations: " << nrOfContaminations << endl;
 
-    cout << "feedingsToFitSum_ = " << feedingsToFitSum_ << endl;
     std::cout << " response.size: with contaminations " << responses.size() << std::endl;
     cout << "contNrOfCounts = " << contNrOfCounts << endl;
     cout << "--------------Prepare Contaminations----END-------"<< endl;
 }
 
-void FitController::makeFit()
+void FitController::BinForFitting()
+{
+    cout << "BinForFitting(), experiment.size() = " << experiment.size() << endl;
+    cout << "BinForFitting(), responses.at(10).size() = " << responses.at(10).size() << endl;
+    cout << "binning = " << binning << endl;
+
+    int nrOfbinsInGroup = binning - 1;
+    std::vector<float> tempExperiment;
+    for(unsigned int i = 0; i < experiment.size(); i++)
+    {
+        if(nrOfbinsInGroup == binning - 1)
+        {
+            tempExperiment.push_back(experiment.at(i));
+            nrOfbinsInGroup = 0;
+        }
+        else
+        {
+            tempExperiment.back() += experiment.at(i);
+            nrOfbinsInGroup ++;
+        }
+    }
+    experiment = tempExperiment;
+    cout << "experiment done" << endl;
+
+    std::vector< vector<float> > tempResponses;
+    std::vector<float> tempVector;
+    for(unsigned int i = 0; i < responses.size(); i++)
+    {
+        //cout << "i = " << i << endl;
+        tempResponses.push_back(tempVector);
+        nrOfbinsInGroup = binning - 1;
+        for(unsigned int j = 0; j < (responses.at(i)).size(); j++)
+        {
+            //cout << "j = " << j << endl;
+            if(nrOfbinsInGroup == binning - 1)
+            {
+                //cout << "if" << endl;
+                tempResponses.at(i).push_back(responses.at(i).at(j));
+                nrOfbinsInGroup = 0;
+            }
+            else
+            {
+                //cout << " esle" << endl;
+                tempResponses.at(i).back() += responses.at(i).at(j);
+                nrOfbinsInGroup ++;
+            }
+        }
+    }
+    responses = tempResponses;
+
+    std::cout << "feedings.size: " << feedings.size() << std::endl;
+    cout << "BinForFitting(), experiment.size() = " << experiment.size() << endl;
+    cout << "BinForFitting(), responses.at(10).size() = " << responses.at(10).size() << endl;
+}
+
+
+void FitController::makeLikelyhoodFit()
 {
     cout << "-------------making fit----------------" << endl;
     int nrOfHistograms = feedings.size();
@@ -150,7 +282,11 @@ void FitController::makeFit()
     std::cout << "experiment.size: " << experiment.size() << std::endl;
     std::cout << "responses.size: " << responses.size() << std::endl;
 
-    normBeforeFit = findNormalisation();
+    normBeforeFit = 0.;
+    for(int i = 0; i != feedings.size(); ++i)
+        normBeforeFit += feedings.at(i);
+    cout << "normBeforeFit = " << normBeforeFit << endl;
+
     vector<float> oldFeedings = feedings;
     cout << nrOfHistograms << " " << nrOfPoints << " " << nrOfLevels << endl;
     cout << " nrOfIterations: " << nrOfIterations << endl;
@@ -229,20 +365,15 @@ void FitController::makeFit()
            if( intensityFitFlags.at(i) )
                feedingsDuringFitSum += feedings.at(i);
 
-       double itShouldEqualOneDuringFitting = 0.;
-       for(int i = 0; i < nrOfHistograms; i++)
-       {
-           if( intensityFitFlags.at(i) )
-               feedings.at(i) *= feedingsToFitSum_ / feedingsDuringFitSum;
-           itShouldEqualOneDuringFitting += feedings.at(i);
-       }
        cout << "feedingsDuringFitSum = " << feedingsDuringFitSum << endl;
-       cout << "itShouldEqualOneDuringFitting = " << itShouldEqualOneDuringFitting << endl;
 
        oldFeedings = feedings;
     }
     std::cout << std::endl;
-    normAfterFit =  findNormalisation();
+    normAfterFit = 0.;
+    for(int i = 0; i != feedings.size(); ++i)
+        normAfterFit += feedings.at(i);
+    cout << "normAfterFit = " << normAfterFit << endl;
 
     int allFeedingsSize = feedings.size();
     int betaFeedingsSize = feedings.size() - nrOfContaminations;
@@ -312,14 +443,171 @@ void FitController::makeFit()
 
 }
 
-float FitController::findNormalisation()
+void FitController::makeBayesianFit()
 {
-    float normalization = 0;
-    for(int i = 0; i != feedings.size(); ++i)
-        normalization += feedings.at(i);
+    cout << "-------------making fit----------------" << endl;
 
-    cout << "FitController::findNormalisation: " << normalization << endl << endl;
-    return normalization;
+    //2 below lines are potentially not correct
+    int nrOfHistograms = bayesianFeedings.at(0).size();
+    int nrOfPoints = bayesianExperiments.at(0).size();
+    int nrOfBetaTransitions = nrOfHistograms - nrOfContaminations;
+
+    normBeforeFit = 0.;
+    for(int i = 0; i != bayesianFeedings.at(0).size(); ++i)
+        normBeforeFit += bayesianFeedings.at(0).at(i);
+    cout << "normBeforeFit = " << normBeforeFit << endl;
+
+    //vector< vector<float> > oldBayesianFeedings = bayesianFeedings;
+
+    cout << nrOfHistograms << " " << nrOfPoints << " " << nrOfLevels << endl;
+    cout << " nrOfIterations: " << nrOfIterations << endl;
+    cout << " lambda: " << lambda << endl;
+
+    string ss;
+    for(int it = 0; it !=nrOfIterations; ++it)
+    {
+        std::cout << "Running fitting iteration # " << it << "\r" << std::flush;
+
+        vector< pair<double, double> > fraction;
+        for(int i = 0; i < nrOfHistograms; i++)
+            fraction.emplace_back(0., 0.);
+
+        for(int id = 0; id < bayesianExperiments.size(); id++)
+        {
+            //preparing correct normalization
+            double sumForNormalization = 0.;
+            for(int i = 0; i < nrOfBetaTransitions; ++i)
+            {
+                double responseNrOfCounts = 0.;
+                for(int j = 0; j < (bayesianResponses.at(id).at(i)).size(); j++)
+                    responseNrOfCounts += (bayesianResponses.at(id).at(i)).at(j);
+                sumForNormalization += responseNrOfCounts * bayesianFeedings.at(id).at(i);
+            }
+
+            //cout << "sumForNormalization = " << sumForNormalization << endl;
+            //normalizationFactor_ * expNorm == a * sumForNormalization;
+            double responseMultiplier = bayesianNormalizationFactors.at(id) * bayesianExpNorms.at(id) / sumForNormalization;
+            //cout << "responseMultiplier = " << responseMultiplier << endl;
+
+            for(int a = 0; a < nrOfHistograms; a++)
+            {
+                if( !intensityFitFlags.at(a) )
+                    continue;
+
+                double sum2 = 0.;
+                double sum3 = 0.;
+                for(int i = 0; i < nrOfPoints; i++)
+                {
+                    double sum1 = 0.;
+                    for(int b = 0; b < nrOfHistograms; b++)
+                    {
+                        if( b < nrOfBetaTransitions )
+                            sum1 += responseMultiplier * (bayesianResponses.at(id).at(b)).at(i) * bayesianFeedings.at(id).at(b);
+                        else
+                            sum1 += (bayesianResponses.at(id).at(b)).at(i) * bayesianFeedings.at(id).at(b);
+                    }
+
+                    if(sum1 != 0)
+                    {
+                        if( a < nrOfBetaTransitions )
+                            sum2 += responseMultiplier * (bayesianResponses.at(id).at(a)).at(i) * bayesianFeedings.at(id).at(a) * bayesianExperiments.at(id).at(i) / sum1;
+                        else
+                            sum2 += (bayesianResponses.at(id).at(a)).at(i) * bayesianFeedings.at(id).at(a) * bayesianExperiments.at(id).at(i) / sum1;
+                    }
+
+                    if( a < nrOfBetaTransitions )
+                        sum3 += responseMultiplier * (bayesianResponses.at(id).at(a)).at(i);
+                    else
+                        sum3 += (bayesianResponses.at(id).at(a)).at(i);
+                }
+                fraction.at(a).first += sum2;
+                fraction.at(a).second += sum3;
+            }
+        }
+
+        for(int id = 0; id < bayesianExperiments.size(); id++)
+            for(int i = 0; i < nrOfHistograms; i++)
+            {
+                if( !intensityFitFlags.at(i) )
+                    continue;
+
+                bayesianFeedings.at(id).at(i) = fraction.at(i).first / fraction.at(i).second;
+            }
+    }
+    std::cout << std::endl;
+    feedings = bayesianFeedings.at(0);
+
+    normAfterFit = 0.;
+    for(int i = 0; i != feedings.size(); ++i)
+        normAfterFit += feedings.at(i);
+    cout << "normAfterFit = " << normAfterFit << endl;
+
+    int allFeedingsSize = feedings.size();
+    int betaFeedingsSize = feedings.size() - nrOfContaminations;
+    double allConstantFeedingsIntensityBeforeNorm = 0.;
+    for(int i = 0; i < allFeedingsSize; i++)
+    {
+        if( !intensityFitFlags.at(i) )
+            allConstantFeedingsIntensityBeforeNorm += feedings.at(i);
+    }
+    cout << "allConstantFeedingsIntensityBeforeNorm = " << allConstantFeedingsIntensityBeforeNorm << endl;
+    double whatShouldBeNonConstantFeedingsIntensity = 1. - allConstantFeedingsIntensityBeforeNorm;
+    double itShouldEqualOne = 0.;
+    double neededFactor = normAfterFit - allConstantFeedingsIntensityBeforeNorm;
+
+    for(int i = 0; i < allFeedingsSize; i++)
+    {
+        if( intensityFitFlags.at(i) )
+        {
+            feedings.at(i) *= whatShouldBeNonConstantFeedingsIntensity / neededFactor;
+        }
+        itShouldEqualOne += feedings.at(i);
+    }
+    cout << "whatShouldBeNonConstantFeedingsIntensity = " << whatShouldBeNonConstantFeedingsIntensity << endl;
+    cout << "neededFactor = " << neededFactor << endl;
+    cout << "itShouldEqualOne = " << itShouldEqualOne << endl;
+
+    double normalizedTotalContaminationsIntensity = 0.;
+    for(int i = betaFeedingsSize; i < allFeedingsSize; i++)
+    {
+        normalizedTotalContaminationsIntensity += feedings.at(i);
+    }
+
+    cout << "normalizedTotalContaminationsIntensity = " << normalizedTotalContaminationsIntensity << endl;
+
+    double finalTotalIntensityOfConstantBetaFeedings = 0.;
+    double atTheMomentSumOfFittedFeedings = 0.;
+    for(int i = 0; i < betaFeedingsSize; i++)
+    {
+        if( !intensityFitFlags.at(i) )
+        {
+            feedings.at(i) /= bayesianNormalizationFactors.at(0);
+            finalTotalIntensityOfConstantBetaFeedings += feedings.at(i);
+        }
+        else
+            atTheMomentSumOfFittedFeedings += feedings.at(i);
+    }
+
+    cout << "finalTotalIntensityOfConstantBetaFeedings = " << finalTotalIntensityOfConstantBetaFeedings << endl;
+    cout << "atTheMomentSumOfFittedFeedings = " << atTheMomentSumOfFittedFeedings << endl;
+
+    double finalTotalIntensityOfFittedParameters = 1. - finalTotalIntensityOfConstantBetaFeedings;
+    double checkSum = 0.;
+    for(int i = 0; i < betaFeedingsSize; i++)
+    {
+        if( intensityFitFlags.at(i) )
+        {
+            feedings.at(i) *= finalTotalIntensityOfFittedParameters / atTheMomentSumOfFittedFeedings;
+            checkSum += feedings.at(i);
+        }
+    }
+    cout << "checkSum = " << checkSum << endl;
+    cout << "Total normalized beta intensity = " << checkSum+finalTotalIntensityOfConstantBetaFeedings << endl;
+
+
+    cout << "-------------making fit------END----------" << endl;
+
+
 }
 
 void FitController::findErrors()
@@ -371,7 +659,7 @@ void FitController::notifyDecay()
 void FitController::notifyContaminations()
 {
     std::cout << "---------------notifyContaminations---------------"<< std::endl;
-    std::vector<Contamination> contaminations = *(myProject->getContaminations());
+    std::vector< std::pair<int, Contamination> > contaminations = *(myProject->getContaminations());
     std::cout << " NrOfHistograms: " << feedings.size()
               << " NrOfLevels: " << nrOfLevels
               << " NrOfContaminations: " << nrOfContaminations << std::endl;
@@ -385,30 +673,10 @@ void FitController::notifyContaminations()
                  << " Feeding normalization AFTER fit: " << normAfterFit << std::endl;
         int j=i-nrOfLevels;
         //contaminations.at(j).intensity = feedings.at(i)*normBeforeFit/normAfterFit;
-        contaminations.at(j).intensity = feedings.at(i);
+        contaminations.at(j).second.intensity = feedings.at(i);
     }
     myProject->setContaminations(contaminations);
 
     std::cout << "---------------notifyContaminations----END---------"<< std::endl;
 }
 
-void FitController::applyFit (Histogram* expHist)
-{
-    cout<<"Fit...."<<endl;
-    prepareExperiment(expHist);
-    std::cout << "1.." << std::endl;
-    prepareLevelsPart();
-    std::cout << "2.." << std::endl;
-    prepareContaminationPart();
-    //std::cout << "3.0." << std::endl;
-    //normalizeToExperiment();
-    std::cout << "3.." << std::endl;
-    makeFit();
-    std::cout << "4.." << std::endl;
-    findErrors();
-    std::cout << "5.." << std::endl;
-    notifyDecay();
-    std::cout << "6.." << std::endl;
-    notifyContaminations();
-    std::cout << "7.. end" << std::endl;
-}

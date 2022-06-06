@@ -94,7 +94,8 @@ bool TransitionRespProvider::CheckAndCreateDirectories()
 
     if( xmlReady )
     {
-        respContainer->simulationDone = checkGeantFile();
+        //respContainer->simulationDone = checkGeantFile();
+        respContainer->simulationDone = true;
         respContainer->sortingDone = checkSortFile();
     }
     else
@@ -461,7 +462,7 @@ bool TransitionRespProvider::makeMacroToGeant()
      out << "/vis/verbose 0" << "\n";
      out << "/event/verbose 0" << "\n";
      out << "/material/verbose 0" << "\n";
-     out << "/random/resetEngineFrom currentEvent.rndm" << "\n";
+//     out << "/random/resetEngineFrom currentEvent.rndm" << "\n";
      out << "/random/setSavingFlag true" << "\n";
      out << "/run/beamOn " << nrOfEvents << "\n";
 

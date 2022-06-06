@@ -47,6 +47,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += main.cpp\
+    deexcitationModelController.cpp \
     mainwindow.cpp \
         project.cpp \
     pseudoLevelsController.cpp \
@@ -84,12 +85,16 @@ SOURCES += main.cpp\
     histogramgraph.cpp \
     manualfitgraph.cpp \
     twoDimFitController.cpp \
-    status.cpp
+    status.cpp \
+    calibrateenergy.cpp \
+    simplefigure.cpp \
+    tableinput.cpp
 
 HEADERS  += mainwindow.h \
     PeriodicTable.hh \
     analysis2d.h \
     binningController.h \
+    deexcitationModelController.h \
     fitController.h \
     histogramgraph.h \
     manualfitgraph.h \
@@ -129,7 +134,10 @@ HEADERS  += mainwindow.h \
     SaveDecayData.hh \
     responsefunction.h \
     twoDimFitController.h \
-    status.h
+    status.h \
+    calibrateenergy.h \
+    simplefigure.h \
+    tableinput.h
 
 FORMS    += mainwindow.ui \
     analysis2d.ui \
@@ -138,7 +146,9 @@ FORMS    += mainwindow.ui \
     pileupController.ui \
     DecayPathEditor.ui \
     transitionEditor.ui \
-    status.ui
+    status.ui \
+    simplefigure.ui \
+    tableinput.ui
 
 DISTFILES += \
     Decay.xml

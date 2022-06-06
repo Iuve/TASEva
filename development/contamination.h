@@ -7,7 +7,7 @@
 class Contamination{
 public:
     Contamination(Histogram histVal, std::string filenameVal, int idVal, float norm, float inten) :
-        hist(histVal), filename(filenameVal), id(idVal), normalization(norm), intensity(inten), freeIntensityFit_(true)
+        hist(histVal), filename(filenameVal), id(idVal), normalization(norm), intensity(inten), freeIntensityFit_(false)
     {}
 
 

@@ -403,14 +403,16 @@ void ManualFitGraph::slotSetAxisRange()
     }
     double size = xMaxEn-xMinEn;
     uiM->histogramPlot->xAxis->setRange(xMinEn,xMaxEn);
-    uiM->histogramDiffPlot->xAxis->setRange(xMinEn,xMaxEn);
 //    double yMax = vectorMax(y,xMinEn,xMaxEn);
 //    yMax = yMax*1.1; //adding 10% to the scale
     uiM->histogramPlot->yAxis->setRange(yMin,yMax);
-    double dyMax = vectorMax(diff,xMinEn,xMaxEn);
-    uiM->histogramDiffPlot->yAxis->setRange(-dyMax,dyMax);
+    if(respType_ != "c"){
+        double dyMax = vectorMax(diff,xMinEn,xMaxEn);
+        uiM->histogramDiffPlot->yAxis->setRange(-dyMax,dyMax);
+        uiM->histogramDiffPlot->xAxis->setRange(xMinEn,xMaxEn);
+        uiM->histogramDiffPlot->replot();
+    }
     uiM->histogramPlot->replot();
-    uiM->histogramDiffPlot->replot();
 
 }
 
@@ -489,24 +491,26 @@ void ManualFitGraph::initializeGraphs()
 
 }
 
-void ManualFitGraph::showDataExpSimDiff(QVector<double> xx, QVector<double> yy, QVector<double> yy2, QVector<double> ddiff)
+void ManualFitGraph::showDataExpSimDiff(QVector<double> xx, QVector<double> yy, QVector<double> xx2, QVector<double> yy2, QVector<double> ddiff)
 {
     cout <<"ManualFitGraph::showDataExpSimDiff - POCZATEK" << endl;
     x = xx;
+    x2 = xx2;
     y = yy;
     y2 = yy2;
     diff =ddiff;
 
     double xMinEn =  uiM -> lineEditXAxisMin->text().toDouble();
     //double xMaxEn =  uiM -> lineEditXAxisMax->text().toDouble();
-    double xMaxEn = x.size();
+    double xMaxEn = x.at(x.size()-1);
     double yMin= uiM->lineEditYAxisMin->text().toDouble();
     double yMaxUser = uiM->lineEditYAxisMax->text().toDouble();
     if(xMinEn == 0.0)
-		xMinEn = 1;
+        xMinEn = 1;
     double yMax = vectorMax(y,xMinEn,xMaxEn);
-    double yMax2 = vectorMax(y2,xMinEn,xMaxEn);
+//    double yMax2 = vectorMax(y2,xMinEn,xMaxEn);
     yMax = std::min(yMax,yMaxUser);
+    cout << "linia 510" << endl;
     //yMax = yMax*1.1; //adding 10% to the scale
     uiM->histogramPlot->yAxis->setRange(yMin,yMax);
 
@@ -526,13 +530,12 @@ void ManualFitGraph::showDataExpSimDiff(QVector<double> xx, QVector<double> yy, 
 //mkout         zero[ii]=0.0;
      if(uiM->checkShowSIM->isChecked())
      {
-         uiM->histogramPlot->graph(1)->setData(x, y2);
+         uiM->histogramPlot->graph(1)->setData(x2, y2);
           uiM->histogramPlot->graph(1)->setVisible(true);
      }
      if(!uiM->checkShowSIM->isChecked())
          uiM->histogramPlot->graph(1)->setVisible(false);
 
-     //uiM->histogramPlot->graph(1)->setData(x, y2);
      uiM->histogramPlot->graph(1)->setPen(redDotPen);
      uiM->histogramPlot->graph(1)->setLineStyle(QCPGraph::LineStyle::lsStepCenter);
      uiM->histogramPlot->graph()->selectable();
@@ -595,11 +598,13 @@ void ManualFitGraph::slotNormaliseBetaFeeding(bool ok)
     //Level *motherLevel_ = &(motherLevels_->at(0));
     std::vector<Transition*>* betaTransitions = motherLevels_->at(0).GetTransitions();
 
-    std::vector<Contamination>* contaminations = myProject->getContaminations();
+    std::vector< std::pair<int,Contamination> >* contaminations = myProject->getContaminations();
+    int expSpectrumID = std::stoi(myProject->getExpSpecID());
     float sumNormCont = 0.0;
     for (unsigned int i = 0; i !=  contaminations->size(); i++)
     {
-        sumNormCont += contaminations->at(i).intensity;
+        if(contaminations->at(i).first == expSpectrumID)
+        sumNormCont += contaminations->at(i).second.intensity;
     }
 
     double IntensitySum = 0 ;
@@ -691,7 +696,8 @@ void ManualFitGraph::showSpectra(int start )
         } else if(spectrumType == "SimMap"){
             cout << "SIM not yet implemented";
             tmpHist = Histogram( *responseFunction_->GetResponseFunction(motherLevel_, hisID));
-            tmpHist.Normalize(1e6);
+            double norm = myProject->getHistFromExpMap(hisID)->GetNrOfCounts();
+            tmpHist.Normalize(norm);
             uiM->histogramPlot->graph(row+start)->setPen(redDotPen);
             uiM->histogramPlot->graph(row+start)->setLineStyle(QCPGraph::LineStyle::lsStepCenter);
 
@@ -751,11 +757,13 @@ void ManualFitGraph::showResponseFunctionsLevels(int start)
     Level *motherLevel_ = &(motherLevels_->at(0));
     std::vector<Transition*>* betaTransitions = motherLevels_->at(0).GetTransitions();
 
-    std::vector<Contamination>* contaminations = myProject->getContaminations();
+    std::vector< std::pair<int, Contamination> >* contaminations = myProject->getContaminations();
+    int expSpectrumID = std::stoi(myProject->getExpSpecID());
     float sumNormCont = 0.0;
     for (unsigned int i = 0; i !=  contaminations->size(); i++)
     {
-        sumNormCont += contaminations->at(i).intensity;
+        if(contaminations->at(i).first == expSpectrumID)
+        sumNormCont += contaminations->at(i).second.intensity;
     }
     cout <<"SumNormCount " << sumNormCont << endl;
     double IntenistySum = 0 ;
@@ -932,4 +940,3 @@ void ManualFitGraph::setColumnStatus(bool status, int column)
     }
 
 }
-

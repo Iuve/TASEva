@@ -124,6 +124,7 @@ public:
 
 
     vecFloat GetEnergyVector(){return energy_;}
+
     vector<double> GetEnergyVectorD(){
         std::vector<double> tmpvec(energy_.begin(),energy_.end());
     return tmpvec;
@@ -203,7 +204,7 @@ public:
         return c/GetNrOfCounts();
     }
 
-    //void Normalize(double c, double xMin, double xMax) {this->Scale(c/GetNrOfCounts( xMin, xMax), xMin, xMax); }
+     void NormalizeV(double c, double xMin, double xMax) {this->Scale(c/GetNrOfCounts( xMin, xMax), xMin, xMax); }
      double Normalize(double c, double xMin, double xMax)
      {
 //         cout<<"void Normalize(double c, double xMin, double xMax) "<<endl;

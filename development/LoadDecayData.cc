@@ -31,6 +31,8 @@ double CalculateHalfLifeTimeInSeconds(double time, std::string unit)
 				return time * 60.;
 			else if(unit == "H")
 				return time * 3600.;
+            else if(unit =="D")
+                return time *3600*24;
 			else if(unit == "Y")
 				return time * 31556926.;
 			else

@@ -3,6 +3,7 @@
 #include "PeriodicTable.hh"
 
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <vector>
 #include <map>
@@ -15,6 +16,11 @@ SaveDecayData::SaveDecayData(string path)
 {
     path_ = path + "/";
     //SaveDecayStructure();
+}
+
+SaveDecayData::SaveDecayData()
+{
+
 }
 
 SaveDecayData::~SaveDecayData()
@@ -540,4 +546,64 @@ void SaveDecayData::CreateDecayXML(Transition* firstTransition, Transition* seco
     xmlFile.close();
     //cout << "File Decay.xml created for transitions " << secondLevelEnergy << " - " << secondTransitionEnergy << "." << endl;
     //cout << "File Name: " << xmlFileName << endl;
+}
+
+
+void SaveDecayData::SaveGeneralDecayInfo(std::string path)
+{
+    DecayPath* decayPath = DecayPath::get();
+    std::vector<Nuclide>* nuclidesVector = decayPath->GetAllNuclides();
+    Nuclide* motherNuclide = &nuclidesVector->at(0);
+    //Nuclide* daughterNuclide = &nuclidesVector->at(1);
+
+    string outputFilename = path + "/GeneralDecayInfo.txt";
+    ofstream outputFile(outputFilename.c_str());
+    if (!outputFile.is_open())
+        cout << "Warning message: The file " + (string) outputFilename + " is not open!" << endl;
+
+    outputFile << "#LevelEnergy    BetaFeeding   GrowingBetaFeeding" << endl;
+
+    double averageBetaEnergy = 0.;
+    double averageGammaEnergy = 0.;
+    double neutronPercentage = 0.;
+    double growingIntensity = 0.;
+
+    for ( auto lt = motherNuclide->GetNuclideLevels()->begin(); lt != motherNuclide->GetNuclideLevels()->end(); ++lt )
+    {
+        for ( auto kt = lt->GetTransitions()->begin(); kt != lt->GetTransitions()->end(); ++kt )
+        {
+            string particleType =  (*kt)->GetParticleType();
+            //double transitionQValue =  (*kt)->GetTransitionQValue();
+            double intensity = (*kt)->GetIntensity() * 100.;
+            double finalLevelEnergy = (*kt)->GetFinalLevelEnergy();
+            //int finalLevelAtomicMass = (*kt)->GetFinalLevelAtomicMass();
+            //int finalLevelAtomicNumber = (*kt)->GetFinalLevelAtomicNumber();
+            //bool isAddedTransition = (*kt)->IsAddedTransition();
+            Level* finalLevel = (*kt)->GetPointerToFinalLevel();
+
+            if (particleType == "B-" || particleType == "B+")
+            {
+                double averageLvlBetaEnergy = (*kt)->GetAverageBetaEnergy();
+                averageBetaEnergy += intensity * averageLvlBetaEnergy / 100;
+
+                if(finalLevel->GetNeutronLevelStatus())
+                {
+                    neutronPercentage += intensity;
+                    outputFile << finalLevelEnergy << " " << intensity << endl;
+                }
+                else
+                {
+                    growingIntensity += intensity;
+                    averageGammaEnergy += finalLevelEnergy * intensity;
+                    outputFile << finalLevelEnergy << " " << intensity << " " << growingIntensity << endl;
+                }
+            }
+        }
+    }
+
+    averageGammaEnergy /= (100 - neutronPercentage);
+    outputFile << "#AverageGammaEnergy = " << averageGammaEnergy << endl;
+    outputFile << "#AverageBetaEnergy = " << averageBetaEnergy << endl;
+    outputFile << "#NeutronPercentage = " << neutronPercentage;
+    outputFile.close();
 }

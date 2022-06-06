@@ -9,6 +9,7 @@
 #include <QDialog>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QAction>
 
 
 TransitionEditor::TransitionEditor(QWidget *parent) :
@@ -34,15 +35,21 @@ TransitionEditor::TransitionEditor(QWidget *parent) :
       connect(uiL->buttonSaveCustom, SIGNAL(clicked(bool)), this, SLOT(slotSaveCustomIntensities()));
       //Mouse right click actions
           setContextMenuPolicy(Qt::ActionsContextMenu);
+          FittingStatusTrueAction_ = new QAction("Set Fitting status TRUE");
+          FittingStatusFalseAction_ = new QAction("Set Fitting status FALSE");
           QAction* transitionAddAction = new QAction("Add transition");
           QAction* transitionRemoveAction = new QAction("Remove transition");
           QAction* normAction = new QAction("Norm. transition intensity to 100%");
 //          QAction* saveAction = new QAction("Save data");
           QAction* closeAction = new QAction("Close");
+          connect(FittingStatusTrueAction_, SIGNAL(triggered()), this, SLOT(slotFittingStatusTrue()));
+          connect(FittingStatusFalseAction_, SIGNAL(triggered()), this, SLOT(slotFittingStatusFalse()));
           connect(normAction, SIGNAL(triggered()), this, SLOT(slotNormalizeTransitionIntensity()));
           connect(transitionAddAction, SIGNAL(triggered()), this, SLOT(slotAddTransition()));
           connect(transitionRemoveAction, SIGNAL(triggered()), this, SLOT(slotRemoveTransition()));
           connect(closeAction, SIGNAL(triggered()), this, SLOT(close()));
+          addAction(FittingStatusTrueAction_);
+          addAction(FittingStatusFalseAction_);
           addAction(normAction);
           addAction(transitionAddAction);
           addAction(transitionRemoveAction);
@@ -65,6 +72,7 @@ void TransitionEditor::setComboBoxMethod()
     uiL->comboBoxIntensity->clear();
     pseudoLevelsController_->createIntensityMethodList();
     vector<string> methodList = pseudoLevelsController_->getIntensityMethodList();
+    vector<QString> methodListToolTip = pseudoLevelsController_->getIntensityMethodListToolTip();
     for (unsigned i=0; i< methodList.size(); i++)
     {
         QString qtext = QString::fromStdString(methodList.at(i));
@@ -163,6 +171,26 @@ void TransitionEditor::slotTableChanged(int row, int column)
 
     }
 }
+
+void TransitionEditor::setColumnStatus(bool status, int column)
+{
+
+    QTableWidget *pointerToTable_ = 0L;
+    pointerToTable_ = uiL->tableTransition;
+
+    QModelIndexList selection = pointerToTable_->selectionModel()->selectedRows();
+
+    for(int i=0; i< selection.count(); i++)
+    {
+        QModelIndex index = selection.at(i);
+//        pointerToTable_->setItem(index.row(),column, new QTableWidgetItem(status ? "true": "false"));
+        slotFittingStatusClicked(index.row(),column);
+    }
+
+}
+
+
+
 void TransitionEditor::slotFittingStatusClicked(int row, int column)
 {
     std::cout << "TransitionEditor::slotFittingStatusClicked row " << row << " column " << column << std::endl;
@@ -175,7 +203,7 @@ void TransitionEditor::slotFittingStatusClicked(int row, int column)
     bool fittingStatus_ = transitions_->at(row)->GetIntensityFitFlag();
 
     fittingStatus_= !fittingStatus_;
-    uiL->tableTransition->setItem(row, 3, new QTableWidgetItem(fittingStatus_ ? "true" : "false"));
+    uiL->tableTransition->setItem(row, column, new QTableWidgetItem(fittingStatus_ ? "true" : "false"));
     uiL->tableTransition->show();
 // change
 

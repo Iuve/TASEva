@@ -842,7 +842,7 @@ Container</string>
         </rect>
        </property>
        <property name="text">
-        <string>0</string>
+        <string>10</string>
        </property>
        <property name="maxLength">
         <number>5</number>
@@ -1003,7 +1003,7 @@ Container</string>
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>120</y>
+         <y>140</y>
          <width>60</width>
          <height>16</height>
         </rect>
@@ -1051,10 +1051,45 @@ Container</string>
        <property name="geometry">
         <rect>
          <x>70</x>
-         <y>120</y>
+         <y>140</y>
          <width>111</width>
          <height>21</height>
         </rect>
+       </property>
+      </widget>
+      <widget class="QLabel" name="labelFitBinning">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>120</y>
+         <width>60</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Binning</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="lineEditFitBinning">
+       <property name="geometry">
+        <rect>
+         <x>130</x>
+         <y>120</y>
+         <width>51</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>10</string>
+       </property>
+       <property name="frame">
+        <bool>true</bool>
+       </property>
+       <property name="cursorPosition">
+        <number>1</number>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
      </widget>
@@ -1094,6 +1129,7 @@ Container</string>
      <addaction name="export_ENS_File"/>
      <addaction name="exportRecHis"/>
      <addaction name="exportXML_Decay_Files"/>
+     <addaction name="exportDecay_information"/>
     </widget>
     <addaction name="actionNewProject"/>
     <addaction name="actionOpenProject"/>
@@ -1269,7 +1305,7 @@ Container</string>
     <bool>false</bool>
    </property>
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
     <string>Energy</string>
@@ -1296,6 +1332,11 @@ Container</string>
   <action name="actionCompare_Spectra">
    <property name="text">
     <string>Compare Spectra</string>
+   </property>
+  </action>
+  <action name="exportDecay_information">
+   <property name="text">
+    <string>Decay information</string>
    </property>
   </action>
  </widget>

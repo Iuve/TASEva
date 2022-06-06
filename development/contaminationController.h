@@ -38,15 +38,16 @@ public:
 //signals:
 //    void UpdateContaminationPanel(bool);
 public slots:
-    void addContamination(QString name, QString id, QString intensity);
-    void editContamination(QString name, QString id, QString intensity);
+    void addContamination(QString expID, QString name, QString id, QString intensity);
+    void editContamination(QString expID, QString name, QString id, QString intensity);
     void removeContamination(QString name, QString id);
     void removeAll();
     void SaveAll();
+    void SaveAllBayesian();
 
 private:
 //    Project *myProject = Project::get();
-    std::vector <Contamination> contaminations_; // = myProject->contaminations();
+    std::vector< std::pair<int, Contamination> > contaminations_; // = myProject->contaminations();
 
 };
 

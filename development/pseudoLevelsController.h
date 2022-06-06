@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <string>
+#include <QString>
 
 class DecayPath;
 
@@ -48,6 +49,7 @@ public:
  //Eva   Level* createPseudoLevel(Level* parentLevel, double energy);
  //Eva   void setSpinAndParity(Level* parentLevel, Level* pseudoLevel);
     std::vector<std::string> getIntensityMethodList();
+    std::vector<QString> getIntensityMethodListToolTip(){return intensityMethodListToolTip_;}
     void setIntensityMethod(std::string method){intensityMethod_ = method;}
     std::string getIntensityMethod(){return intensityMethod_;}
     void setNuclideIndex(int tabIndex){currentNuclideIndex_ = tabIndex;}
@@ -72,6 +74,7 @@ private:
     bool ifStatisticalModel_;
     double deltaE_;
     std::vector<std::string> intensityMethodList_;
+    std::vector<QString> intensityMethodListToolTip_;
     std::string intensityMethod_;
     int currentNuclideIndex_;
 

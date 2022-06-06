@@ -9,11 +9,13 @@ class SaveDecayData
 {
 public:
     SaveDecayData(std::string path);
+    SaveDecayData();
     ~SaveDecayData();
 
     void SaveDecayStructure();  //writes to disk ALL XML nuclide files
     void SaveSpecifiedDecayStructure(Transition* firstTransition, Transition* secondTransition);
     void CreateDecayXML(Transition* firstTransition, Transition* secondTransition);  // create decay.xml (main driver)
+    void SaveGeneralDecayInfo(std::string path);
     std::vector<std::string> GetXmlFilenames() {return fullFileNames_;}
     std::vector<std::string> GetShortXmlFilenames() {return shortFileNames_;}
 

@@ -71,7 +71,8 @@ void FermiDistribution::CalculateBetaEnergyDistribution()
 		totStepTimesProb += probabilityDensityValue*x;
 	}
 
-	std::cout<< " average energy = " << totStepTimesProb/totProb*qVal_ << std::endl;
+    std::cout<< " average energy = " << totStepTimesProb/totProb*qVal_ << std::endl;
+    averageBetaEnergy_ = totStepTimesProb/totProb*qVal_;
 }
 
 double FermiDistribution::FindProbabilityDensityValue(double x)

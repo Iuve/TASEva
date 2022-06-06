@@ -15,12 +15,14 @@ Transition(particleType, transitionQValue, intensity, finalLevelEnergy,
 	if(GetParticleType() == "B-")
 	{
 		//beta minus
-//Eva		betaEnergyDistribution_ = FermiDistribution(GetFinalLevelAtomicNumber() - 1, GetTransitionQValue(), -1);
+        betaEnergyDistribution_ = FermiDistribution(GetFinalLevelAtomicNumber() - 1, GetTransitionQValue(), -1);
+        SetAverageBetaEnergy(betaEnergyDistribution_.GetAverageBetaEnergy());
 	}
 	else if(GetParticleType() == "B+")
 	{
 		//beta plus
-//Eva		betaEnergyDistribution_ = FermiDistribution(GetFinalLevelAtomicNumber() + 1, GetTransitionQValue(), +1);
+        betaEnergyDistribution_ = FermiDistribution(GetFinalLevelAtomicNumber() + 1, GetTransitionQValue(), +1);
+        SetAverageBetaEnergy(betaEnergyDistribution_.GetAverageBetaEnergy());
 	}
 	else
 		std::cout << "Wrong particle type in Beta class." << std::endl; 
