@@ -36,6 +36,7 @@ private:
 	std::vector<Nuclide> allNuclides_; //is it protected from overwriting???
 	
     void FindPointersToFinalLevels();
+    void FindPointersToInitialLevels();
 	void SetPointersToTransitions();
     Level* FindPointerToLevel(int atomicNumber, int atomicMass, double energy, double energyLvlUnc);
     void RecalculateIntensities(int atomicNumber, int atomicMass, double lvlEnergy,

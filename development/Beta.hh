@@ -16,6 +16,8 @@ public:
 	~Beta();
 	
 	std::vector<Event> FindBetaEvent();
+    void CheckBetaTransitionType();
+    void CalculateAverageBetaEnergy();
     double GetAverageBetaEnergy(){return averageBetaEnergy_;}
     void SetAverageBetaEnergy(double avEnergy){averageBetaEnergy_ = avEnergy;}
 	
@@ -25,6 +27,7 @@ private:
 	//int eCharge_;
 	FermiDistribution betaEnergyDistribution_;
     double averageBetaEnergy_;
+    int betaTransitionType_;
 	//std::string particleType_;
 };
 

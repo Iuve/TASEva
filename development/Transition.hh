@@ -36,6 +36,8 @@ public:
 
     void SetPointerToFinalLevel(Level* pointerToFinalLevel){pointerToFinalLevel_ = pointerToFinalLevel;}
     Level* GetPointerToFinalLevel(){return pointerToFinalLevel_;}
+    void SetPointerToInitialLevel(Level* pointerToInitialLevel){pointerToInitialLevel_ = pointerToInitialLevel;}
+    Level* GetPointerToInitialLevel(){return pointerToInitialLevel_;}
 
     void SetIntensityFitFlag(bool parameter){freeIntensityFit_ = parameter;}
     bool GetIntensityFitFlag(){return freeIntensityFit_;}
@@ -65,6 +67,10 @@ public:
         std::cout << "I'm inside virtual GetShellElectronConversionCoefficient, that should never happen! Something went wrong." <<std::endl;
         return 0;
         }
+    virtual void CalculateAverageBetaEnergy() {
+        std::cout << "I'm inside virtual GetShellElectronConversionCoefficient, that should never happen! Something went wrong." <<std::endl;
+        return;
+        }
     virtual double GetAverageBetaEnergy() {
         std::cout << "I'm inside virtual GetShellElectronConversionCoefficient, that should never happen! Something went wrong." <<std::endl;
         return 0;
@@ -79,6 +85,7 @@ private:
 	int finalLevelAtomicNumber_;
 	
     Level* pointerToFinalLevel_;
+    Level* pointerToInitialLevel_;
 	double runningIntensity_;
     bool freeIntensityFit_; // for fitting purposes
     bool isAddedTransition_; // = false if Transition in official, = true if added in analysis

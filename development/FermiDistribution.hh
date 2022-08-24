@@ -17,7 +17,7 @@ public:
      * Sampling the Fermi distribution for B-dacey energy input to EGS4, W. R. Nelson, J. Liu, SLAC-TN_92-1 
      * eCharge - possible only +/- 1 value. +1 - beta plus, -1 - beta minus
      */
-    FermiDistribution(int atomicNumber, double qVal, int eCharge);
+    FermiDistribution(int atomicNumber, double qVal, int eCharge, int betaTransitionType);
     FermiDistribution(){};
     virtual ~FermiDistribution();
 
@@ -26,7 +26,7 @@ public:
 private:
     void CalculateBetaEnergyDistribution();
     double FindProbabilityDensityValue(double x);
-
+    double GetShapeCorrectionFactor(double energy);
     double EulerGammaFunction (double finalValue);
     int atomicNumber_;
     double qVal_;
@@ -53,6 +53,7 @@ private:
     double xMax_;
     double maxBetaProbability_;
     double delta0_;
+    int betaTransitionType_; //Fermi, Gammow-Teller, allowed, first forbidden etc..
 };
 
 #endif	/* FERMIDISTRIBUTION_H */

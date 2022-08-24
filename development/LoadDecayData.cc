@@ -80,6 +80,7 @@ void LoadDecayData::LoadDataFromXml()
 	SetPointersToTransitions();
 	
 	FindPointersToFinalLevels();
+    FindPointersToInitialLevels();
 	
 	int tempAtomicNumber = dir.child("StartLevel").attribute("AtomicNumber").as_int();
 	int tempAtomicMass = dir.child("StartLevel").attribute("AtomicMass").as_int();
@@ -349,6 +350,20 @@ void LoadDecayData::FindPointersToFinalLevels()
 			}
 		}
 	}
+}
+
+void LoadDecayData::FindPointersToInitialLevels()
+{
+    for ( auto it = allNuclides_.begin(); it != allNuclides_.end(); ++it )
+    {
+        for ( auto jt = it->GetNuclideLevels()->begin(); jt != it->GetNuclideLevels()->end(); ++jt )
+        {
+            for ( auto kt = jt->GetTransitions()->begin(); kt != jt->GetTransitions()->end(); ++kt )
+            {
+                (*kt)->SetPointerToInitialLevel( &(*jt) );
+            }
+        }
+    }
 }
 
 

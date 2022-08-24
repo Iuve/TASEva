@@ -583,6 +583,7 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
 
             if (particleType == "B-" || particleType == "B+")
             {
+                (*kt)->CalculateAverageBetaEnergy();
                 double averageLvlBetaEnergy = (*kt)->GetAverageBetaEnergy();
                 averageBetaEnergy += intensity * averageLvlBetaEnergy / 100;
 

@@ -333,7 +333,7 @@ bool TransitionRespProvider::makeInputToSort()
     out << "EMax " << eMax << "\n";
     out << "2DbinningFactor " << myProject->getBinning2Dfactor() << "\n";
 //    out << "2DbinningFactor " <<  "1" << "\n";
-    out << "siliThreshold " << 20 << "\n";
+    out << "siliThreshold " << 70 << "\n";
 
     return true;
 }
