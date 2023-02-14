@@ -54,6 +54,8 @@ void PseudoLevelsController::createIntensityMethodList()
     intensityMethodListToolTip_.push_back("");
     intensityMethodList_.push_back("ModelM1"); // no pseudo lvls, but deexcitation model
     intensityMethodListToolTip_.push_back("");
+    intensityMethodList_.push_back("Neutron"); // single neutron levels
+    intensityMethodListToolTip_.push_back("");
 
     Project *myProject = Project::get();
     if( myProject->getCustomTransitionIntensities()->size() )
@@ -66,7 +68,8 @@ std::vector<string> PseudoLevelsController::getIntensityMethodList()
 }
 
 
-void PseudoLevelsController::addPseudoLevels(double stepEnergy, double minEn, double maxEn, double totInt,  string gammaModel)
+void PseudoLevelsController::addPseudoLevels(double stepEnergy, double minEn, double maxEn, double totInt,
+                                             string gammaModel, double finalNeutronE, double Sn)
 {
 
     double QValue = decayPath_->GetAllNuclides()->at(0).GetNuclideLevels()->at(0).GetTransitions()->at(0)->GetTransitionQValue();
@@ -87,6 +90,8 @@ void PseudoLevelsController::addPseudoLevels(double stepEnergy, double minEn, do
     minEnergy_ = minEn;
     maxEnergy_ = maxEn;
     totIntensity_ = totInt;
+    finalNeutronE_ = finalNeutronE;
+    Sn_ = Sn;
     if( intensityMethod_ != gammaModel ) cout << " Model Problem " << endl;
 //    ifStatisticalModel_ =  ifStatModel;
 
@@ -123,6 +128,8 @@ void PseudoLevelsController::addPseudoLevels(double stepEnergy, double minEn, do
     {   addCustomPseudoLevels();
     } else if (intensityMethod_ == intensityMethodList_.at(7)) //ModelM1
     {   applyModelM1();
+    } else if (intensityMethod_ == intensityMethodList_.at(8)) //Neutron levels
+    {   addNeutronLevels();
     } else cout << "method not on the list " << endl;
 }
 
@@ -159,6 +166,17 @@ void PseudoLevelsController::addCustomPseudoLevels()
             decayPath_->GetAllNuclides()->at(currentNuclideIndex_).AddCustomLevel(levelEnergy, 0.);
         else
             decayPath_->GetAllNuclides()->at(currentNuclideIndex_).AddCustomLevel(levelEnergy, deltaE_);
+    }
+}
+
+void PseudoLevelsController::addNeutronLevels()
+{
+    int nrOfPseudolevels = (int)(maxEnergy_ - minEnergy_)/ deltaE_;
+
+    for(int i = 0; i<nrOfPseudolevels; i++)
+    {
+        double levelEnergy = minEnergy_ + i * deltaE_;
+        decayPath_->GetAllNuclides()->at(currentNuclideIndex_).AddLevel(levelEnergy,-1,"",1e-15,0.001,finalNeutronE_,Sn_);
     }
 }
 

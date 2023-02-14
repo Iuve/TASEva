@@ -31,7 +31,8 @@ public:
     PseudoLevelsController();
     ~PseudoLevelsController();
 
-    void addPseudoLevels(double stepEnergy, double minEn, double maxEn, double totInt,  std::string gammaIntensityMethod);
+    void addPseudoLevels(double stepEnergy, double minEn, double maxEn, double totInt,
+                         std::string gammaIntensityMethod, double finalNeutronE, double Sn);
 //EVa    void applyStatisticalModel();
 
     /** Add pseudolevels with no information about spin.
@@ -41,6 +42,7 @@ public:
     void addSimplePseudoLevels();
     void addCustomPseudoLevels();
     void addRemainingTransition(std::string method);
+    void addNeutronLevels();
 //EVa    void addStatPseudoLevels();
 //Eva    double findTransitionIntensity
 //            ( Level* finalLevel, double atomicMass, double energy, SpinAndParity spin);
@@ -71,6 +73,8 @@ private:
     double minEnergy_;
     double maxEnergy_;
     double totIntensity_;
+    double finalNeutronE_;
+    double Sn_;
     bool ifStatisticalModel_;
     double deltaE_;
     std::vector<std::string> intensityMethodList_;

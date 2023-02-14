@@ -31,7 +31,8 @@ public:
 
     void RemoveTransition(std::string type, double energy);
     void UpdateTransitionVector();
-    void AddTransition(std::string type, double transitionQValue, double intensity);
+    void AddTransition(std::string type, double transitionQValue, double intensity,
+                       double neutronFinalLvlEnergy=0.);
 
     void NormalizeTransitionIntensities();
 	void CalculateTotalProbability();

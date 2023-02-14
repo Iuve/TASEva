@@ -11,6 +11,10 @@
   Maximum entropy method taken from J.L.Tain, D. Cano-Ott, NIM 571 (2007) 728-738
 
   Bayesian method taken from P.Shuai et al. (2021)
+  equation A3 from appendix A describes method for single module
+  equation A4 is for coincidence (2D) spectrum - NOT implemented
+  equation A5 shows how to deal with multiple modules and 2D spectrums,
+  which is implemented here as "sum" of multiple modules / A3 equations
   */
 
 class FitController : public QWidget

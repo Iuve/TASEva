@@ -168,7 +168,8 @@ void Level::UpdateTransitionVector()
             transitions_.push_back( &(*it) );
 }
 
-void Level::AddTransition(std::string type, double transitionQValue, double intensity)
+void Level::AddTransition(std::string type, double transitionQValue, double intensity,
+                          double neutronFinalLvlEnergy)
 {
     double finalLevelEnergy;
     int finalLevelAtomicMass;
@@ -238,10 +239,10 @@ void Level::AddTransition(std::string type, double transitionQValue, double inte
         finalLevelAtomicNumber = atomicNumber;
         //not ready! Sn needed
         //finalLevelEnergy = levelEnergy_ - Sn - transitionQValue;
-        finalLevelEnergy = 0.;
+        //finalLevelEnergy = 0.;
 
         neutronsFromLvL_.push_back(Neutron(type, transitionQValue, intensity,
-            finalLevelEnergy, finalLevelAtomicMass, finalLevelAtomicNumber));
+            neutronFinalLvlEnergy, finalLevelAtomicMass, finalLevelAtomicNumber));
         transitions_.push_back(&neutronsFromLvL_.back());
         neutronLevel_ = true;
     }

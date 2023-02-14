@@ -94,8 +94,8 @@ bool TransitionRespProvider::CheckAndCreateDirectories()
 
     if( xmlReady )
     {
-        //respContainer->simulationDone = checkGeantFile();
-        respContainer->simulationDone = true;
+        respContainer->simulationDone = checkGeantFile();
+        //respContainer->simulationDone = true;
         respContainer->sortingDone = checkSortFile();
     }
     else
@@ -319,7 +319,7 @@ void TransitionRespProvider::sortFile()
 bool TransitionRespProvider::makeInputToSort()
 {
     Project *myProject = Project::get();
-    int eMax = 9000; //?????
+    int eMax = 12000; //?????
     QFile file(levelDir_.filePath(inputToSortName_));
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
         return false;
@@ -333,7 +333,7 @@ bool TransitionRespProvider::makeInputToSort()
     out << "EMax " << eMax << "\n";
     out << "2DbinningFactor " << myProject->getBinning2Dfactor() << "\n";
 //    out << "2DbinningFactor " <<  "1" << "\n";
-    out << "siliThreshold " << 70 << "\n";
+    out << "siliThreshold " << 10 << "\n";
 
     return true;
 }

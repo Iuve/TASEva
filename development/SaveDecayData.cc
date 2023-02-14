@@ -72,7 +72,7 @@ void SaveDecayData::SaveDecayStructure()
             nodeLevel.append_attribute("Energy").set_value(toStringPrecision(levelEnergy,2).c_str());
             nodeLevel.append_attribute("Spin").set_value(toStringPrecision(spin,2).c_str());
             nodeLevel.append_attribute("Parity") = parity.c_str();
-            nodeLevel.append_attribute("HalfLifeTime").set_value(toStringPrecision(halfLifeTimeInSeconds,2).c_str());
+            nodeLevel.append_attribute("HalfLifeTime").set_value(toStringPrecision(halfLifeTimeInSeconds,9).c_str());
             nodeLevel.append_attribute("TimeUnit") = "S";
             if( isPseudoLevel )
                 nodeLevel.append_attribute("Origin") = "Added";
@@ -104,13 +104,13 @@ void SaveDecayData::SaveDecayStructure()
                     if (eCC > 0.)
                     {
                         //Check later whether 6 precision is enough
-                        pugi::xml_node nodeConversion = nodeTransition.child("ElectronConversionCoefficient");
+                        pugi::xml_node nodeConversion = nodeTransition.append_child("ElectronConversionCoefficient");
                         nodeConversion.append_attribute("Total").set_value(toStringPrecision(eCC,6).c_str());
                         double* shellECC = (*kt)->GetShellElectronConversionCoefficient();
                         nodeConversion.append_attribute("KC").set_value(toStringPrecision(shellECC[0],6).c_str());
-                        nodeConversion.append_attribute("LC").set_value(toStringPrecision(shellECC[1],6).c_str());
-                        nodeConversion.append_attribute("MC").set_value(toStringPrecision(shellECC[2],6).c_str());
-                        nodeConversion.append_attribute("NC").set_value(toStringPrecision(shellECC[3],6).c_str());
+                        nodeConversion.append_attribute("LC").set_value(toStringPrecision(shellECC[1]-shellECC[0],6).c_str());
+                        nodeConversion.append_attribute("MC").set_value(toStringPrecision(shellECC[2]-shellECC[1],6).c_str());
+                        nodeConversion.append_attribute("NC").set_value(toStringPrecision(shellECC[3]-shellECC[2],6).c_str());
 
                     }
                 }
@@ -207,7 +207,7 @@ void SaveDecayData::SaveSpecifiedDecayStructure(Transition* firstTransition, Tra
                 nodeLevel.append_attribute("Energy").set_value(toStringPrecision(levelEnergy,2).c_str());
                 nodeLevel.append_attribute("Spin").set_value(toStringPrecision(spin,2).c_str());
                 nodeLevel.append_attribute("Parity") = parity.c_str();
-                nodeLevel.append_attribute("HalfLifeTime").set_value(toStringPrecision(halfLifeTimeInSeconds,2).c_str());
+                nodeLevel.append_attribute("HalfLifeTime").set_value(toStringPrecision(halfLifeTimeInSeconds,9).c_str());
                 nodeLevel.append_attribute("TimeUnit") = "S";
 
                 string particleType =  (*kt)->GetParticleType();
@@ -265,7 +265,7 @@ void SaveDecayData::SaveSpecifiedDecayStructure(Transition* firstTransition, Tra
                 nodeLevel.append_attribute("Energy").set_value(toStringPrecision(levelEnergy,2).c_str());
                 nodeLevel.append_attribute("Spin").set_value(toStringPrecision(spin,2).c_str());
                 nodeLevel.append_attribute("Parity") = parity.c_str();
-                nodeLevel.append_attribute("HalfLifeTime").set_value(toStringPrecision(halfLifeTimeInSeconds,2).c_str());
+                nodeLevel.append_attribute("HalfLifeTime").set_value(toStringPrecision(halfLifeTimeInSeconds,9).c_str());
                 nodeLevel.append_attribute("TimeUnit") = "S";
 
                 double transitionQValue =  (*kt)->GetTransitionQValue();
@@ -285,13 +285,13 @@ void SaveDecayData::SaveSpecifiedDecayStructure(Transition* firstTransition, Tra
                     if (eCC > 0.)
                     {
                         //Check later whether 6 precision is enough
-                        pugi::xml_node nodeConversion = nodeTransition.child("ElectronConversionCoefficient");
+                        pugi::xml_node nodeConversion = nodeTransition.append_child("ElectronConversionCoefficient");
                         nodeConversion.append_attribute("Total").set_value(toStringPrecision(eCC,6).c_str());
                         double* shellECC = (*kt)->GetShellElectronConversionCoefficient();
                         nodeConversion.append_attribute("KC").set_value(toStringPrecision(shellECC[0],6).c_str());
-                        nodeConversion.append_attribute("LC").set_value(toStringPrecision(shellECC[1],6).c_str());
-                        nodeConversion.append_attribute("MC").set_value(toStringPrecision(shellECC[2],6).c_str());
-                        nodeConversion.append_attribute("NC").set_value(toStringPrecision(shellECC[3],6).c_str());
+                        nodeConversion.append_attribute("LC").set_value(toStringPrecision(shellECC[1]-shellECC[0],6).c_str());
+                        nodeConversion.append_attribute("MC").set_value(toStringPrecision(shellECC[2]-shellECC[1],6).c_str());
+                        nodeConversion.append_attribute("NC").set_value(toStringPrecision(shellECC[3]-shellECC[2],6).c_str());
 
                     }
                 }
@@ -325,7 +325,7 @@ void SaveDecayData::SaveSpecifiedDecayStructure(Transition* firstTransition, Tra
                 nodeLevel.append_attribute("Energy").set_value(toStringPrecision(levelEnergy,2).c_str());
                 nodeLevel.append_attribute("Spin").set_value(toStringPrecision(spin,2).c_str());
                 nodeLevel.append_attribute("Parity") = parity.c_str();
-                nodeLevel.append_attribute("HalfLifeTime").set_value(toStringPrecision(halfLifeTimeInSeconds,2).c_str());
+                nodeLevel.append_attribute("HalfLifeTime").set_value(toStringPrecision(halfLifeTimeInSeconds,9).c_str());
                 nodeLevel.append_attribute("TimeUnit") = "S";
 
                 for ( auto kt = levelToWrite->GetTransitions()->begin(); kt != levelToWrite->GetTransitions()->end(); ++kt )
@@ -348,13 +348,13 @@ void SaveDecayData::SaveSpecifiedDecayStructure(Transition* firstTransition, Tra
                         if (eCC > 0.)
                         {
                             //Check later whether 6 precision is enough
-                            pugi::xml_node nodeConversion = nodeTransition.child("ElectronConversionCoefficient");
+                            pugi::xml_node nodeConversion = nodeTransition.append_child("ElectronConversionCoefficient");
                             nodeConversion.append_attribute("Total").set_value(toStringPrecision(eCC,6).c_str());
                             double* shellECC = (*kt)->GetShellElectronConversionCoefficient();
                             nodeConversion.append_attribute("KC").set_value(toStringPrecision(shellECC[0],6).c_str());
-                            nodeConversion.append_attribute("LC").set_value(toStringPrecision(shellECC[1],6).c_str());
-                            nodeConversion.append_attribute("MC").set_value(toStringPrecision(shellECC[2],6).c_str());
-                            nodeConversion.append_attribute("NC").set_value(toStringPrecision(shellECC[3],6).c_str());
+                            nodeConversion.append_attribute("LC").set_value(toStringPrecision(shellECC[1]-shellECC[0],6).c_str());
+                            nodeConversion.append_attribute("MC").set_value(toStringPrecision(shellECC[2]-shellECC[1],6).c_str());
+                            nodeConversion.append_attribute("NC").set_value(toStringPrecision(shellECC[3]-shellECC[2],6).c_str());
 
                         }
                     }
@@ -419,7 +419,7 @@ void SaveDecayData::SaveSpecifiedDecayStructure(Transition* firstTransition, Tra
                             nodeLevel.append_attribute("Energy").set_value(toStringPrecision(levelEnergy,2).c_str());
                             nodeLevel.append_attribute("Spin").set_value(toStringPrecision(spin,2).c_str());
                             nodeLevel.append_attribute("Parity") = parity.c_str();
-                            nodeLevel.append_attribute("HalfLifeTime").set_value(toStringPrecision(halfLifeTimeInSeconds,2).c_str());
+                            nodeLevel.append_attribute("HalfLifeTime").set_value(toStringPrecision(halfLifeTimeInSeconds,9).c_str());
                             nodeLevel.append_attribute("TimeUnit") = "S";
 
                             for ( auto kt = levelToWrite->GetTransitions()->begin(); kt != levelToWrite->GetTransitions()->end(); ++kt )
@@ -442,13 +442,13 @@ void SaveDecayData::SaveSpecifiedDecayStructure(Transition* firstTransition, Tra
                                     if (eCC > 0.)
                                     {
                                         //Check later whether 6 precision is enough
-                                        pugi::xml_node nodeConversion = nodeTransition.child("ElectronConversionCoefficient");
+                                        pugi::xml_node nodeConversion = nodeTransition.append_child("ElectronConversionCoefficient");
                                         nodeConversion.append_attribute("Total").set_value(toStringPrecision(eCC,6).c_str());
                                         double* shellECC = (*kt)->GetShellElectronConversionCoefficient();
                                         nodeConversion.append_attribute("KC").set_value(toStringPrecision(shellECC[0],6).c_str());
-                                        nodeConversion.append_attribute("LC").set_value(toStringPrecision(shellECC[1],6).c_str());
-                                        nodeConversion.append_attribute("MC").set_value(toStringPrecision(shellECC[2],6).c_str());
-                                        nodeConversion.append_attribute("NC").set_value(toStringPrecision(shellECC[3],6).c_str());
+                                        nodeConversion.append_attribute("LC").set_value(toStringPrecision(shellECC[1]-shellECC[0],6).c_str());
+                                        nodeConversion.append_attribute("MC").set_value(toStringPrecision(shellECC[2]-shellECC[1],6).c_str());
+                                        nodeConversion.append_attribute("NC").set_value(toStringPrecision(shellECC[3]-shellECC[2],6).c_str());
 
                                     }
                                 }
@@ -570,7 +570,7 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
     if (!outputFile.is_open())
         cout << "Warning message: The file " + (string) outputFilename + " is not open!" << endl;
 
-    outputFile << "#LevelEnergy    BetaFeeding   GrowingBetaFeeding" << endl;
+    outputFile << "#LevelEnergy | BetaFeeding | GrowingBetaFeeding(gammas)/Energy(neutrons) | FinalLevel(neutrons)" << endl;
 
     double averageBetaEnergy = 0.;
     double averageGammaEnergy = 0.;
@@ -599,13 +599,19 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
                 if(finalLevel->GetNeutronLevelStatus())
                 {
                     neutronPercentage += intensity;
-                    string neutronsEnergies = " ";
+                    //string neutronsEnergies = " ";
+                    int nEnergy = 0;
+                    int targetLvlEnergy = 0;
                     for(auto nt = finalLevel->GetTransitions()->begin(); nt != finalLevel->GetTransitions()->end(); ++nt)
                     {
-                        neutronsEnergies += (*nt)->GetParticleType() + to_string_with_precision((*nt)->GetIntensity(),0);
-                        neutronsEnergies += "E" + to_string_with_precision((*nt)->GetTransitionQValue(),0);
+                        //neutronsEnergies += (*nt)->GetParticleType() + to_string_with_precision((*nt)->GetIntensity(),0);
+                        //neutronsEnergies += "E" + to_string_with_precision((*nt)->GetTransitionQValue(),0);
+                        nEnergy = (*nt)->GetTransitionQValue();
+                        targetLvlEnergy = (*nt)->GetFinalLevelEnergy();
                     }
-                    outputFile << finalLevelEnergy << " " << intensity << neutronsEnergies << endl;
+
+                    outputFile << finalLevelEnergy << " " << intensity << " "
+                               << nEnergy << " " << targetLvlEnergy << endl;
                 }
                 else
                 {

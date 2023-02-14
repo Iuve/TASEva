@@ -75,6 +75,8 @@ DecayPathEditor::DecayPathEditor(QWidget *parent) :
     uiT->linePseudoLevEnMin->setText(QString::number(pseudoLevelEnergyMin_));
     uiT->linePseudoLevEnMax->setText(QString::number(pseudoLevelEnergyMax_));
     uiT->linePseudoLevTotInten->setText(QString::number(pseudoLevelTotInten_));
+    uiT->linePseudoLevNeutronE->setText(QString::number(pseudoLevNeutronE_));
+    uiT->linePseudoLevSn->setText(QString::number(pseudoLevSn_));
 
     uiT->tableMotherLevels->setMinimumHeight(150);
     uiT->tableDaughterLevels->setMinimumHeight(150);
@@ -184,7 +186,7 @@ void DecayPathEditor::slotAddPseudoLevel()
    int tabIndex = uiT->tabDecay->currentIndex();
    pseudoLevelsController_->setNuclideIndex(tabIndex);
    pseudoLevelsController_->addPseudoLevels(pseudoLevelEnergyStep_,pseudoLevelEnergyMin_,pseudoLevelEnergyMax_,
-                                          pseudoLevelTotInten_, gammaIntensityMethod_);
+                                          pseudoLevelTotInten_, gammaIntensityMethod_, pseudoLevNeutronE_, pseudoLevSn_);
    emit signalDecayPathEdited();
    responseFunction->UpdateStructure();
    emit signalUpdateTables();
@@ -198,6 +200,8 @@ void DecayPathEditor::slotUpdatePseudoLevelData()
     pseudoLevelEnergyMin_ = uiT->linePseudoLevEnMin->text().toDouble();
     pseudoLevelEnergyMax_ = uiT->linePseudoLevEnMax->text().toDouble();
     pseudoLevelTotInten_ = uiT->linePseudoLevTotInten->text().toDouble();
+    pseudoLevNeutronE_ = uiT->linePseudoLevNeutronE->text().toDouble();
+    pseudoLevSn_ = uiT->linePseudoLevSn->text().toDouble();
 
     if(uiT->radioStatisticalModelApply->isChecked()){
         ifStatModel_ = true;

@@ -23,7 +23,8 @@ public:
     void DeleteLevels();
     void AddLevelEI(double, double); //Energy,Intensity
     void AddCustomLevel(double, double); //Energy
-    void AddLevel(double, double, std::string, double, double intensity = 0.); //energy,spin,parity,T12,intensity
+    void AddLevel(double, double, std::string, double, double intensity = 0.,
+                  double neutronFinalLvlEnergy=0., double Sn=0.); //energy,spin,parity,T12,intensity,neutron
 
 private:
 	int atomicNumber_;

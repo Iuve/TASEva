@@ -94,6 +94,8 @@ private:
     double pseudoLevelEnergyMin_=3000;
     double pseudoLevelEnergyMax_=5000;
     double pseudoLevelTotInten_=10;
+    double pseudoLevNeutronE_ = 0.;
+    double pseudoLevSn_ = 0.;
     bool ifStatModel_ = true;
     string gammaIntensityMethod_;
 };

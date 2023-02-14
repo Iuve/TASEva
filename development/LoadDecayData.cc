@@ -19,7 +19,7 @@ double CalculateHalfLifeTimeInSeconds(double time, std::string unit)
 		return time;
     else
     {
-			if(unit == "F")
+            if(unit == "NS")
 				return time * pow(10., -9.);
 			else if(unit == "MS")
 				return time * 0.001;
@@ -243,7 +243,11 @@ Nuclide LoadDecayData::LoadNuclideData(const string filename)
                         //not sure if this works with Qt; using stringToDouble function may be needed
 						double value;
 						istringstream( attr.value() ) >> value;
-						cout << attr.name() << " " << value << endl;
+                        //cout << attr.name() << " " << value << endl;
+                        string typeName = attr.name();
+                        if( typeName == "Total" )
+                            continue;
+
 						gammaTransition.SetShellElectronConvCoef(attr.name(), value);
 					}
 

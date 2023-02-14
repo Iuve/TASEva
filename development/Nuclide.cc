@@ -122,22 +122,25 @@ void Nuclide::AddLevelEI(double energy, double intensity)
 
 }
 
-void Nuclide::AddLevel(double energy, double spin, std::string parity, double T12, double intensity)
+void Nuclide::AddLevel(double energy, double spin, std::string parity, double T12, double intensity,
+                       double neutronFinalLvlEnergy, double Sn)
 {
     nuclideLevels_.push_back( Level(energy, spin, parity, T12) );
     nuclideLevels_.back().setAsPseudoLevel();
-    //add default gamma transition to ground state
-    nuclideLevels_.back().AddTransition("G", energy, 1.);
+    //add default gamma (or neutron) transition to ground state
+    if(Sn > 0)
+    {
+        double neutronKineticEnergy = energy - neutronFinalLvlEnergy - Sn;
+        nuclideLevels_.back().AddTransition("N", neutronKineticEnergy, 1.,
+                                            neutronFinalLvlEnergy);
+    }
+    else
+        nuclideLevels_.back().AddTransition("G", energy, 1.);
     //add default beta minus transition to created level
     DecayPath* decayPath = DecayPath::get();
     std::vector<Nuclide>* nuclidesVector = decayPath->GetAllNuclides();
     for ( auto jt = nuclidesVector->begin(); jt != nuclidesVector->end(); ++jt )
     {
-        //std::cout << "atomicNumber_: " << atomicNumber_ << std::endl;
-        //std::cout << "jt->GetAtomicNumber(): " << jt->GetAtomicNumber() << std::endl;
-        //std::cout << "jt->GetAtomicMass(): " << jt->GetAtomicMass() << std::endl;
-        //std::cout << "(atomicNumber_ + 1 == jt->GetAtomicNumber()): " << (atomicNumber_ + 1 == jt->GetAtomicNumber()) << std::endl;
-        //std::cout << "(atomicMass_ == jt->GetAtomicMass()) : " << (atomicMass_ == jt->GetAtomicMass())  << std::endl;
         if( (atomicNumber_ - 1 == jt->GetAtomicNumber()) && (atomicMass_ == jt->GetAtomicMass()) )
         {
             for ( auto kt = jt->GetNuclideLevels()->begin(); kt != jt->GetNuclideLevels()->end(); ++kt )

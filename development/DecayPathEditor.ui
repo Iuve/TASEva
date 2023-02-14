@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>545</width>
-    <height>656</height>
+    <height>736</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -113,7 +113,51 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="1" rowspan="4">
+       <item row="2" column="0">
+        <widget class="QLabel" name="labelDaughterQvalue">
+         <property name="text">
+          <string>Q (keV):</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
+        <widget class="QPushButton" name="buttonAddLevel">
+         <property name="toolTip">
+          <string>Adds new level</string>
+         </property>
+         <property name="text">
+          <string>Add new level</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QPushButton" name="buttonNormBetaFeeding">
+         <property name="toolTip">
+          <string>Normalizes beta feding to 100%</string>
+         </property>
+         <property name="text">
+          <string>Norm. beta feeding</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="labelTotalIntensity">
+         <property name="text">
+          <string>Total feeding intensity :</string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="0">
+        <widget class="QPushButton" name="buttonRemoveLevel">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>RemoveLevel</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
         <widget class="QFrame" name="frame_2">
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
@@ -137,8 +181,8 @@
          <widget class="QComboBox" name="comboBoxModel">
           <property name="geometry">
            <rect>
-            <x>180</x>
-            <y>20</y>
+            <x>20</x>
+            <y>40</y>
             <width>91</width>
             <height>25</height>
            </rect>
@@ -147,8 +191,8 @@
          <widget class="QPushButton" name="buttonApplyModel">
           <property name="geometry">
            <rect>
-            <x>180</x>
-            <y>50</y>
+            <x>20</x>
+            <y>70</y>
             <width>89</width>
             <height>25</height>
            </rect>
@@ -191,47 +235,10 @@
          <column/>
         </widget>
        </item>
-       <item row="9" column="0">
-        <widget class="QPushButton" name="buttonRemoveLevel">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="text">
-          <string>RemoveLevel</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="labelDaughterQvalue">
-         <property name="text">
-          <string>Q (keV):</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="0">
-        <widget class="QPushButton" name="buttonNormBetaFeeding">
-         <property name="toolTip">
-          <string>Normalizes beta feding to 100%</string>
-         </property>
-         <property name="text">
-          <string>Norm. beta feeding</string>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="0">
         <widget class="QLabel" name="labelDaughterT12">
          <property name="text">
           <string>T1/2:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="0">
-        <widget class="QPushButton" name="buttonAddLevel">
-         <property name="toolTip">
-          <string>Adds new level</string>
-         </property>
-         <property name="text">
-          <string>Add new level</string>
          </property>
         </widget>
        </item>
@@ -247,10 +254,36 @@
           <enum>QFrame::Raised</enum>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
-          <item row="0" column="0" colspan="2">
-           <widget class="QLabel" name="labelPseudoLevels">
+          <item row="2" column="0">
+           <widget class="QLabel" name="labelPseudoLevelEnMin">
             <property name="text">
-             <string>Add PseudoLevels</string>
+             <string>Energy min. (keV)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="linePseudoLevEnStep"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="linePseudoLevEnMax"/>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLineEdit" name="linePseudoLevTotInten"/>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Final lvl (neutron only)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QPushButton" name="buttonAddPseudoLevel">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Add</string>
             </property>
            </widget>
           </item>
@@ -261,53 +294,10 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="linePseudoLevEnStep"/>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="labelPseudoLevelEnMin">
-            <property name="text">
-             <string>Energy min. (keV)</string>
-            </property>
-           </widget>
-          </item>
           <item row="2" column="1">
            <widget class="QLineEdit" name="linePseudoLevEnMin"/>
           </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="labelPseudoLevelEnMax">
-            <property name="text">
-             <string>Energy max. (keV)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="linePseudoLevEnMax"/>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="labelPseudoLevelIntensity">
-            <property name="text">
-             <string>Total Intensity (%)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QLineEdit" name="linePseudoLevTotInten"/>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label">
-            <property name="toolTip">
-             <string>Gamma intensity model to be used</string>
-            </property>
-            <property name="text">
-             <string>Gamma intensity  model</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QComboBox" name="comboBoxIntensity"/>
-          </item>
-          <item row="6" column="0">
+          <item row="8" column="0">
            <widget class="QRadioButton" name="radioStatisticalModelApply">
             <property name="enabled">
              <bool>false</bool>
@@ -323,24 +313,58 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="1">
-           <widget class="QPushButton" name="buttonAddPseudoLevel">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
+          <item row="3" column="0">
+           <widget class="QLabel" name="labelPseudoLevelEnMax">
             <property name="text">
-             <string>Add</string>
+             <string>Energy max. (keV)</string>
             </property>
            </widget>
           </item>
+          <item row="0" column="0" colspan="2">
+           <widget class="QLabel" name="labelPseudoLevels">
+            <property name="text">
+             <string>Add PseudoLevels</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label">
+            <property name="toolTip">
+             <string>Gamma intensity model to be used</string>
+            </property>
+            <property name="text">
+             <string>Gamma intensity  model</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="labelPseudoLevelIntensity">
+            <property name="text">
+             <string>Total Intensity (%)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QComboBox" name="comboBoxIntensity"/>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLineEdit" name="linePseudoLevNeutronE">
+            <property name="dragEnabled">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Sn (neutron only)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="QLineEdit" name="linePseudoLevSn"/>
+          </item>
          </layout>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="labelTotalIntensity">
-         <property name="text">
-          <string>Total feeding intensity :</string>
-         </property>
         </widget>
        </item>
       </layout>
