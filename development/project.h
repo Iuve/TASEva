@@ -114,6 +114,8 @@ public:
     //double getGateOtherLevelsNormFactor(){return gateOtherLevelsNormFactor_;}
     void setCustomTransitionIntensities(std::vector<double> customInt ) {customTransitionIntensities_ = customInt;}
     std::vector<double>* getCustomTransitionIntensities() {return &customTransitionIntensities_;}
+    void setBinning1Dfactor(int bin){binning1Dfactor_ = bin;}
+    int getBinning1Dfactor(){return binning1Dfactor_;}
     void setBinning2Dfactor(int bin){binning2Dfactor_ = bin;}
     int getBinning2Dfactor(){return binning2Dfactor_;}
     void setActiveCoresForSimulation(int number){activeCoresForSimulation_ = number;}
@@ -190,6 +192,7 @@ private:
     Histogram Gate2DOtherLevelsContribution_;  //keeps contribution from levels of higier energy to the get set
 
     double gateNormFactor_;
+    int binning1Dfactor_;
     int binning2Dfactor_;
     int activeCoresForSimulation_;
 

@@ -45,6 +45,7 @@ Project::Project()
  recHist_ = *Histogram::GetEmptyHistogram(0.0,10.0,10);
  difHist_ = *Histogram::GetEmptyHistogram(0.0,10.0,10);
 
+
 // slotUpdateProjectPanel(true);
 }
 
@@ -69,6 +70,7 @@ void  Project::New()
     fitLevelTo_ = 5000.0;
     fitLambda_ = 1.0;
     noFitIterations_ = 100;
+    binning1Dfactor_ = 1;
     binning2Dfactor_ = 1;
     activeCoresForSimulation_ = 4;
 }
@@ -115,7 +117,19 @@ void Project::Open(string fileName)
             con.push_back(b5);
             inputContamination_.push_back(con);
             }
-        else if (b1 == "Binning2D:") {binning2Dfactor_ = std::stoi(b2);}
+        else if (b1 == "Binning1D:")
+        {
+            binning1Dfactor_ = std::stoi(b2);
+            decHist_ = *Histogram::GetEmptyHistogram(0, 100, 100 / binning1Dfactor_);
+            expHist_ = *Histogram::GetEmptyHistogram(0, 100, 100 / binning1Dfactor_);
+            recHist_ = *Histogram::GetEmptyHistogram(0, 100, 100 / binning1Dfactor_);
+            difHist_ = *Histogram::GetEmptyHistogram(0, 100, 100 / binning1Dfactor_);
+        }
+        else if (b1 == "Binning2D:")
+        {
+            binning2Dfactor_ = std::stoi(b2);
+            exp2DHist_ = *Histogram::GetEmptyHistogram(0, 100, 100 / binning2Dfactor_);
+        }
         else if (b1 == "SimulationActiveCores:") {activeCoresForSimulation_ = std::stoi(b2);}
         else {std::cout << "unknown text in input file " << b1 <<" i "<< b2 << std::endl; }
          }

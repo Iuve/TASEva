@@ -31,6 +31,9 @@ void Gamma::InitializeShellNumbers()
 	shellNumbers_[1] = 1;
 	shellNumbers_[2] = 4;
 	shellNumbers_[3] = 9;
+
+    for(int i = 0; i < numberOfShellIndexes_; i++)
+        shellElectonConvCoeff_[i] = 0.;
 }
 
 void Gamma::SetShellElectronConvCoef(std::string type, double value)

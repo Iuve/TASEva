@@ -113,6 +113,9 @@ void ContaminationController::addContamination(QString expID, QString name, QStr
     std::cout << "intensityValue: " <<intensityValue <<std::endl;
     std::cout << "hist: " << histtmp <<std::endl;
 */
+    Project *myProject = Project::get();
+    histtmp->Rebin( myProject->getBinning1Dfactor() );
+
     Contamination* test = new Contamination(histtmp, filename, idValue, 1.0, intensityValue);
     std::cout << "--------------------------------------" << std::endl;
     std::cout << "filename: " <<test->filename <<std::endl;

@@ -794,6 +794,8 @@ void MainWindow::slotCalculateDECSpectrum()
     Histogram tmpDecHist = new Histogram();
     tmpDecHist = *responseFunction->GetResponseFunction(motherLevel, histId);
 
+    tmpDecHist.Rebin(myProject->getBinning1Dfactor());
+
     ui->frameFit->setEnabled(true);
     ui->buttonAutoFit->setEnabled(true);
     ui->buttonAnalysis2D->setEnabled(true);
@@ -830,8 +832,8 @@ void MainWindow::slotCalculateTotalRECSpectrum()
 //Evaout    Histogram *recHist = Histogram::GetEmptyHistogram();  //why we crate rec his jest zdefiniowane w proj.h
 //     recHist = Histogram::GetEmptyHistogram();
 
-    Histogram* recHist = Histogram::GetEmptyHistogram();
-    Histogram* difHist = Histogram::GetEmptyHistogram();
+    Histogram* recHist = Histogram::GetEmptyHistogram(0, 100, 100 / myProject->getBinning1Dfactor());
+    Histogram* difHist = Histogram::GetEmptyHistogram(0, 100, 100 / myProject->getBinning1Dfactor());
     Histogram* decHist = myProject->getDecHist();
 
     if(decHist != 0L)
@@ -1439,6 +1441,7 @@ void MainWindow::openProject(bool trigered)
 //    Histogram tmp = myProject->getHistFromExpMap(hisId);
 //    myProject->setExpHist( tmp );
     myProject->setExpHist();
+    myProject->getExpHist()->Rebin( myProject->getBinning1Dfactor() );
 
     double xEMax = myProject->getExpHist()->GetNrOfBins();
     double ymax = static_cast<double>( myProject->getExpHist()->GetMaxValue(1,xEMax));
