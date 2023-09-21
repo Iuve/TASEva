@@ -33,7 +33,8 @@ public:
     void setY2Values(QVector<double> Y){ y2 = Y;}
     void setDiffValues(QVector<double> Y){ diff = Y;}
     void initializeGraphs();
-
+    void setSnLabel();
+    void setQValueLabel();
     Ui::ManualFitGraph *uiM;
 
 public slots:

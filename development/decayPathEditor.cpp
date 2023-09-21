@@ -26,6 +26,7 @@ DecayPathEditor::DecayPathEditor(QWidget *parent) :
     pseudoLevelsController_ =  new PseudoLevelsController();
 
     setComboBoxMethod();
+    setComboBoxDeExPath();
 
     uiT->tableDaughterLevels->setToolTip("Double click on the row number to get the transition editor open");
     connect(uiT->tableMotherLevels->verticalHeader(), SIGNAL(sectionDoubleClicked(int)), this, SLOT(slotEditMTransitions(int)));
@@ -42,7 +43,13 @@ DecayPathEditor::DecayPathEditor(QWidget *parent) :
     connect(g1, SIGNAL(signalUpdateTransitionTable(int,int )), this, SLOT(slotEditTransitions(int,int)));
     connect(g1, SIGNAL(signalUpdateLevelTable()),this, SLOT(slotUpdateTablesForward()));
     connect(uiT->buttonAddPseudoLevel, SIGNAL(clicked(bool)), this, SLOT(slotAddPseudoLevel()));
-    connect(uiT->comboBoxIntensity, SIGNAL(currentTextChanged(QString)), this, SLOT(slotSetGammaIntensityMethod(QString)));
+    connect(uiT->comboBoxGammaInten, SIGNAL(currentTextChanged(QString)), this, SLOT(slotSetGammaIntensityMethod(QString)));
+    connect(uiT->comboBoxGammaPath, SIGNAL(currentTextChanged(QString)),this, SLOT(slotSetGammaPathMethod(QString)));
+    connect(uiT->comboBoxParticleInten, SIGNAL(currentTextChanged(QString)), this, SLOT(slotSetParticleIntensityMethod(QString)));
+    connect(uiT->comboBoxParticlePath, SIGNAL(currentTextChanged(QString)),this, SLOT(slotSetParticlePathMethod(QString)));
+    connect(uiT->comboBoxDeExcitationPath  , SIGNAL(currentTextChanged(QString)), this, SLOT(slotSetDeExcitationPath(QString)));
+    connect(uiT->comboBoxGammaParticleRatio, SIGNAL(currentTextChanged(QString)), this, SLOT(slotSetGammaParticleIntensityRatio(QString)));
+    connect(uiT->buttonApplyPathAndInten, SIGNAL(clicked(bool)), this, SLOT(slotApplyPathAndInten(bool)) );
 
     connect(g1, SIGNAL(signalTransitionsEdited()), this, SIGNAL(signalDecayPathEdited()));
 
@@ -75,12 +82,24 @@ DecayPathEditor::DecayPathEditor(QWidget *parent) :
     uiT->linePseudoLevEnMin->setText(QString::number(pseudoLevelEnergyMin_));
     uiT->linePseudoLevEnMax->setText(QString::number(pseudoLevelEnergyMax_));
     uiT->linePseudoLevTotInten->setText(QString::number(pseudoLevelTotInten_));
-    uiT->linePseudoLevNeutronE->setText(QString::number(pseudoLevNeutronE_));
-    uiT->linePseudoLevSn->setText(QString::number(pseudoLevSn_));
 
     uiT->tableMotherLevels->setMinimumHeight(150);
     uiT->tableDaughterLevels->setMinimumHeight(150);
     uiT->tableGrandDaughterLevels->setMinimumHeight(150);
+
+    uiT->labelIntensityModel->setEnabled(false);
+    uiT->labelParticle->setEnabled(false);
+    uiT->labelParticle->setText("Particle");
+    uiT->comboBoxParticleInten->setEnabled(false);
+    uiT->comboBoxParticlePath->setEnabled(false);
+    uiT->labelGamma->setEnabled(false);
+    uiT->comboBoxGammaInten->setEnabled(false);
+    uiT->comboBoxGammaPath->setEnabled(false);
+    uiT->labelRatio->setEnabled(false);
+    uiT->comboBoxGammaParticleRatio->setEnabled(false);
+    uiT->buttonApplyPathAndInten->setEnabled(false);
+    uiT->buttonAddPseudoLevel->setEnabled(false);
+
 
 
 //    InitLabels();
@@ -111,20 +130,21 @@ void DecayPathEditor::InitLabels()
     QString QMassNumber = QString::number(nuclides_->at(i).GetAtomicMass());
     QString QElementName = QString::fromStdString(PeriodicTable::GetAtomicName(atomicNumber_));
     QString QQBeta = QString::number(nuclides_->at(i).GetQBeta());
-
+    QString QSn = QString::number(nuclides_->at(i).GetSn());
 // Setting Labels
     //Mother
     if( i == 0)
     {
     uiT->labelMotherIsotope->setText("Isotope : " +QElementName+"-"+QMassNumber);
     uiT->labelMotherT12->setText("T1/2 :");
-    uiT->labelMotherQvalue->setText("QBeta (keV) : "+QQBeta);
+    uiT->labelMotherQvalue->setText("QBeta (keV) = "+QQBeta);
     uiT->labelMotherSpinParity->setText("I : ");
     } else if (i==1)
     {//Daughter
-    uiT->labelDaughterIsotope->setText("Isotope : ");
+    uiT->labelDaughterIsotope->setText("Isotope : "+QElementName+"-"+QMassNumber);
     uiT->labelDaughterT12->setText("T1/2 :");
-    uiT->labelDaughterQvalue->setText("QBeta (keV) : ");
+    uiT->labelDaughterQvalue->setText("QBeta (keV) = "+QQBeta);
+    uiT->labelDaughterSn->setText("Sn (keV) = "+QSn);
     } else if (i==2)
         {//GrandDaughter
     uiT->labelGrandDaughterIsotope->setText("Isotope : ");
@@ -133,36 +153,261 @@ void DecayPathEditor::InitLabels()
     }
     }
 }
+
+void DecayPathEditor::setComboBoxDeExPath()
+{
+//    QStringList  List = {"--chooose--", "G", "N", "G+N",  "P"};
+
+//    uiT->comboBoxDeExcitationPath->addItems(List);
+
+    vector<QString> mainPathMethodList = pseudoLevelsController_->getMainPathMethodList();
+    vector<QString> mainPathMethodListToolTip = pseudoLevelsController_->getMainPathMethodListToolTip();
+    for (unsigned i=0; i< mainPathMethodList.size(); i++)
+    {
+        uiT->comboBoxDeExcitationPath->addItem(mainPathMethodList.at(i));
+        uiT->comboBoxDeExcitationPath->setItemData(i, mainPathMethodListToolTip.at(i), Qt::ToolTipRole);
+    }
+
+    uiT->comboBoxGammaInten->setEnabled(false);
+    uiT->comboBoxGammaPath->setEnabled(false);
+    uiT->comboBoxParticleInten->setEnabled(false);
+    uiT->comboBoxParticlePath->setEnabled(false);
+    uiT->comboBoxGammaParticleRatio->setEnabled(false);
+}
+
+
 void DecayPathEditor::setComboBoxMethod()
 {
-    vector<string> methodList = pseudoLevelsController_->getIntensityMethodList();
-    for (unsigned i=0; i< methodList.size(); i++)
+    // Sets initial values for comboBoxs
+    vector<QString> gammaIntenMethodList = pseudoLevelsController_->getGammaIntensityMethodList();
+    vector<QString> gammaIntenMethodListToolTip = pseudoLevelsController_->getGammaIntensityMethodListToolTip();
+    for (unsigned i=0; i< gammaIntenMethodList.size(); i++)
     {
-        QString qtext = QString::fromStdString(methodList.at(i));
-        uiT->comboBoxIntensity->addItem(qtext);
+        uiT->comboBoxGammaInten->addItem(gammaIntenMethodList.at(i));
+        uiT->comboBoxGammaInten->setItemData(i, gammaIntenMethodListToolTip.at(i), Qt::ToolTipRole);
     }
+    vector<QString> gammaPathMethodList = pseudoLevelsController_->getGammaPathMethodList();
+    vector<QString> gammaPathMethodListToolTip = pseudoLevelsController_->getGammaPathMethodListToolTip();
+    for (unsigned i=0; i< gammaPathMethodList.size(); i++)
+    {
+        uiT->comboBoxGammaPath->addItem(gammaPathMethodList.at(i));
+        uiT->comboBoxGammaPath->setItemData(i, gammaPathMethodListToolTip.at(i), Qt::ToolTipRole);
+    }
+    vector<QString> particleIntenMethodList = pseudoLevelsController_->getParticleIntensityMethodList();
+    vector<QString> particleIntenMethodListToolTip = pseudoLevelsController_->getParticleIntensityMethodListToolTip();
+    for (unsigned i=0; i< particleIntenMethodList.size(); i++)
+    {
+        uiT->comboBoxParticleInten->addItem(particleIntenMethodList.at(i));
+        uiT->comboBoxParticleInten->setItemData(i, particleIntenMethodListToolTip.at(i), Qt::ToolTipRole);
+    }
+    vector<QString> particlePathMethodList = pseudoLevelsController_->getParticlePathMethodList();
+    vector<QString> particlePathMethodListToolTip = pseudoLevelsController_->getParticlePathMethodListToolTip();
+    for (unsigned i=0; i< particlePathMethodList.size(); i++)
+    {
+ //       QString qtext = QString::fromStdString(particlePathMethodList.at(i));
+        uiT->comboBoxParticlePath->addItem(particlePathMethodList.at(i));
+        uiT->comboBoxParticlePath->setItemData(i, particlePathMethodListToolTip.at(i), Qt::ToolTipRole);
+    }
+
 
 }
 
 void DecayPathEditor::slotSetGammaIntensityMethod(QString qmethod)
 {
-    pseudoLevelsController_->setIntensityMethod(qmethod.toStdString());
+    pseudoLevelsController_->setGammaIntensityMethod(qmethod.toStdString());
     cout << "Gamma intensity method set to: " << qmethod.toStdString() << "read: " <<
-            pseudoLevelsController_->getIntensityMethod() << endl;
-    gammaIntensityMethod_ = qmethod.toStdString();
+            pseudoLevelsController_->getGammaIntensityMethod() << endl;
+//    gammaIntensityMethod_ = qmethod.toStdString();
+}
+
+void DecayPathEditor::slotSetGammaPathMethod(QString qmethod)
+{
+    vector<QString> gammaPathMethodList_ = pseudoLevelsController_->getGammaPathMethodList();
+    if (qmethod == gammaPathMethodList_.at(0))
+    {
+        uiT->comboBoxGammaInten->setEnabled(false);
+    } else
+    {
+        uiT->comboBoxGammaInten->setEnabled(true);
+    }
+}
+void DecayPathEditor::slotSetParticleIntensityMethod(QString qmethod)
+{
+    pseudoLevelsController_->setParticleIntensityMethod(qmethod.toStdString());
+    cout << "Particle intensity method set to: " << qmethod.toStdString() << "read: " <<
+            pseudoLevelsController_->getParticleIntensityMethod() << endl;
+//    particleIntensityMethod_ = qmethod.toStdString();
+}
+
+void DecayPathEditor::slotSetParticlePathMethod(QString qmethod)
+{
+    vector<QString> particlePathMethodList_ = pseudoLevelsController_->getParticlePathMethodList();
+    if (qmethod == particlePathMethodList_.at(0))
+    {
+        uiT->comboBoxParticleInten->setEnabled(false);
+    } else
+    {
+        uiT->comboBoxParticleInten->setEnabled(true);
+    }
+}
+void DecayPathEditor::slotSetDeExcitationPath(QString particle)
+{
+    if (particle == "N")
+    {
+        uiT->labelParticle->setEnabled(true);
+        uiT->labelParticle->setText("Neutron");
+        uiT->comboBoxParticlePath->setEnabled(true);
+        uiT->comboBoxParticlePath->setCurrentIndex(0);
+        uiT->comboBoxParticleInten->setEnabled(false);
+        uiT->comboBoxParticleInten->setCurrentIndex(0);
+        uiT->labelGamma->setEnabled(false);
+        uiT->comboBoxGammaInten->setEnabled(false);
+        uiT->comboBoxGammaPath->setEnabled(false);
+        uiT->labelRatio->setEnabled(false);
+        uiT->comboBoxGammaParticleRatio->setEnabled(false);
+        uiT->buttonApplyPathAndInten->setEnabled(true);
+        uiT->labelIntensityModel->setEnabled(true);
+
+    } else if (particle == "G") {
+        uiT->labelParticle->setEnabled(false);
+        uiT->labelParticle->setText("Particle");
+        uiT->comboBoxParticleInten->setEnabled(false);
+        uiT->comboBoxParticlePath->setEnabled(false);
+        uiT->labelGamma->setEnabled(true);
+        uiT->comboBoxGammaPath->setEnabled(true);
+        uiT->comboBoxGammaInten->setEnabled(false);
+        uiT->comboBoxGammaPath->setCurrentIndex(0);
+        uiT->comboBoxGammaInten->setCurrentIndex(0);
+        uiT->labelRatio->setEnabled(false);
+        uiT->comboBoxGammaParticleRatio->setEnabled(false);
+        uiT->buttonApplyPathAndInten->setEnabled(true);
+        uiT->labelIntensityModel->setEnabled(true);
+
+
+    } else if (particle == "G+N") {
+        uiT->labelParticle->setEnabled(true);
+        uiT->labelParticle->setText("Neutron");
+        uiT->comboBoxParticlePath->setEnabled(true);
+        uiT->comboBoxParticleInten->setEnabled(false);
+        uiT->comboBoxParticlePath->setCurrentIndex(0);
+        uiT->comboBoxParticleInten->setCurrentIndex(0);
+        uiT->labelGamma->setEnabled(true);
+        uiT->comboBoxGammaPath->setEnabled(true);
+        uiT->comboBoxGammaInten->setEnabled(false);
+        uiT->comboBoxGammaPath->setCurrentIndex(0);
+        uiT->comboBoxGammaInten->setCurrentIndex(0);
+        uiT->labelRatio->setEnabled(true);
+        uiT->comboBoxGammaParticleRatio->setEnabled(true);
+        uiT->buttonApplyPathAndInten->setEnabled(true);
+        uiT->labelIntensityModel->setEnabled(true);
+
+    } else if (particle == "P") {
+        uiT->comboBoxParticleInten->setEnabled(true);
+        uiT->labelParticle->setText("Proton");
+        uiT->comboBoxParticlePath->setEnabled(true);
+        uiT->comboBoxParticleInten->setEnabled(false);
+        uiT->comboBoxParticlePath->setCurrentIndex(0);
+        uiT->comboBoxParticleInten->setCurrentIndex(0);
+        uiT->labelGamma->setEnabled(false);
+        uiT->comboBoxGammaInten->setEnabled(false);
+        uiT->comboBoxGammaPath->setEnabled(false);
+        uiT->labelRatio->setEnabled(false);
+        uiT->comboBoxGammaParticleRatio->setEnabled(false);
+        uiT->buttonApplyPathAndInten->setEnabled(false);
+        uiT->labelIntensityModel->setEnabled(false);
+
+    }  else {
+        uiT->labelParticle->setEnabled(false);
+        uiT->labelParticle->setText("Particle");
+        uiT->comboBoxParticleInten->setEnabled(false);
+        uiT->comboBoxParticlePath->setEnabled(false);
+        uiT->comboBoxParticlePath->setCurrentIndex(0);
+        uiT->labelGamma->setEnabled(false);
+        uiT->comboBoxGammaInten->setEnabled(false);
+        uiT->comboBoxGammaPath->setEnabled(false);
+        uiT->comboBoxGammaPath->setCurrentIndex(0);
+        uiT->labelRatio->setEnabled(false);
+        uiT->comboBoxGammaParticleRatio->setEnabled(false);
+        uiT->buttonApplyPathAndInten->setEnabled(false);
+        uiT->labelIntensityModel->setEnabled(false);
+
+    }
+
+}
+void DecayPathEditor::slotSetGammaParticleIntensityRatio(QString)
+{
 
 }
 
+void DecayPathEditor::slotApplyPathAndInten(bool flag)
+{
+    if (!flag)  //reading all the setings
+    {
+//        QString pathMain_ = uiT->comboBoxDeExcitationPath->currentText();
 
+        pseudoLevelsController_->setPathMainMethod(uiT->comboBoxDeExcitationPath->currentText());
+        pseudoLevelsController_->setGammaPathMethod(uiT->comboBoxGammaPath->currentText());
+        pseudoLevelsController_->setParticlePathMethod(uiT->comboBoxParticlePath->currentText());
+        pseudoLevelsController_->setGammaIntensityMethod(uiT->comboBoxGammaInten->currentText());
+        pseudoLevelsController_->setParticleIntensityMethod(uiT->comboBoxParticleInten->currentText());
+
+        pathMain_ = pseudoLevelsController_->getPathMainMethod();
+        std::string intenGamma_ = pseudoLevelsController_->getGammaIntensityMethod();
+        std::string intenParticle_ = pseudoLevelsController_->getParticleIntensityMethod();
+        std::string pathParticle_ = pseudoLevelsController_->getParticlePathMethod();
+        std::string pathGamma_ = pseudoLevelsController_->getGammaPathMethod();
+
+        uiT->buttonAddPseudoLevel->setEnabled(true);
+// what is it for?  to check that all necessary data are supply by the user i.e no "--choose--"
+ /*      if (pathMain_ == "--choose--")
+       {
+
+       } else if(pathMain_ == "G")
+       {
+
+       } else if(pathMain_ == "N")
+        {
+           if (pathParticle_ == "GS only")
+           {
+
+           } else if (pathParticle_ == "FE only")
+           {
+
+           } else if (pathParticle_ == "GS+FE")
+           {
+
+           } else if (pathParticle_ == "All allowed")
+           {
+
+           }
+       } else if(pathMain_ == "G+N")
+       {
+           if (pathParticle_ == "GS only")
+           {
+
+           } else if (pathParticle_ == "FE only")
+           {
+
+           } else if (pathParticle_ == "GS+FE")
+           {
+
+           } else if (pathParticle_ == "All allowed")
+           {
+
+           }
+       }
+*/
+    }
+}
 void DecayPathEditor::slotAddPseudoLevel()
 {
-//    gammaIntensityMethod_ = pseudoLevelsController_->getIntensityMethod();
-    cout << "method: " <<  gammaIntensityMethod_ << endl;
+    //gammaIntensityMethod_ = pseudoLevelsController_->getIntensityMethod();
+    //cout << "method: " <<  gammaIntensityMethod_ << endl;
 
     ResponseFunction* responseFunction = ResponseFunction::get();
 
-    slotUpdatePseudoLevelData();
-
+    slotUpdatePseudoLevelData(); // updates pseudleveldata
+    slotApplyPathAndInten(false);   // updates path and intensity
 
    if(pseudoLevelEnergyMax_<=pseudoLevelEnergyMin_)
       {
@@ -172,21 +417,25 @@ void DecayPathEditor::slotAddPseudoLevel()
           if (r == QMessageBox::Ok)
               return;
       }
-   if(gammaIntensityMethod_ == "--choose--")
+/*   if(gammaIntensityMethod_ == "--choose--"
+           || particleIntensityMethod_ == "--choose--")
       {
           int r = QMessageBox::warning(this, tr("Error"),
-                                       tr("Please first select method for gamma intensity calculation"),
+                                       tr("Please first select method for gamma/particle intensity calculation"),
                                        QMessageBox::Ok);
           if (r == QMessageBox::Ok)
               return;
       }
-//    pseudoLevelsAdded = true;
+*/
+ //    pseudoLevelsAdded = true;
 
 //   pseudoLevelsController = new PseudoLevelsController(decay);
    int tabIndex = uiT->tabDecay->currentIndex();
    pseudoLevelsController_->setNuclideIndex(tabIndex);
    pseudoLevelsController_->addPseudoLevels(pseudoLevelEnergyStep_,pseudoLevelEnergyMin_,pseudoLevelEnergyMax_,
-                                          pseudoLevelTotInten_, gammaIntensityMethod_, pseudoLevNeutronE_, pseudoLevSn_);
+                                          pseudoLevelTotInten_, pathMain_); //, gammaIntensityMethod_, pseudoLevNeutronE_);
+   // to powinnismy zmienic na decay type i intensity method
+
    emit signalDecayPathEdited();
    responseFunction->UpdateStructure();
    emit signalUpdateTables();
@@ -200,8 +449,8 @@ void DecayPathEditor::slotUpdatePseudoLevelData()
     pseudoLevelEnergyMin_ = uiT->linePseudoLevEnMin->text().toDouble();
     pseudoLevelEnergyMax_ = uiT->linePseudoLevEnMax->text().toDouble();
     pseudoLevelTotInten_ = uiT->linePseudoLevTotInten->text().toDouble();
-    pseudoLevNeutronE_ = uiT->linePseudoLevNeutronE->text().toDouble();
-    pseudoLevSn_ = uiT->linePseudoLevSn->text().toDouble();
+//    pseudoLevNeutronE_ = uiT->linePseudoLevNeutronE->text().toDouble();
+    //    pseudoLevSn_ = uiT->linePseudoLevSn->text().toDouble();
 
     if(uiT->radioStatisticalModelApply->isChecked()){
         ifStatModel_ = true;
@@ -266,7 +515,7 @@ void DecayPathEditor::slotAddLevelEI()
     if(tabIndex == 0) QValue = 20000; //setting largeenough to have all decaying isomers in mothernuclei
 
     QString text = QInputDialog::getText(this, tr("New Level"),
-                                          tr("Energy(keV : Feeding Intensity(%)"), QLineEdit::Normal,
+                                          tr("Energy(keV) : Feeding Intensity(%)"), QLineEdit::Normal,
                                           "energy:intensity", &ok);
     QStringList stringList= text.split(":",QString::SkipEmptyParts);
 
@@ -292,7 +541,7 @@ void DecayPathEditor::slotAddLevelEI()
          intensity = 0;
          return;
      }
-    decayPath->GetAllNuclides()->at(tabIndex).AddLevelEI(energy,intensity/100.);
+    decayPath->GetAllNuclides()->at(tabIndex).AddLevelEnergyInten(energy,intensity/100.);
 
     emit signalDecayPathEdited();
     responseFunction->UpdateStructure();
@@ -373,12 +622,6 @@ void DecayPathEditor::setTotalIntensityLabel()
 }
 
 /*Eva
-void LevelEditor::slotRecalculateDECSpectrum(bool)
-{
-// DOES nothing
-    int histId = std::stoi(myProject->expSpecID());
-
-}
 
 void LevelEditor::slotUpdateFeedingData(int row, int column)
 {
@@ -433,7 +676,6 @@ void DecayPathEditor::slotEditTransitions(int tableIndex, int rowIndex)
     QString qstr = "Transtion Editor for Level: "+ QEnergy_ + " keV in "
             + QElementName + "-" +QMassNumber +
             " (Z= "+  QAtomicNumber + ") nuclide";
-//    g1->setTransitionLabel("TEst");
 
     g1->setTransitionLabel(qstr);
     g1->setCurrentLevel(rowIndex);

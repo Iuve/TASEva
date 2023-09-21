@@ -419,10 +419,13 @@ Histogram ResponseFunction::loadXGate(QDir dirName_, int histId, double xMin, do
     string filenameStr = filename.toStdString();
     TFile* dataFile = new TFile (filenameStr.c_str());
     std::string histName = num2string(histId);
+    cout << filenameStr.c_str() << " histId: " << histName << endl;
     TH2F* matrix = (TH2F*) dataFile->Get(histName.c_str());
     int minBin = static_cast<int> (xMin/myProject->getBinning2Dfactor() );
     int maxBin = static_cast<int> (xMax/myProject->getBinning2Dfactor() );
+    qDebug() << minBin << " "  << maxBin;
     std::string projectionName = histName + "_xGate_" + num2string(xMin) + "_" + num2string(xMax);
+    cout << "loadXGate " << projectionName << endl;
     TH1F* projection = (TH1F*)matrix->ProjectionY(projectionName.c_str(), minBin, maxBin);
 
     Histogram* projectionHist = new Histogram(projection);

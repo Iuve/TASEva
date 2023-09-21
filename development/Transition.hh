@@ -45,6 +45,9 @@ public:
     void SetAsAddedTransition(){isAddedTransition_ = true;}
     bool IsAddedTransition(){return isAddedTransition_;}
 
+    void SetD_Intensity(double d_intensity){d_intensity_ = d_intensity;}
+    double GetD_Intensity(){return d_intensity_;}
+
    // void SetTransitionRespFlag(bool flag){transitionRespFlag_ = flag;}
     //bool GetTransitionRespFlag(){return transitionRespFlag_;}
 
@@ -76,10 +79,21 @@ public:
         return 0;
         }
 
+    bool operator < (const Transition& str) const
+        {
+            return (finalLevelEnergy_ < str.finalLevelEnergy_);
+        }
+
+    bool operator > (const Transition& str) const
+        {
+            return (finalLevelEnergy_ > str.finalLevelEnergy_);
+        }
+
 private:
 	std::string particleType_;
 	double transitionQValue_;
 	double intensity_;
+    double d_intensity_;
 	double finalLevelEnergy_;
 	int finalLevelAtomicMass_;
 	int finalLevelAtomicNumber_;

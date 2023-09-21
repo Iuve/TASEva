@@ -99,6 +99,13 @@
          <column/>
         </widget>
        </item>
+       <item row="2" column="1">
+        <widget class="QLabel" name="labelMotherSn">
+         <property name="text">
+          <string>Sn (keV)</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="Daughter">
@@ -106,20 +113,6 @@
        <string>Daughter</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="0" column="0">
-        <widget class="QLabel" name="labelDaughterIsotope">
-         <property name="text">
-          <string>Isotope:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="labelDaughterQvalue">
-         <property name="text">
-          <string>Q (keV):</string>
-         </property>
-        </widget>
-       </item>
        <item row="8" column="0">
         <widget class="QPushButton" name="buttonAddLevel">
          <property name="toolTip">
@@ -128,79 +121,6 @@
          <property name="text">
           <string>Add new level</string>
          </property>
-        </widget>
-       </item>
-       <item row="7" column="0">
-        <widget class="QPushButton" name="buttonNormBetaFeeding">
-         <property name="toolTip">
-          <string>Normalizes beta feding to 100%</string>
-         </property>
-         <property name="text">
-          <string>Norm. beta feeding</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="labelTotalIntensity">
-         <property name="text">
-          <string>Total feeding intensity :</string>
-         </property>
-        </widget>
-       </item>
-       <item row="9" column="0">
-        <widget class="QPushButton" name="buttonRemoveLevel">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="text">
-          <string>RemoveLevel</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0">
-        <widget class="QFrame" name="frame_2">
-         <property name="frameShape">
-          <enum>QFrame::StyledPanel</enum>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Raised</enum>
-         </property>
-         <widget class="QLabel" name="label_2">
-          <property name="geometry">
-           <rect>
-            <x>10</x>
-            <y>10</y>
-            <width>141</width>
-            <height>21</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Deexcitation model</string>
-          </property>
-         </widget>
-         <widget class="QComboBox" name="comboBoxModel">
-          <property name="geometry">
-           <rect>
-            <x>20</x>
-            <y>40</y>
-            <width>91</width>
-            <height>25</height>
-           </rect>
-          </property>
-         </widget>
-         <widget class="QPushButton" name="buttonApplyModel">
-          <property name="geometry">
-           <rect>
-            <x>20</x>
-            <y>70</y>
-            <width>89</width>
-            <height>25</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Apply</string>
-          </property>
-         </widget>
         </widget>
        </item>
        <item row="11" column="0" colspan="2">
@@ -235,10 +155,195 @@
          <column/>
         </widget>
        </item>
+       <item row="9" column="0">
+        <widget class="QPushButton" name="buttonRemoveLevel">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>RemoveLevel</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="labelDaughterQvalue">
+         <property name="text">
+          <string>Q (keV):</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QFrame" name="frame_2">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <widget class="QLabel" name="labelIntensityModel">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>171</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Transition:    path     intensity </string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+         <widget class="QLabel" name="labelGamma">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>40</y>
+            <width>58</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Gamma</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="labelParticle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>70</y>
+            <width>58</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Particle</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="comboBoxParticleInten">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="geometry">
+           <rect>
+            <x>130</x>
+            <y>60</y>
+            <width>71</width>
+            <height>32</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="comboBoxGammaInten">
+          <property name="geometry">
+           <rect>
+            <x>130</x>
+            <y>30</y>
+            <width>71</width>
+            <height>32</height>
+           </rect>
+          </property>
+          <property name="toolTipDuration">
+           <number>10</number>
+          </property>
+         </widget>
+         <widget class="QLabel" name="labelRatio">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>100</y>
+            <width>58</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Ig/(Ig+Ip)</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="comboBoxGammaParticleRatio">
+          <property name="geometry">
+           <rect>
+            <x>70</x>
+            <y>90</y>
+            <width>81</width>
+            <height>32</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="comboBoxGammaPath">
+          <property name="geometry">
+           <rect>
+            <x>60</x>
+            <y>30</y>
+            <width>71</width>
+            <height>32</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="comboBoxParticlePath">
+          <property name="geometry">
+           <rect>
+            <x>60</x>
+            <y>60</y>
+            <width>71</width>
+            <height>32</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="buttonApplyPathAndInten">
+          <property name="geometry">
+           <rect>
+            <x>155</x>
+            <y>90</y>
+            <width>61</width>
+            <height>32</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Apply</string>
+          </property>
+         </widget>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="labelTotalIntensity">
+         <property name="text">
+          <string>Total feeding intensity :</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLabel" name="labelDaughterSn">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>Sn (keV)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="labelDaughterIsotope">
+         <property name="text">
+          <string>Isotope:</string>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="0">
         <widget class="QLabel" name="labelDaughterT12">
          <property name="text">
           <string>T1/2:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QPushButton" name="buttonNormBetaFeeding">
+         <property name="toolTip">
+          <string>Normalizes beta feding to 100%</string>
+         </property>
+         <property name="text">
+          <string>Norm. beta feeding</string>
          </property>
         </widget>
        </item>
@@ -254,50 +359,7 @@
           <enum>QFrame::Raised</enum>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
-          <item row="2" column="0">
-           <widget class="QLabel" name="labelPseudoLevelEnMin">
-            <property name="text">
-             <string>Energy min. (keV)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="linePseudoLevEnStep"/>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="linePseudoLevEnMax"/>
-          </item>
-          <item row="4" column="1">
-           <widget class="QLineEdit" name="linePseudoLevTotInten"/>
-          </item>
           <item row="6" column="0">
-           <widget class="QLabel" name="label_3">
-            <property name="text">
-             <string>Final lvl (neutron only)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="1">
-           <widget class="QPushButton" name="buttonAddPseudoLevel">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
-            <property name="text">
-             <string>Add</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="labelPseudoLevelEnergyDist">
-            <property name="text">
-             <string>Energy dist. (keV)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="linePseudoLevEnMin"/>
-          </item>
-          <item row="8" column="0">
            <widget class="QRadioButton" name="radioStatisticalModelApply">
             <property name="enabled">
              <bool>false</bool>
@@ -313,10 +375,43 @@
             </property>
            </widget>
           </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="linePseudoLevEnMax"/>
+          </item>
+          <item row="5" column="1">
+           <widget class="QComboBox" name="comboBoxDeExcitationPath"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="labelPseudoLevelEnergyDist">
+            <property name="text">
+             <string>Energy dist. (keV)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="linePseudoLevEnStep"/>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="labelPseudoLevelEnMin">
+            <property name="text">
+             <string>Energy min. (keV)</string>
+            </property>
+           </widget>
+          </item>
           <item row="3" column="0">
            <widget class="QLabel" name="labelPseudoLevelEnMax">
             <property name="text">
              <string>Energy max. (keV)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QPushButton" name="buttonAddPseudoLevel">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Add</string>
             </property>
            </widget>
           </item>
@@ -327,15 +422,8 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label">
-            <property name="toolTip">
-             <string>Gamma intensity model to be used</string>
-            </property>
-            <property name="text">
-             <string>Gamma intensity  model</string>
-            </property>
-           </widget>
+          <item row="4" column="1">
+           <widget class="QLineEdit" name="linePseudoLevTotInten"/>
           </item>
           <item row="4" column="0">
            <widget class="QLabel" name="labelPseudoLevelIntensity">
@@ -344,25 +432,18 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="1">
-           <widget class="QComboBox" name="comboBoxIntensity"/>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="linePseudoLevEnMin"/>
           </item>
-          <item row="6" column="1">
-           <widget class="QLineEdit" name="linePseudoLevNeutronE">
-            <property name="dragEnabled">
-             <bool>false</bool>
+          <item row="5" column="0">
+           <widget class="QLabel" name="labelDeExcitationPath">
+            <property name="toolTip">
+             <string>Gamma intensity model to be used</string>
             </property>
-           </widget>
-          </item>
-          <item row="7" column="0">
-           <widget class="QLabel" name="label_4">
             <property name="text">
-             <string>Sn (neutron only)</string>
+             <string>De-excitation path</string>
             </property>
            </widget>
-          </item>
-          <item row="7" column="1">
-           <widget class="QLineEdit" name="linePseudoLevSn"/>
           </item>
          </layout>
         </widget>
@@ -373,14 +454,7 @@
       <attribute name="title">
        <string>GrandDaughter</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="0">
-        <widget class="QLabel" name="labelGrandDaughterIsotope">
-         <property name="text">
-          <string>Isotope : </string>
-         </property>
-        </widget>
-       </item>
+      <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0,0,0" rowminimumheight="0,0,0,0">
        <item row="1" column="0">
         <widget class="QLabel" name="labelGrandDaughterT12">
          <property name="text">
@@ -388,10 +462,17 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="labelGrandDaughterIsotope">
+         <property name="text">
+          <string>Isotope : </string>
+         </property>
+        </widget>
+       </item>
        <item row="2" column="0">
         <widget class="QLabel" name="labelGrandDaughterQValue">
          <property name="text">
-          <string>Q : </string>
+          <string>Q (keV) : </string>
          </property>
         </widget>
        </item>
@@ -407,6 +488,13 @@
          <column/>
          <column/>
          <column/>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLabel" name="labelGrandDaughterSn">
+         <property name="text">
+          <string>Sn (keV)</string>
+         </property>
         </widget>
        </item>
       </layout>

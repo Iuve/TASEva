@@ -21,7 +21,7 @@ public:
                         when renormalized when evaluating>*/
     void SetIntensityFitFlag(bool parameter){freeIntensityFit_ = parameter;}
     bool GetIntensityFitFlag(){return freeIntensityFit_;}
-
+    Histogram* GetHistogram(){return &hist;}
 
 private:
     bool freeIntensityFit_;

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>461</width>
+    <width>509</width>
     <height>300</height>
    </rect>
   </property>
@@ -81,7 +81,7 @@
       <string>Adds new Gamma</string>
      </property>
      <property name="text">
-      <string>Add Gamma</string>
+      <string>Add Transition</string>
      </property>
     </widget>
    </item>
@@ -98,7 +98,7 @@
    <item row="7" column="1">
     <widget class="QPushButton" name="buttonRemove">
      <property name="text">
-      <string>Remove Gamma</string>
+      <string>Remove Transition</string>
      </property>
     </widget>
    </item>

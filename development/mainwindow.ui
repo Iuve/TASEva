@@ -6,17 +6,570 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>900</width>
-    <height>715</height>
+    <width>936</width>
+    <height>870</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="toolTip">
+   <string>Experimental spectrum ID number</string>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
+    <item row="1" column="6">
+     <widget class="QLabel" name="label_YAxisMax">
+      <property name="text">
+       <string>Y-Axis Max:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="9">
+     <widget class="QCheckBox" name="MainPlotLogScale">
+      <property name="text">
+       <string>Y - LogScale</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="3">
+     <widget class="QLineEdit" name="lineEditYAxisMin">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>1</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>0</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="7">
+     <widget class="QLineEdit" name="lineEditXAxisMax">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>10000</string>
+      </property>
+      <property name="maxLength">
+       <number>6</number>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="3">
+     <widget class="QLineEdit" name="lineEditNormMin">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>2</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>0</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QLabel" name="labelXAxisMin">
+      <property name="text">
+       <string>X-Axis Min:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QLabel" name="labelYAxisMin">
+      <property name="text">
+       <string>Y-Axis Min:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="12">
+     <widget class="QPushButton" name="buttonClose">
+      <property name="text">
+       <string>Quit project</string>
+      </property>
+     </widget>
+    </item>
+    <item row="7" column="0" rowspan="2" colspan="5">
+     <widget class="QFrame" name="frameResponseFunction">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <widget class="QLabel" name="labelRespFunc">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>0</y>
+         <width>121</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <underline>true</underline>
+        </font>
+       </property>
+       <property name="text">
+        <string>Response Function </string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="buttonEditLevelScheme">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>50</y>
+         <width>181</width>
+         <height>32</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Open decay path scheme</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="buttonCalculateSIMSpec">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>90</x>
+         <y>120</y>
+         <width>91</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Calc REC
+spectrum</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="buttonShowNNDCLevelSchemePDF">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>20</y>
+         <width>181</width>
+         <height>32</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Show NNDC level Scheme</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="buttonMakeSimulations">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>121</y>
+         <width>101</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Run GEANT 
+simulations</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="buttonUploadAndCalculateResponse">
+       <property name="geometry">
+        <rect>
+         <x>90</x>
+         <y>75</y>
+         <width>91</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Read resp.
+functions</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="buttonMakeDirsAndCheckFiles">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>75</y>
+         <width>101</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Check Create 
+input files</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="buttonUpdateResponseContainer">
+       <property name="geometry">
+        <rect>
+         <x>170</x>
+         <y>70</y>
+         <width>75</width>
+         <height>90</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Update 
+Respons
+Container</string>
+       </property>
+      </widget>
+     </widget>
+    </item>
+    <item row="2" column="7">
+     <widget class="QLineEdit" name="lineEditNormMax">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>2</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>10000</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Norm Min.</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="3">
+     <widget class="QLineEdit" name="lineEditXAxisMin">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>1</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>0</string>
+      </property>
+      <property name="maxLength">
+       <number>6</number>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="6">
+     <widget class="QLabel" name="label_10">
+      <property name="text">
+       <string>Norm Max.</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="6">
+     <widget class="QLabel" name="labelXAxisMax">
+      <property name="text">
+       <string>X-Axis Max:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="7" column="5" rowspan="2" colspan="4">
+     <widget class="QFrame" name="frameContaminationPanel">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="mouseTracking">
+       <bool>true</bool>
+      </property>
+      <property name="acceptDrops">
+       <bool>true</bool>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <widget class="QLabel" name="labelContFrame">
+       <property name="geometry">
+        <rect>
+         <x>70</x>
+         <y>0</y>
+         <width>101</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <underline>true</underline>
+        </font>
+       </property>
+       <property name="text">
+        <string>Contaminations</string>
+       </property>
+      </widget>
+      <widget class="QTableWidget" name="tableContamination">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>20</y>
+         <width>221</width>
+         <height>131</height>
+        </rect>
+       </property>
+       <property name="mouseTracking">
+        <bool>true</bool>
+       </property>
+       <property name="acceptDrops">
+        <bool>true</bool>
+       </property>
+       <property name="rowCount">
+        <number>0</number>
+       </property>
+       <property name="columnCount">
+        <number>4</number>
+       </property>
+       <attribute name="horizontalHeaderDefaultSectionSize">
+        <number>65</number>
+       </attribute>
+       <attribute name="horizontalHeaderStretchLastSection">
+        <bool>true</bool>
+       </attribute>
+       <column/>
+       <column/>
+       <column/>
+       <column/>
+      </widget>
+     </widget>
+    </item>
+    <item row="1" column="7">
+     <widget class="QLineEdit" name="lineEditYAxisMax">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>2</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>10000</string>
+      </property>
+      <property name="maxLength">
+       <number>8</number>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="9" colspan="3">
+     <widget class="QLabel" name="labelExpCount">
+      <property name="text">
+       <string>No. of counts in exp. spec within limits:</string>
+      </property>
+     </widget>
+    </item>
     <item row="4" column="0" rowspan="3" colspan="11">
      <widget class="QCustomPlot" name="specPlot" native="true"/>
+    </item>
+    <item row="4" column="11" rowspan="2" colspan="2">
+     <widget class="QFrame" name="frameProject">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="10" column="0" colspan="2">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Output SIM file</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="3">
+        <widget class="QLineEdit" name="lineExp2DSpecID">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="placeholderText">
+          <string>6350</string>
+         </property>
+        </widget>
+       </item>
+       <item row="12" column="3">
+        <widget class="QLineEdit" name="lineCodeGEANT"/>
+       </item>
+       <item row="1" column="3">
+        <widget class="QLineEdit" name="lineProjectName"/>
+       </item>
+       <item row="9" column="0" colspan="3">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Output Decay file</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QLineEdit" name="lineWorkingDir"/>
+       </item>
+       <item row="11" column="3">
+        <widget class="QLineEdit" name="lineOutputLEVFile"/>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Directory</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>EXP file </string>
+         </property>
+        </widget>
+       </item>
+       <item row="12" column="0" colspan="2">
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>GEANT SIM code</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" colspan="3">
+        <widget class="QLabel" name="labelProject">
+         <property name="font">
+          <font>
+           <underline>true</underline>
+          </font>
+         </property>
+         <property name="text">
+          <string>Project </string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="3">
+        <widget class="QLineEdit" name="lineExpFile"/>
+       </item>
+       <item row="11" column="0" colspan="2">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Output LEV HIS</string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="3">
+        <widget class="QLineEdit" name="lineOutputDecayFile"/>
+       </item>
+       <item row="8" column="3">
+        <widget class="QLineEdit" name="lineInputDecayFile">
+         <property name="font">
+          <font>
+           <family>Arial</family>
+           <strikeout>false</strikeout>
+           <kerning>false</kerning>
+          </font>
+         </property>
+         <property name="toolTip">
+          <string>NNDC input file</string>
+         </property>
+         <property name="placeholderText">
+          <string>decay.xml</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0" colspan="2">
+        <widget class="QLabel" name="label_20">
+         <property name="text">
+          <string>EXP 2D Spec. ID</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0" colspan="2">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Input Decay file</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="labelProjectName">
+         <property name="text">
+          <string>Project Name:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="10" column="3">
+        <widget class="QLineEdit" name="lineOutputSIMFile"/>
+       </item>
+       <item row="4" column="3">
+        <widget class="QComboBox" name="comboBox_ExpSpecID">
+         <property name="editable">
+          <bool>true</bool>
+         </property>
+         <property name="currentText">
+          <string/>
+         </property>
+         <property name="maxVisibleItems">
+          <number>5</number>
+         </property>
+         <property name="maxCount">
+          <number>10</number>
+         </property>
+         <property name="frame">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>EXP Spec. ID</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </item>
     <item row="7" column="9" rowspan="2" colspan="2">
      <widget class="QFrame" name="frameFit">
@@ -138,629 +691,6 @@
       </widget>
      </widget>
     </item>
-    <item row="0" column="9" colspan="3">
-     <widget class="QLabel" name="labelExpCount">
-      <property name="text">
-       <string>No. of counts in exp. spec within limits:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="1">
-     <widget class="QLabel" name="labelYAxisMin">
-      <property name="text">
-       <string>Y-Axis Min:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="3">
-     <widget class="QLineEdit" name="lineEditXAxisMin">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-        <horstretch>1</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string>0</string>
-      </property>
-      <property name="maxLength">
-       <number>6</number>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="6">
-     <widget class="QLabel" name="labelXAxisMax">
-      <property name="text">
-       <string>X-Axis Max:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="7">
-     <widget class="QLineEdit" name="lineEditXAxisMax">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string>10000</string>
-      </property>
-      <property name="maxLength">
-       <number>6</number>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="1">
-     <widget class="QLabel" name="labelXAxisMin">
-      <property name="text">
-       <string>X-Axis Min:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="6">
-     <widget class="QLabel" name="label_YAxisMax">
-      <property name="text">
-       <string>Y-Axis Max:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="11" rowspan="2" colspan="2">
-     <widget class="QFrame" name="frameProject">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::StyledPanel</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Raised</enum>
-      </property>
-      <widget class="QLabel" name="labelProjectName">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>30</y>
-         <width>90</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Project Name:</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="lineProjectName">
-       <property name="geometry">
-        <rect>
-         <x>110</x>
-         <y>30</y>
-         <width>113</width>
-         <height>21</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_2">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>70</y>
-         <width>91</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>EXP file </string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="lineExpFile">
-       <property name="geometry">
-        <rect>
-         <x>110</x>
-         <y>70</y>
-         <width>113</width>
-         <height>21</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_3">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>130</y>
-         <width>101</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Input Decay file</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_4">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>90</y>
-         <width>101</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>EXP Spec. ID</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="lineExpSpecID">
-       <property name="geometry">
-        <rect>
-         <x>110</x>
-         <y>90</y>
-         <width>113</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="placeholderText">
-        <string>6300</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="lineInputDecayFile">
-       <property name="geometry">
-        <rect>
-         <x>110</x>
-         <y>130</y>
-         <width>113</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>Arial</family>
-         <strikeout>false</strikeout>
-         <kerning>false</kerning>
-        </font>
-       </property>
-       <property name="toolTip">
-        <string>NNDC input file</string>
-       </property>
-       <property name="placeholderText">
-        <string>decay.xml</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_5">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>150</y>
-         <width>111</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Output Decay file</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="lineOutputDecayFile">
-       <property name="geometry">
-        <rect>
-         <x>110</x>
-         <y>150</y>
-         <width>113</width>
-         <height>21</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_6">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>170</y>
-         <width>101</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Output SIM file</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="lineOutputSIMFile">
-       <property name="geometry">
-        <rect>
-         <x>110</x>
-         <y>170</y>
-         <width>113</width>
-         <height>21</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_7">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>190</y>
-         <width>101</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Output LEV HIS</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="lineOutputLEVFile">
-       <property name="geometry">
-        <rect>
-         <x>110</x>
-         <y>190</y>
-         <width>113</width>
-         <height>21</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_8">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>50</y>
-         <width>101</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Directory</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="lineWorkingDir">
-       <property name="geometry">
-        <rect>
-         <x>110</x>
-         <y>50</y>
-         <width>113</width>
-         <height>21</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_9">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>210</y>
-         <width>101</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>GEANT SIM code</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="lineCodeGEANT">
-       <property name="geometry">
-        <rect>
-         <x>110</x>
-         <y>210</y>
-         <width>113</width>
-         <height>21</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_20">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>110</y>
-         <width>101</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>EXP 2D Spec. ID</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="lineExp2DSpecID">
-       <property name="geometry">
-        <rect>
-         <x>110</x>
-         <y>110</y>
-         <width>113</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="placeholderText">
-        <string>6350</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="labelProject">
-       <property name="geometry">
-        <rect>
-         <x>90</x>
-         <y>0</y>
-         <width>60</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <underline>true</underline>
-        </font>
-       </property>
-       <property name="text">
-        <string>Project </string>
-       </property>
-      </widget>
-     </widget>
-    </item>
-    <item row="7" column="0" rowspan="2" colspan="5">
-     <widget class="QFrame" name="frameResponseFunction">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::StyledPanel</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Raised</enum>
-      </property>
-      <widget class="QLabel" name="labelRespFunc">
-       <property name="geometry">
-        <rect>
-         <x>40</x>
-         <y>0</y>
-         <width>121</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <underline>true</underline>
-        </font>
-       </property>
-       <property name="text">
-        <string>Response Function </string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="buttonEditLevelScheme">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>50</y>
-         <width>181</width>
-         <height>32</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Open decay path scheme</string>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="buttonCalculateSIMSpec">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>105</x>
-         <y>120</y>
-         <width>91</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Calc REC
-spectrum</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="buttonShowNNDCLevelSchemePDF">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>20</y>
-         <width>181</width>
-         <height>32</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Show NNDC level Scheme</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="buttonMakeSimulations">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>121</y>
-         <width>111</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Run GEANT 
-simulations</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="buttonUploadAndCalculateResponse">
-       <property name="geometry">
-        <rect>
-         <x>105</x>
-         <y>75</y>
-         <width>91</width>
-         <height>51</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Read resp.
-functions</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="buttonMakeDirsAndCheckFiles">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>75</y>
-         <width>111</width>
-         <height>51</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Check Create 
-input files</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="buttonUpdateResponseContainer">
-       <property name="geometry">
-        <rect>
-         <x>190</x>
-         <y>70</y>
-         <width>75</width>
-         <height>90</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Update 
-Respons
-Container</string>
-       </property>
-      </widget>
-     </widget>
-    </item>
-    <item row="8" column="12">
-     <widget class="QPushButton" name="buttonClose">
-      <property name="text">
-       <string>Quit project</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="7">
-     <widget class="QLineEdit" name="lineEditYAxisMax">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-        <horstretch>2</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string>10000</string>
-      </property>
-      <property name="maxLength">
-       <number>8</number>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item row="7" column="5" rowspan="2" colspan="4">
-     <widget class="QFrame" name="frameContaminationPanel">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="mouseTracking">
-       <bool>true</bool>
-      </property>
-      <property name="acceptDrops">
-       <bool>true</bool>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::StyledPanel</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Raised</enum>
-      </property>
-      <widget class="QLabel" name="labelContFrame">
-       <property name="geometry">
-        <rect>
-         <x>70</x>
-         <y>0</y>
-         <width>101</width>
-         <height>20</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <underline>true</underline>
-        </font>
-       </property>
-       <property name="text">
-        <string>Contaminations</string>
-       </property>
-      </widget>
-      <widget class="QTableWidget" name="tableContamination">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>20</y>
-         <width>211</width>
-         <height>131</height>
-        </rect>
-       </property>
-       <property name="mouseTracking">
-        <bool>true</bool>
-       </property>
-       <property name="acceptDrops">
-        <bool>true</bool>
-       </property>
-       <property name="rowCount">
-        <number>0</number>
-       </property>
-       <property name="columnCount">
-        <number>4</number>
-       </property>
-       <attribute name="horizontalHeaderDefaultSectionSize">
-        <number>65</number>
-       </attribute>
-       <attribute name="horizontalHeaderStretchLastSection">
-        <bool>true</bool>
-       </attribute>
-       <column/>
-       <column/>
-       <column/>
-       <column/>
-      </widget>
-     </widget>
-    </item>
-    <item row="1" column="3">
-     <widget class="QLineEdit" name="lineEditYAxisMin">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-        <horstretch>1</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string>0</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="1">
-     <widget class="QCheckBox" name="MainPlotLogScale">
-      <property name="text">
-       <string>Y - LogScale</string>
-      </property>
-     </widget>
-    </item>
     <item row="6" column="11" rowspan="2" colspan="2">
      <widget class="QFrame" name="frameFitParam">
       <property name="enabled">
@@ -791,9 +721,9 @@ Container</string>
       <widget class="QLabel" name="labelFittingMethod">
        <property name="geometry">
         <rect>
-         <x>10</x>
+         <x>60</x>
          <y>20</y>
-         <width>171</width>
+         <width>131</width>
          <height>20</height>
         </rect>
        </property>
@@ -822,7 +752,7 @@ Container</string>
       <widget class="QLabel" name="label_16">
        <property name="geometry">
         <rect>
-         <x>110</x>
+         <x>120</x>
          <y>60</y>
          <width>21</width>
          <height>16</height>
@@ -854,7 +784,7 @@ Container</string>
       <widget class="QLineEdit" name="lineEditFitEnergyTo">
        <property name="geometry">
         <rect>
-         <x>130</x>
+         <x>150</x>
          <y>60</y>
          <width>51</width>
          <height>21</height>
@@ -939,7 +869,7 @@ Container</string>
        </property>
        <property name="geometry">
         <rect>
-         <x>80</x>
+         <x>90</x>
          <y>180</y>
          <width>111</width>
          <height>32</height>
@@ -955,7 +885,7 @@ Container</string>
        </property>
        <property name="geometry">
         <rect>
-         <x>20</x>
+         <x>50</x>
          <y>0</y>
          <width>151</width>
          <height>20</height>
@@ -1008,6 +938,9 @@ Container</string>
          <height>16</height>
         </rect>
        </property>
+       <property name="toolTip">
+        <string>if more than one spectrum to be fitted. Separate HistId with semicolon (;)</string>
+       </property>
        <property name="text">
         <string>HistID</string>
        </property>
@@ -1015,7 +948,7 @@ Container</string>
       <widget class="QLineEdit" name="lineEditNoFitIterations">
        <property name="geometry">
         <rect>
-         <x>130</x>
+         <x>150</x>
          <y>80</y>
          <width>51</width>
          <height>21</height>
@@ -1031,7 +964,7 @@ Container</string>
       <widget class="QLineEdit" name="lineEditFitLambda">
        <property name="geometry">
         <rect>
-         <x>130</x>
+         <x>150</x>
          <y>100</y>
          <width>51</width>
          <height>21</height>
@@ -1050,11 +983,14 @@ Container</string>
        </property>
        <property name="geometry">
         <rect>
-         <x>70</x>
+         <x>90</x>
          <y>140</y>
          <width>111</width>
          <height>21</height>
         </rect>
+       </property>
+       <property name="toolTip">
+        <string>if more than one spectrum to be fitted. Separate HistId with semicolon (;)</string>
        </property>
       </widget>
       <widget class="QLabel" name="labelFitBinning">
@@ -1073,7 +1009,7 @@ Container</string>
       <widget class="QLineEdit" name="lineEditFitBinning">
        <property name="geometry">
         <rect>
-         <x>130</x>
+         <x>150</x>
          <y>120</y>
          <width>51</width>
          <height>21</height>
@@ -1101,7 +1037,7 @@ Container</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>900</width>
+     <width>936</width>
      <height>22</height>
     </rect>
    </property>
@@ -1119,24 +1055,12 @@ Container</string>
      <addaction name="loadDecay"/>
      <addaction name="loadInputHIS"/>
     </widget>
-    <widget class="QMenu" name="menuExport_Files">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="title">
-      <string>Export Files</string>
-     </property>
-     <addaction name="export_ENS_File"/>
-     <addaction name="exportRecHis"/>
-     <addaction name="exportXML_Decay_Files"/>
-     <addaction name="exportDecay_information"/>
-    </widget>
     <addaction name="actionNewProject"/>
     <addaction name="actionOpenProject"/>
     <addaction name="actionSaveProject"/>
     <addaction name="separator"/>
     <addaction name="loadFiles"/>
-    <addaction name="menuExport_Files"/>
+    <addaction name="actionExport_Files"/>
    </widget>
    <widget class="QMenu" name="menuContaminations">
     <property name="enabled">
@@ -1320,6 +1244,9 @@ Container</string>
    </property>
   </action>
   <action name="exportXML_Decay_Files">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>XML Decay Files</string>
    </property>
@@ -1335,8 +1262,21 @@ Container</string>
    </property>
   </action>
   <action name="exportDecay_information">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Decay information</string>
+   </property>
+  </action>
+  <action name="exportResponse_Functions">
+   <property name="text">
+    <string>Response Functions</string>
+   </property>
+  </action>
+  <action name="actionExport_Files">
+   <property name="text">
+    <string>Export Files</string>
    </property>
   </action>
  </widget>

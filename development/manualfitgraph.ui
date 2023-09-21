@@ -300,7 +300,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Show calculated SUM spectrum</string>
+    <string>Show calculated REC spectrum</string>
    </property>
    <property name="checked">
     <bool>true</bool>

@@ -7,21 +7,29 @@
     <x>0</x>
     <y>0</y>
     <width>998</width>
-    <height>714</height>
+    <height>769</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>2D Analysis</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="0" rowspan="4">
-    <widget class="QCustomPlot" name="PlotProjOnY" native="true"/>
+   <item row="8" column="1">
+    <widget class="QPushButton" name="buttonSaveLevel">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>Save level result</string>
+     </property>
+    </widget>
    </item>
-   <item row="1" column="1" rowspan="4" colspan="5">
-    <widget class="QCustomPlot" name="Plot2D" native="true"/>
-   </item>
-   <item row="5" column="1" rowspan="3" colspan="5">
-    <widget class="QCustomPlot" name="PlotProjOnX" native="true"/>
+   <item row="7" column="0">
+    <widget class="QLabel" name="labelGate2Counts">
+     <property name="text">
+      <string>Number of counts in Gate # 2: </string>
+     </property>
+    </widget>
    </item>
    <item row="2" column="6" rowspan="2" colspan="3">
     <widget class="QFrame" name="frameGating">
@@ -222,6 +230,96 @@
      </widget>
     </widget>
    </item>
+   <item row="1" column="0" rowspan="4">
+    <widget class="QCustomPlot" name="PlotProjOnY" native="true"/>
+   </item>
+   <item row="8" column="2">
+    <widget class="QPushButton" name="buttonSaveAll">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>Save ALL results</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="3" colspan="2">
+    <widget class="QPushButton" name="buttonShowResults">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>Show Results</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="8">
+    <widget class="QPushButton" name="buttonClose">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Close</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1" rowspan="4" colspan="5">
+    <widget class="QCustomPlot" name="Plot2D" native="true"/>
+   </item>
+   <item row="5" column="1" rowspan="3" colspan="5">
+    <widget class="QCustomPlot" name="PlotProjOnX" native="true"/>
+   </item>
+   <item row="0" column="0">
+    <widget class="QCheckBox" name="checkLogYProj">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>LogScaleYProjection</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="labelGate1Counts">
+     <property name="text">
+      <string>Number of counts in Gate # 1:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2">
+    <widget class="QLabel" name="labelMain">
+     <property name="font">
+      <font>
+       <pointsize>20</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+       <underline>true</underline>
+      </font>
+     </property>
+     <property name="lineWidth">
+      <number>1</number>
+     </property>
+     <property name="text">
+      <string>Analysis 2D Panel</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::RichText</enum>
+     </property>
+     <property name="scaledContents">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QCheckBox" name="checkLogXProj">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>LogScaleXProjection</string>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="6" rowspan="2" colspan="3">
     <widget class="QFrame" name="frameDisplay2D">
      <property name="enabled">
@@ -368,104 +466,6 @@
      </widget>
     </widget>
    </item>
-   <item row="8" column="8">
-    <widget class="QPushButton" name="buttonClose">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="text">
-      <string>Close</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0">
-    <widget class="QCheckBox" name="checkLogXProj">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="text">
-      <string>LogScaleXProjection</string>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="3" colspan="2">
-    <widget class="QPushButton" name="buttonShowResults">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="text">
-      <string>Show Results</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0">
-    <widget class="QLabel" name="labelGate1Counts">
-     <property name="text">
-      <string>Number of counts in Gate # 1:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0">
-    <widget class="QCheckBox" name="checkLogYProj">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="text">
-      <string>LogScaleYProjection</string>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="2">
-    <widget class="QPushButton" name="buttonSaveAll">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="text">
-      <string>Save ALL results</string>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="0">
-    <widget class="QLabel" name="labelGate2Counts">
-     <property name="text">
-      <string>Number of counts in Gate # 2: </string>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="1">
-    <widget class="QPushButton" name="buttonSaveLevel">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="text">
-      <string>Save level result</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="2">
-    <widget class="QLabel" name="labelMain">
-     <property name="font">
-      <font>
-       <pointsize>20</pointsize>
-       <weight>75</weight>
-       <bold>true</bold>
-       <underline>true</underline>
-      </font>
-     </property>
-     <property name="lineWidth">
-      <number>1</number>
-     </property>
-     <property name="text">
-      <string>Analysis 2D Panel</string>
-     </property>
-     <property name="textFormat">
-      <enum>Qt::RichText</enum>
-     </property>
-     <property name="scaledContents">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
    <item row="4" column="6" rowspan="3" colspan="3">
     <widget class="QFrame" name="frameFitting">
      <property name="enabled">
@@ -588,6 +588,154 @@
      </widget>
     </widget>
    </item>
+   <item row="7" column="6" colspan="3">
+    <widget class="QFrame" name="frameChi2">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <widget class="QLabel" name="label_17">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>0</y>
+        <width>151</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <underline>true</underline>
+       </font>
+      </property>
+      <property name="text">
+       <string>Whole spectrum Chi2</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineChi2StartE">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>80</y>
+        <width>51</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>100</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineChi2StopE">
+      <property name="geometry">
+       <rect>
+        <x>70</x>
+        <y>80</y>
+        <width>51</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>10000</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineChi2Bin">
+      <property name="geometry">
+       <rect>
+        <x>150</x>
+        <y>80</y>
+        <width>51</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>100</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_18">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>60</y>
+        <width>60</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Start E</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_19">
+      <property name="geometry">
+       <rect>
+        <x>70</x>
+        <y>60</y>
+        <width>60</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Stop E</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_20">
+      <property name="geometry">
+       <rect>
+        <x>150</x>
+        <y>60</y>
+        <width>60</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Bin</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="buttonChi2Calc">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>30</y>
+        <width>111</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Calculate Chi2</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineChi2StartChi2">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>30</y>
+        <width>51</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>100</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_21">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>30</y>
+        <width>60</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>from</string>
+      </property>
+     </widget>
+    </widget>
+   </item>
   </layout>
   <zorder>frameFitting</zorder>
   <zorder>frameDisplay2D</zorder>
@@ -604,6 +752,7 @@
   <zorder>labelGate2Counts</zorder>
   <zorder>checkLogXProj</zorder>
   <zorder>labelMain</zorder>
+  <zorder>frameChi2</zorder>
  </widget>
  <customwidgets>
   <customwidget>

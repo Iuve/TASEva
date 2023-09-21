@@ -388,6 +388,9 @@ void ManualFitGraph::slotSetAxisRange()
 //    double xMaxEn = x.size();
     double yMin =  uiM->lineEditYAxisMin->text().toDouble();
     double yMax =  uiM->lineEditYAxisMax->text().toDouble();
+    uiM->histogramPlot->clearItems();
+    setSnLabel();
+    setQValueLabel();
    if(xMaxEn > x.back())
     {
         xMaxEn = x.back();
@@ -461,18 +464,28 @@ void ManualFitGraph::initializeGraphs()
     uiM->histogramDiffPlot->xAxis->setRangeLower(xMinEn);
     uiM->histogramDiffPlot->xAxis->setRangeUpper(xMaxEn);
 
+    uiM->histogramPlot->clearItems();
+    setQValueLabel();
+    setSnLabel();
 
+//    cout<< "end of preparation phase" << endl;
+
+}
+
+void ManualFitGraph::setQValueLabel()
+{
     // getting Q value from NNDC input data and making a line
-            QCPItemLine *QValueLine = new QCPItemLine(uiM->histogramPlot);
+
             DecayPath* decayPath= DecayPath::get();
             if(decayPath != 0L)
             {
             double QValue = decayPath->GetAllNuclides()->at(0).GetQBeta();
-            xMaxEn= QValue* 1.2;
+            double yMax = uiM->lineEditYAxisMax->text().toDouble();
      // add the text label at the top:
             QCPItemText *textLabel = new QCPItemText(uiM->histogramPlot);
+            QCPItemLine *QValueLine = new QCPItemLine(uiM->histogramPlot);
             textLabel->setPositionAlignment(Qt::AlignLeft|Qt::AlignVCenter);
-            textLabel->position->setCoords(QValue, yMax/4);
+            textLabel->position->setCoords(QValue, yMax/3);
             QString qstr = "Q=" + QString::number(QValue) + " keV";
             textLabel->setText(qstr);
             textLabel->setFont(QFont(font().family(), 16)); // make font a bit larger
@@ -482,13 +495,38 @@ void ManualFitGraph::initializeGraphs()
             QValueLine->end->setCoords(QValue, 1);
             QValueLine->setHead(QCPLineEnding::esSpikeArrow);
             QValueLine->setPen(QPen(Qt::red));
-            delete textLabel;
             }
+}
 
-            delete QValueLine;
+void ManualFitGraph::setSnLabel()
+{
 
-    cout<< "end of preparation phase" << endl;
+    DecayPath* decayPath= DecayPath::get();
+    if(decayPath != 0L)
+    {
+        double Sn = decayPath->GetAllNuclides()->at(1).GetSn();
+        double QValue = decayPath->GetAllNuclides()->at(0).GetQBeta();
+        if (Sn < QValue)
+        {
+        double yMax = uiM->lineEditYAxisMax->text().toDouble();
+        QCPItemLine *SnValueLine = new QCPItemLine(uiM->histogramPlot);
+        QCPItemText *textLabel2 = new QCPItemText(uiM->histogramPlot);
+        textLabel2->setPositionAlignment(Qt::AlignLeft|Qt::AlignVCenter);
+        textLabel2->position->setCoords(Sn, yMax/3);
+        QString Snstr = "Sn=" + QString::number(Sn) + " keV";
+        qDebug() << Snstr ;
+        textLabel2->setText(Snstr);
+        textLabel2->setFont(QFont(font().family(), 16)); // make font a bit larger
+        textLabel2->setPen(QPen(Qt::black)); // show black border around text
+        textLabel2->setRotation(-90);
+        SnValueLine->start->setParentAnchor(textLabel2->left);
+        SnValueLine->end->setCoords(Sn, 1);
+        SnValueLine->setHead(QCPLineEnding::esSpikeArrow);
+        SnValueLine->setPen(QPen(Qt::red));
+        }
+        else { return ; }
 
+    }
 }
 
 void ManualFitGraph::showDataExpSimDiff(QVector<double> xx, QVector<double> yy, QVector<double> xx2, QVector<double> yy2, QVector<double> ddiff)
@@ -510,9 +548,14 @@ void ManualFitGraph::showDataExpSimDiff(QVector<double> xx, QVector<double> yy, 
     double yMax = vectorMax(y,xMinEn,xMaxEn);
 //    double yMax2 = vectorMax(y2,xMinEn,xMaxEn);
     yMax = std::min(yMax,yMaxUser);
-    cout << "linia 510" << endl;
+//    cout << "linia 510" << endl;
     //yMax = yMax*1.1; //adding 10% to the scale
     uiM->histogramPlot->yAxis->setRange(yMin,yMax);
+
+ // maybe seting labels during initialisation is enough
+ //   uiM->histogramPlot->clearItems();
+ //   setSnLabel();
+ //   setQValueLabel();
 
 
     uiM->histogramPlot->addGraph();

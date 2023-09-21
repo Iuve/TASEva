@@ -10,6 +10,7 @@
 #include "decaySpectrum.h"
 #include "analysis2d.h"
 #include "status.h"
+#include "exportFiles.h"
 
 #include <QMainWindow>
 #include <QtWidgets>
@@ -42,19 +43,22 @@ public slots:
     void newProject(bool trigered);
     void saveProject(bool trigered);
 //Eva    void slotEnergyCalibration(bool trigered); /**< SLOT to input calibration data and do the recalibration */
-//Eva    void slotFWHMCalibration(bool trigered);    /** SLOT to recalibrate FWHM */
+    void slotFWHMCalibration(bool trigered);    /** SLOT to recalibrate FWHM */
     void loadDecayFile(bool trigered);
     void loadHISFile(bool trigered);
     void slotShowStatus(bool);
 //Eva    void exportDecayFile(bool trigered);
-    void exportXMLDecayFiles(bool triggered);
-    string checkAndPreparePath();
-    void exportRecSpec(bool trigered);
-    void exportDecayInfo(bool triggered);
+// mk   void exportXMLDecayFiles(bool triggered);
+// mk   string checkAndPreparePath();
+//mk    void exportRecSpec(bool trigered);
+//mk    void exportDecayInfo(bool triggered);
+ //mk   void exportResponseFunctions(bool triggered);
+    void slotExportFiles(bool triggered);
 //Eva    void showLevelSchemePDF();
     void slotProjectNameUpdate();
     void slotProjectExpFileUpdate();
     void slotProjectExpSpecIDUpdate();
+    void slotProjectExpSpecIDUpdate(int ID);
     void slotProjectExp2DSpecIDUpdate();
     void slotProjectWorkingDirUpdate();
     void slotProjectInputDecayFileUpdate();
@@ -77,6 +81,7 @@ public slots:
 
     void slotSetMainLogScale(bool checked);
     void slotSetAxisRange();
+    void slotSetNormRange();
 
     void slotEditLevelSchemeClicked(bool checked); /**< SLOT to open/close LevelScheme Editor */
     void slotCalculateDECSpectrum();               /**< SLOT to start calculations of simulated spectrum */
@@ -110,10 +115,10 @@ public slots:
 //    Histogram*  readHISFile(string hisfilename, int hisId);
    void cleanHistogram(Histogram* hist);
    void checkHistogram(Histogram* hist);
-   void saveLevelResp(int histId, QString outputFile);
+//mk   void saveLevelResp(int histId, QString outputFile);
    void CloseLevelSchemeEditor(bool); /**<  Closes level scheme editor - no data deleted from the memory*/
    void slotUpdateLevelEditor();
-
+   void CloseExportFilesWindow(bool);
    void slotMakeDirsAndCheckFiles();
    void slotMakeSimulations();
    void slotUploadAndCalculateResponse();
@@ -131,9 +136,11 @@ private:
     DecayPathEditor *t1;
     Analysis2D *a2D_ui;
     Status *s_ui;
+    ExportFiles *e1;
 //Eva    Calibration* cal_ui;
 //Eva    HisDrr* inputFile;
     std::vector<float> *histDataFloat;
+    int respFunNorm_;   /**< Keeps normalisation for the output response functions*/
 //    DecaySpectrum *decaySpectrum;
 //    Project *myProject = Project::get();
 //    Histogram *expHist = myProject->getExpHist();  /**<  Holds experimental spectrum*/
@@ -154,6 +161,7 @@ private:
 
     void OpenLevelSchemeEditor(); /**<  Opens new window with the level scheme editor*/
     void SetcomboBoxFit();  /**<  Sets table of 1D fitting methods to choose from*/
+    void SetcomboBoxExpSpecID(); /**< Sets values of Experimental Spectrum combo BOX */
 signals:
     void signalUpdateSpecPlot();
     void signalUpdateDecSpec();

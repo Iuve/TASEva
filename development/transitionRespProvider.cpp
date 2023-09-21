@@ -9,7 +9,8 @@
 #include "TClass.h"
 #include "TROOT.h"
 
-
+#include <QApplication>
+#include <QMessageBox>
 #include <QFile>
 #include <QCryptographicHash>
 #include <QTextStream>
@@ -58,12 +59,15 @@ TransitionRespProvider::TransitionRespProvider(Level* motherLevel , Transition* 
     geantOutputFileExtension_ = ".root";
     sortOutputFileName_ = myProject->getSortOutputFileName();
     sortOutputFileExtension_ = myProject->getSortOutputFileExtension();
-    sortProgramName_ = "sortCalFold2D";
+    sortProgramName_ = myProject->getSortProgramName(); // "sortCalFold2D";
     geantInputFileName_ = "Decay";
     geantInputFileExtension_ = ".xml";
     geantProgramName_ = QString::fromStdString(myProject->getCodeGEANTName()); //  "MTASSimulation_XML";
+    codeGEANTver_ = myProject->getCodeGEANTver();  // 10-07 for MK physics lists
     macroToGeantName_ = "input.mac";
-    inputToSortName_ = "sortInput.txt";
+    inputToSortName_ = myProject->getSortInputFileName(); // "sortInput.txt";
+    xmlYesAll_ = true;
+    xmlAnsAll_ =false;
 //    makeSimulation();
 
 }
@@ -72,6 +76,7 @@ bool TransitionRespProvider::CheckAndCreateDirectories()
 {
     ResponseFunction* responseFunction = ResponseFunction::get();
     TransitionRespContainer* respContainer = responseFunction->GetPointerToCorrespondingStructure(transition_);
+    Project *myProject = Project::get();
 
     //levelDir_ = checkAndMakeDirectory();
     makeInputToGeant( levelDir_);
@@ -94,8 +99,10 @@ bool TransitionRespProvider::CheckAndCreateDirectories()
 
     if( xmlReady )
     {
-        respContainer->simulationDone = checkGeantFile();
-        //respContainer->simulationDone = true;
+        if(myProject->getCheckOutputROOT())
+            respContainer->simulationDone = checkGeantFile();
+        else
+            respContainer->simulationDone = true;
         respContainer->sortingDone = checkSortFile();
     }
     else
@@ -103,6 +110,48 @@ bool TransitionRespProvider::CheckAndCreateDirectories()
         respContainer->simulationDone = false;
         respContainer->sortingDone = false;
     }
+/*    else
+    {
+        if (!xmlAnsAll_ )
+        {
+        QMessageBox msgBox;
+        msgBox.setText("The XML decay files have been modified.");
+        msgBox.setInformativeText("Do you want to RUMN new GEANT simulations?");
+        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::YesAll | QMessageBox::NoAll);
+        msgBox.setDefaultButton(QMessageBox::NoAll);
+        int ret = msgBox.exec();
+
+         switch (ret)
+         {
+           case QMessageBox::Yes:
+             qDebug() << "Yes was clicked NEW simulations.";
+             respContainer->simulationDone = false;
+             respContainer->sortingDone = false;
+             break;
+           case QMessageBox::No:
+             qDebug() << " No NEW resimulation of response functions.";
+             respContainer->simulationDone = checkGeantFile();
+             respContainer->sortingDone = checkSortFile();
+             break;
+           case QMessageBox::YesAll:
+             respContainer->simulationDone = false;
+             respContainer->sortingDone = false;
+             xmlYesAll_ = true;
+             xmlAnsAll_ = true;
+             break;
+           case QMessageBox::NoAll:
+             respContainer->simulationDone = checkGeantFile();
+             respContainer->sortingDone = checkSortFile();
+             xmlYesAll_ = false;
+             xmlAnsAll_ = true;
+             break;
+           default:
+             respContainer->simulationDone = checkGeantFile();
+             respContainer->sortingDone = checkSortFile();
+         }
+        }
+    }
+    */
 
     bool result = respContainer->xmlFilesCorrect * respContainer->simulationDone * respContainer->sortingDone;
     if( result )
@@ -319,7 +368,13 @@ void TransitionRespProvider::sortFile()
 bool TransitionRespProvider::makeInputToSort()
 {
     Project *myProject = Project::get();
-    int eMax = 12000; //?????
+    int eMax = 15000; //?????
+
+    int pos = inputToSortName_.indexOf('.');
+    QString extension = inputToSortName_.mid(pos + 1,3);
+    cout << extension.toStdString() << endl;
+    if(extension == "txt")
+    {
     QFile file(levelDir_.filePath(inputToSortName_));
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
         return false;
@@ -333,8 +388,41 @@ bool TransitionRespProvider::makeInputToSort()
     out << "EMax " << eMax << "\n";
     out << "2DbinningFactor " << myProject->getBinning2Dfactor() << "\n";
 //    out << "2DbinningFactor " <<  "1" << "\n";
-    out << "siliThreshold " << 10 << "\n";
+    out << "siliThreshold " << myProject->getSiliThreshold() << "\n";
+    out << "IMOThreshold " << myProject->getIMOThreshold() << "\n";
+    } else if(extension == "xml")
+    {
+    QFile file(levelDir_.filePath(inputToSortName_));
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+         return false;
+    QString inputPath = levelDir_.filePath(geantOutputFileName_) + geantOutputFileExtension_;
+    QString outputPath = levelDir_.filePath(sortOutputFileName_) + sortOutputFileExtension_;
+    QTextStream out(&file);
 
+    vector<QString> xmlText = myProject->getSortXMLInputFile();
+    for(auto i=0; i < xmlText.size(); i++)
+    {
+        if(xmlText.at(i).contains("sort.root", Qt::CaseInsensitive))
+        {
+//            qDebug() << xmlText.at(i);
+            auto pos = xmlText.at(i).indexOf("sort.root");
+            xmlText.at(i).replace(pos, 9, outputPath);
+//            qDebug() << xmlText.at(i);
+        }
+        if(xmlText.at(i).contains("output.root", Qt::CaseInsensitive))
+        {
+            qDebug() << xmlText.at(i);
+            auto pos = xmlText.at(i).indexOf("output.root");
+            xmlText.at(i).replace(pos, 11, inputPath);
+            qDebug() << xmlText.at(i);
+        }
+         out << xmlText.at(i) << "\n" ;
+    }
+
+    } else
+    {
+        qDebug() << "Unknown extenstion for sortInput file " << extension ;
+    }
     return true;
 }
 
@@ -441,25 +529,41 @@ void TransitionRespProvider::runSimulation()
 
 bool TransitionRespProvider::makeMacroToGeant()
 {
+    Project* myProject = Project::get();
+
     int totalNorm = 1e8;
-    int maxNorm = 1e6;
+    int maxNorm = 1e7;
 //Eva    int norm = static_cast<int> (totalNorm*level_->GetBetaFeedingFunction() * gamma_->GetTotalIntensity());
-    int nrOfEvents = 1e5;
+    int nrOfEvents = myProject->getNumberOfSimulations();
+    if(nrOfEvents == 0)
+        nrOfEvents = 1e5;
+
 //Eva    if (norm > nrOfEvents)
 //Eva        nrOfEvents = norm;
-    if(nrOfEvents > maxNorm)
-       nrOfEvents = maxNorm;
+    if(nrOfEvents > maxNorm) nrOfEvents = maxNorm;
+
 
     QFile file(levelDir_.filePath(macroToGeantName_));
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
         return false;
 
      QTextStream out(&file);
+     if( codeGEANTver_ == "10-07")
+     {
+         out << "/process/had/particle_hp/use_photo_evaporation true" << "\n" ;
+         out << "/process/had/particle_hp/do_not_adjust_final_state false" << "\n" ;
+         out << "/process/had/particle_hp/skip_missing_isotopes false" << "\n" ;
+         out << "/process/had/particle_hp/neglect_Doppler_broadening true" << "\n" ;
+         out << "/process/had/particle_hp/produce_fission_fragment false" << "\n" ;
+         out << "/process/had/particle_hp/use_Wendt_fission_model false" << "\n" ;
+         out << "/process/had/particle_hp/use_NRESP71_model false" << "\n" ;
+         out << "/process/had/particle_hp/verbose 2" << "\n" ;
+     }
      out << "/control/verbose 1" << "\n";
      out << "/run/verbose 2" << "\n";
      out << "/process/verbose 0" << "\n";
      out << "/tracking/verbose 0" << "\n";
-     out << "/vis/verbose 0" << "\n";
+//     out << "/vis/verbose 0" << "\n";
      out << "/event/verbose 0" << "\n";
      out << "/material/verbose 0" << "\n";
 //     out << "/random/resetEngineFrom currentEvent.rndm" << "\n";

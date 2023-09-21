@@ -30,6 +30,7 @@ public slots:
      void slotSetLevelEnergy(QString qLevelEnergy);
      void slot2DFitControler();
      void slotShowGate1ExpVsSim(bool recalculateTransitions);
+     void slotChi2Calculation();
     void slotClose();
 signals:
     void signalClose2dUI();

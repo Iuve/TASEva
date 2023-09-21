@@ -50,10 +50,10 @@ void FitController::applyMaximumLikelyhoodFit (Histogram* expHist)
 
 void FitController::applyBayesianFit (std::vector< std::pair<Histogram*, int> > bayesianHistograms)
 {
-    cout << "BayesianFit start." << endl;
+    cout << "-------------BayesianFit start.-----------------" << endl;
     for(auto ih = bayesianHistograms.begin(); ih != bayesianHistograms.end(); ++ih)
     {
-        cout << (*ih).second << endl;
+        cout << "------- for histogram: " << (*ih).second << endl;
         prepareExperiment((*ih).first);
         prepareLevelsPart((*ih).second);
         prepareContaminationPart( *(myProject->getContaminations()), (*ih).second );
@@ -75,12 +75,13 @@ void FitController::applyBayesianFit (std::vector< std::pair<Histogram*, int> > 
 
 void FitController::prepareExperiment(Histogram* expHist)
 {
+    cout << "------------Preparing EXP histogram. ------------" << endl;
     experiment.clear();
     Histogram tempHist = *expHist;
     tempHist.Normalize(1.);
     experiment = tempHist.GetAllData(minEnergy, maxEnergy);
     expNorm = tempHist.GetNrOfCounts(minEnergy,maxEnergy);
-    double expSum;
+    double expSum = 0.;
     for (int i = 0; i != experiment.size(); i++)
     {
         expSum += experiment.at(i);
@@ -88,6 +89,9 @@ void FitController::prepareExperiment(Histogram* expHist)
     cout << "number of counts in EXP spec: " << expSum << endl;
     cout << "experiment.size() = " << experiment.size() << endl;
     cout << "Number of counts within fitting limits ("<< minEnergy <<":"<<maxEnergy<<") : " <<expNorm << endl;
+    cout << "------------Preparing EXP histogram. ----END ----" << endl;
+
+
 }
 
 void FitController::prepareLevelsPart(int simID)
@@ -238,7 +242,7 @@ void FitController::BinForFitting()
         }
     }
     experiment = tempExperiment;
-    cout << "experiment done" << endl;
+ //   cout << "experiment done" << endl;
 
     std::vector< vector<float> > tempResponses;
     std::vector<float> tempVector;
@@ -466,18 +470,20 @@ void FitController::makeBayesianFit()
     string ss;
     for(int it = 0; it !=nrOfIterations; ++it)
     {
-        std::cout << "Running fitting iteration # " << it << "\r" << std::flush;
+        std::cout << "Running fitting iteration # " << it << "\r" <<  std::flush;
 
         vector< pair<double, double> > fraction;
         for(int i = 0; i < nrOfHistograms; i++)
             fraction.emplace_back(0., 0.);
-
+        //cout << "bayesian Experiments.size() " << bayesianExperiments.size() << std::endl;
         for(int id = 0; id < bayesianExperiments.size(); id++)
         {
             //preparing correct normalization
+            //cout << "id " << id << std::endl;
             double sumForNormalization = 0.;
             for(int i = 0; i < nrOfBetaTransitions; ++i)
             {
+                //cout << "i= " << i << std::endl;
                 double responseNrOfCounts = 0.;
                 for(int j = 0; j < (bayesianResponses.at(id).at(i)).size(); j++)
                     responseNrOfCounts += (bayesianResponses.at(id).at(i)).at(j);
@@ -489,11 +495,13 @@ void FitController::makeBayesianFit()
             double responseMultiplier = bayesianNormalizationFactors.at(id) * bayesianExpNorms.at(id) / sumForNormalization;
             //cout << "responseMultiplier = " << responseMultiplier << endl;
 
+ //           cout << "nrofHisto" << nrOfHistograms << std::endl;
             for(int a = 0; a < nrOfHistograms; a++)
             {
+//                cout << "a= " << a << std::endl;
+//                cout << "intensitforflag " << intensityFitFlags.size() << std::endl;
                 if( !intensityFitFlags.at(a) )
                     continue;
-
                 double sum2 = 0.;
                 double sum3 = 0.;
                 for(int i = 0; i < nrOfPoints; i++)
@@ -501,7 +509,8 @@ void FitController::makeBayesianFit()
                     double sum1 = 0.;
                     for(int b = 0; b < nrOfHistograms; b++)
                     {
-                        if( b < nrOfBetaTransitions )
+//                        if( b < nrOfBetaTransitions )
+                        if( (b < nrOfBetaTransitions) && intensityFitFlags.at(b) )
                             sum1 += responseMultiplier * (bayesianResponses.at(id).at(b)).at(i) * bayesianFeedings.at(id).at(b);
                         else
                             sum1 += (bayesianResponses.at(id).at(b)).at(i) * bayesianFeedings.at(id).at(b);
@@ -514,7 +523,7 @@ void FitController::makeBayesianFit()
                         else
                             sum2 += (bayesianResponses.at(id).at(a)).at(i) * bayesianFeedings.at(id).at(a) * bayesianExperiments.at(id).at(i) / sum1;
                     }
-
+                //cout << "tutut" << std::endl;
                     if( a < nrOfBetaTransitions )
                         sum3 += responseMultiplier * (bayesianResponses.at(id).at(a)).at(i);
                     else
@@ -524,7 +533,6 @@ void FitController::makeBayesianFit()
                 fraction.at(a).second += sum3;
             }
         }
-
         for(int id = 0; id < bayesianExperiments.size(); id++)
             for(int i = 0; i < nrOfHistograms; i++)
             {

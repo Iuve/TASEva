@@ -10,6 +10,7 @@ TwoDimFitController::TwoDimFitController(QWidget *parent)
 {
     decayPath = DecayPath::get();
     myProject = Project::get();
+    level_ = 0L;
 
     decayPath->FindAndMarkNeutronLevels();
     otherLevelsToFeedingsRatio_ = 0;
@@ -67,9 +68,7 @@ void TwoDimFitController::prepareRestLevelsResponseFromOutside()
 
 void TwoDimFitController::PrepareNeutronLevelsResponse()
 {
-    //WARNING: what if neutron level is the one fitted? All of neutrons levels would be
-    //prepared anyway!!!
-    // Function potentially for further development
+    // Function potentially for further development | or not
     Histogram neutronLevelsResponse = *Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_);
     std::vector<Transition*>* betaTransitions = decayPath->GetBetaTransitionsFromFirstNuclide();
 
@@ -79,7 +78,7 @@ void TwoDimFitController::PrepareNeutronLevelsResponse()
         std::vector<Transition*>* transitionsFromLevel = tmpLevel->GetTransitions();
         Histogram neutronOneLevelResponse = *Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_);
 
-        if( tmpLevel->GetNeutronLevelStatus() )
+        if( tmpLevel->GetNeutronLevelStatus() && tmpLevel != level_ )
         {
             for( auto it = transitionsFromLevel->begin(); it != transitionsFromLevel->end(); ++it)
             {
@@ -101,6 +100,7 @@ Histogram TwoDimFitController::prepareRestLevelsResponse()
     std::vector<Transition*>* transitions_ = decayPath->GetBetaTransitionsFromFirstNuclide();
 
     Histogram xGate = *Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_); // jesli zadziala zrobicporzadnie -AUTOMATYCZNIE
+    xGate.Add( neutronLevelsResponse_, 1. );
 
     for(auto it = transitions_->begin(); it != transitions_->end(); ++it)
     {
@@ -112,7 +112,7 @@ Histogram TwoDimFitController::prepareRestLevelsResponse()
         {
             std::vector<Transition*>* transitionsFromLevel = tmpLevel->GetTransitions();
             //if( ( tmpLevel->GetLevelEnergy() > energy_ - subtractFromEnergy ) )
-            if( ( tmpLevel->GetLevelEnergy() > 10. ) )
+            if( ( tmpLevel->GetLevelEnergy() >= 0. ) )
             {
                 Histogram* levelXGate = Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_);
                 for(auto itt = transitionsFromLevel->begin(); itt != transitionsFromLevel->end(); ++itt)
@@ -125,7 +125,6 @@ Histogram TwoDimFitController::prepareRestLevelsResponse()
         }
     }
 
-    xGate.Add( neutronLevelsResponse_, 1. );
     return xGate;
 }
 
@@ -139,7 +138,6 @@ Histogram TwoDimFitController::prepareTransitionResponse(Transition* transition_
     QString transitionDirName = QString("%1").arg(transitionEnergy);
     QString dirName_ = levelDirName + "/" + transitionDirName;
     QDir directory(dirName_);
-//    qDebug() << "directory w twoDimFit: " << directory   ;
     if(!directory.exists())
     {
         return Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_);
@@ -203,14 +201,16 @@ void TwoDimFitController::calculateSimulatedHistogram()
 void TwoDimFitController::calculateRecHistogram()
 {
       double xMin = normalizeStartPoint_;  // to avoid channel 0
-      double xMax = maxEn_;
+      double xMax = maxEn_; // - 120;
       recGate_ = *Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_);
 
     double scaleRatio;
     if(otherLevelsToFeedingsRatio_ == 0.)
-        otherLevelsToFeedingsRatio_ = otherLevelsResponse_->GetNrOfCounts(xMin,xMax) / ( simGate_.GetNrOfCounts(xMin,xMax) + otherLevelsResponse_->GetNrOfCounts(xMin,xMax) );
+        otherLevelsToFeedingsRatio_ = otherLevelsResponse_->GetNrOfCounts(xMin,xMax)
+                / ( simGate_.GetNrOfCounts(xMin,xMax) + otherLevelsResponse_->GetNrOfCounts(xMin,xMax) );
 
-    scaleRatio = expGate_->GetNrOfCounts(xMin,xMax) / ( simGate_.GetNrOfCounts(xMin,xMax) + otherLevelsResponse_->GetNrOfCounts(xMin,xMax) );
+    scaleRatio = expGate_->GetNrOfCounts(xMin, xMax)
+            / ( simGate_.GetNrOfCounts(xMin,xMax) + otherLevelsResponse_->GetNrOfCounts(xMin,xMax) );
 
     myProject->setGateNormFactor(scaleRatio);
     recGate_.Add( &simGate_, scaleRatio );
@@ -392,11 +392,11 @@ void TwoDimFitController::BinForFitting(std::vector<double>* experimentForFit, s
         }
     }
 
-    for(int l = 0; l < responsesForFit->size(); l++)
+    for(unsigned l = 0; l < responsesForFit->size(); l++)
     {
         k = 0;
         binSum = 0.;
-        for(int i = 0; i < responsesForFit->at(l).size(); i++)
+        for(unsigned i = 0; i < responsesForFit->at(l).size(); i++)
         {
             binSum += responsesForFit->at(l).at(i);
             k++;
@@ -404,7 +404,7 @@ void TwoDimFitController::BinForFitting(std::vector<double>* experimentForFit, s
             {
                 k = 0;
                 double averageCount = binSum / binningFactor_;
-                for(int j = i; j != i - binningFactor_; j--)
+                for(unsigned j = i; j != i - binningFactor_; j--)
                     responsesForFit->at(l).at(j) = averageCount;
                 binSum = 0.;
             }
@@ -465,12 +465,6 @@ void TwoDimFitController::printResults()
         gammaNr++;
     }
 
-    /*
-    cout << "Other lvls contribution "
-         << " was " << feedingsBeforeFit.back() * 100.
-         << " is " << feedings.back() * 100.
-         << " +- " << errors.back() << " [%]" << endl;
-    */
 
     cout << "Transition fit is done" << endl;
 }

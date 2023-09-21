@@ -65,9 +65,14 @@ public slots:
     void slotUpdatePseudoLevelData();
     void slotAddPseudoLevel();
     void slotSetGammaIntensityMethod(QString method);
+    void slotSetGammaPathMethod(QString qmethod);
+    void slotSetParticleIntensityMethod(QString);
+    void slotSetParticlePathMethod(QString);
+    void slotSetDeExcitationPath(QString);
+    void slotSetGammaParticleIntensityRatio(QString);
     void slotUpdateTablesForward();
     void slotDaughterTableChanged( int row, int column);
-
+    void slotApplyPathAndInten(bool);
     void InitLabels();
 
 signals:
@@ -78,6 +83,7 @@ private:
     TransitionEditor* g1;
 //         void initializeTable();
     void setComboBoxMethod();
+    void setComboBoxDeExPath();
     void setTotalIntensityLabel();
 //EVa    void checkData();
 
@@ -95,9 +101,11 @@ private:
     double pseudoLevelEnergyMax_=5000;
     double pseudoLevelTotInten_=10;
     double pseudoLevNeutronE_ = 0.;
-    double pseudoLevSn_ = 0.;
+//    double pseudoLevSn_ = 0.;
     bool ifStatModel_ = true;
-    string gammaIntensityMethod_;
+//    string gammaIntensityMethod_;
+//    string particleIntensityMethod_;
+    string pathMain_;
 };
 
-#endif // LEVELEDITOR_H
+#endif // DECAYPATHEDITOR_H

@@ -6,8 +6,8 @@
 
 
 
-Nuclide::Nuclide(int atomicNumber, int atomicMass, double qBeta, std::vector<Level> nuclideLevels):
-atomicNumber_(atomicNumber), atomicMass_(atomicMass), nuclideLevels_(nuclideLevels), qBeta_(qBeta)
+Nuclide::Nuclide(int atomicNumber, int atomicMass, double qBeta, double Sn, std::vector<Level> nuclideLevels):
+atomicNumber_(atomicNumber), atomicMass_(atomicMass), nuclideLevels_(nuclideLevels), qBeta_(qBeta), Sn_(Sn)
 {
 	
 }
@@ -113,7 +113,7 @@ void Nuclide::DeleteLevels()
     std::cout << "levelsToDelete_ is cleared now. Its size: " << levelsToDelete_.size() << std::endl;
 }
 
-void Nuclide::AddLevelEI(double energy, double intensity)
+void Nuclide::AddLevelEnergyInten(double energy, double intensity)
 {
     double spin =-1;
     std::string parity = "";
@@ -123,19 +123,20 @@ void Nuclide::AddLevelEI(double energy, double intensity)
 }
 
 void Nuclide::AddLevel(double energy, double spin, std::string parity, double T12, double intensity,
-                       double neutronFinalLvlEnergy, double Sn)
+                       double finalLvlEnergy, std::string type)
 {
     nuclideLevels_.push_back( Level(energy, spin, parity, T12) );
     nuclideLevels_.back().setAsPseudoLevel();
-    //add default gamma (or neutron) transition to ground state
-    if(Sn > 0)
+    //add one default gamma (or neutron) transition to ground state
+    if(type == "N")
     {
-        double neutronKineticEnergy = energy - neutronFinalLvlEnergy - Sn;
-        nuclideLevels_.back().AddTransition("N", neutronKineticEnergy, 1.,
-                                            neutronFinalLvlEnergy);
+        double neutronKineticEnergy = energy - finalLvlEnergy - Sn_;
+        nuclideLevels_.back().AddTransition("N", neutronKineticEnergy, 1.);
+                                           // ,neutronFinalLvlEnergy);
     }
     else
         nuclideLevels_.back().AddTransition("G", energy, 1.);
+
     //add default beta minus transition to created level
     DecayPath* decayPath = DecayPath::get();
     std::vector<Nuclide>* nuclidesVector = decayPath->GetAllNuclides();

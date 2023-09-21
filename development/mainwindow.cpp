@@ -5,7 +5,8 @@
 #include "fitController.h"
 #include "responsefunction.h"
 #include "histogramgraph.h"
-#include "histogramOutputController.h"
+#include "histogramOutputController.h" 
+//#include "exportFiles.h"  decalred in mainwindow.h
 
 #include "tablecontroller.h"
 #include "PeriodicTable.hh"
@@ -19,6 +20,7 @@
 #include "ui_status.h"
 #include "ui_manualfitgraph.h"
 #include "ui_tableinput.h"
+#include "ui_exportFiles.h"
 
 // Qt INCLUDES
 #include <QApplication>
@@ -54,18 +56,15 @@ MainWindow::MainWindow(QWidget *parent) :
     msgBox.exec();
 
     //Initialization
-//Eva out   decay = 0L;
-//Eva    simHist = Histogram::GetEmptyHistogram();
-//Eva    decHist = Histogram::GetEmptyHistogram();
     t1 = new DecayPathEditor();
     m1 = new ManualFitGraph();
-//    specComp_ui = new ManualFitGraph();
 
     levelEditorOpen_ = false;
     projectOpen_ = false;
     s_ui = 0L;
     fittingMethod_ = 0;
     SetcomboBoxFit();
+
 
     slotUpdateProjectPanel(true);
 
@@ -97,11 +96,11 @@ MainWindow::MainWindow(QWidget *parent) :
     //Status
     connect(ui->actionStatus, SIGNAL(triggered(bool)), this, SLOT(slotShowStatus(bool)));
 
-    connect(ui->export_ENS_File, SIGNAL(triggered(bool)), this, SLOT(exportENSFile(bool)));
-    connect(ui->exportXML_Decay_Files, SIGNAL(triggered(bool)), this, SLOT(exportXMLDecayFiles(bool)));
-    connect(ui->exportRecHis, SIGNAL(triggered(bool)), this, SLOT(exportRecSpec(bool)));
-    connect(ui->exportDecay_information, SIGNAL(triggered(bool)), this, SLOT(exportDecayInfo(bool)));
-//contaminations
+    connect(ui->actionExport_Files, SIGNAL(triggered(bool)),this,SLOT(slotExportFiles(bool)));
+
+
+ //   connect(ui->export_ENS_File, SIGNAL(triggered(bool)), this, SLOT(exportENSFile(bool)));
+    //contaminations
     connect(ui->actionSignal_Signal, SIGNAL(triggered(bool)), this, SLOT(slotPileupSignalSignal()));
     connect(ui->actionSignal_Bkg, SIGNAL(triggered(bool)), this, SLOT(slotPileupSignalBackground()));
     connect(this, SIGNAL(signalUpdateContaminationPanel()), this, SLOT(slotUpdateContaminationPanel()));
@@ -112,13 +111,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->lineExpFile, SIGNAL(returnPressed()), this, SLOT(slotProjectExpFileUpdate()));
     connect(ui->lineExpFile, SIGNAL(returnPressed()), this, SLOT(slotUpdateSpecPlot()));  // not working expHis not read in updateslot
 
-    connect(ui->lineExpSpecID, SIGNAL(returnPressed()), this, SLOT(slotProjectExpSpecIDUpdate()));
+//    connect(ui->lineExpSpecID, SIGNAL(returnPressed()), this, SLOT(slotProjectExpSpecIDUpdate()));
+    connect(ui->comboBox_ExpSpecID, SIGNAL(activated(int)), this, SLOT(slotProjectExpSpecIDUpdate(int)));
+
     connect(ui->lineExp2DSpecID, SIGNAL(returnPressed()), this, SLOT(slotProjectExp2DSpecIDUpdate()));
     connect(ui->lineInputDecayFile, SIGNAL(returnPressed()), this, SLOT(slotProjectInputDecayFileUpdate()));
     connect(ui->lineOutputDecayFile, SIGNAL(returnPressed()), this, SLOT(slotProjectOutputDecayFileUpdate()));
     connect(ui->lineOutputSIMFile, SIGNAL(returnPressed()), this, SLOT(slotProjectOutputSIMFileUpdate()));
     connect(ui->lineOutputLEVFile, SIGNAL(returnPressed()), this, SLOT(slotProjectOutputLEVFileUpdate()));
-    connect(ui->lineCodeGEANT, SIGNAL(returnPressed()), this, SLOT(slotProjectCodeGEANTUpdate(bool)));
+    connect(ui->lineCodeGEANT, SIGNAL(returnPressed()), this, SLOT(slotProjectCodeGEANTUpdate()));
 
     //SpecPLot
     connect(ui->specPlot, SIGNAL(selectionChangedByUser()), this, SLOT(slotSelectionChanged()));
@@ -136,6 +137,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(t1->uiT->buttonClose, SIGNAL(clicked(bool)), this, SLOT(slotEditLevelSchemeClicked(bool)));
 
+    ui->comboBox_ExpSpecID->setEnabled(false);  //disabling this input line before the check simulations is not done for a default spectrum.
     ui->buttonMakeDirsAndCheckFiles->setEnabled(false);
     ui->buttonMakeSimulations->setEnabled(false);
     ui->buttonUploadAndCalculateResponse->setEnabled(false);
@@ -157,19 +159,14 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->lineEditXAxisMin, SIGNAL(returnPressed()), this, SLOT(slotSetAxisRange()));
     connect(ui->lineEditYAxisMax, SIGNAL(returnPressed()), this, SLOT(slotSetAxisRange()));
     connect(ui->lineEditYAxisMin, SIGNAL(returnPressed()), this, SLOT(slotSetAxisRange()));
-
+    connect(ui->lineEditNormMin, SIGNAL(returnPressed()),this,SLOT(slotSetNormRange()));
+    connect(ui->lineEditNormMax, SIGNAL(returnPressed()),this,SLOT(slotSetNormRange()));
 
 // Contaminations Panel
     connect(ui->tableContamination,SIGNAL(cellChanged(int,int)), SLOT(slotContaminationTableChanged(int,int)));
     connect(ui->tableContamination,SIGNAL(cellClicked(int,int)), SLOT(slotContaminationTableClicked(int,int)));
 
 //    connect(ui->tableContamination,SIGNAL(cellChanged(int,int)), SLOT(slotUpdateContaminationData(int,int)));
-
-
- //   QStringList header;
- //   header << "File Name" << "Norm (%)" << "free param" << "histID" ;
- //   ui->tableContamination->setHorizontalHeaderLabels(header);
-
 
 
     //2D Analysis panel
@@ -218,6 +215,7 @@ MainWindow::~MainWindow()
     delete t1;
     delete ui;
     //delete a2D_ui;
+
 }
 
 MainWindow* MainWindow::mainInstance = NULL;
@@ -227,7 +225,7 @@ MainWindow* MainWindow::GetInstance(QWidget *parent)
     {
         mainInstance = new MainWindow(parent);
     }
-    std::cout << "MAINWINDOW INSTANCE  w kreowaniue" << mainInstance <<std::endl;
+    std::cout << "MAINWINDOW INSTANCE  w kreowaniu" << mainInstance <<std::endl;
     return mainInstance;
 }
 
@@ -261,12 +259,12 @@ void MainWindow::slotEnergyCalibration(bool trigered)
    calE = new CalibrateEnergy();
 //   cal_ui->show();
 }
-/*
+
 void MainWindow::slotFWHMCalibration(bool trigered)
 {
-
+  qDebug() << "NOT IMPLEMENTED YET" ;
 }
-*/
+
 
 void MainWindow::slotCompareSpectra(bool trigered)
 {
@@ -288,8 +286,7 @@ void MainWindow::slotCompareSpectra(bool trigered)
     std::string expFileName = myProject->getExpFile();
     std::vector<string> expID = myProject->getExpSpecIDVec();
 //simID to be filled based on the available data in the memory.
-//    std::vector<string> simID = {"6300","6310","6320","6330","6340"};
-    std::vector<string> simID = myProject->getExpSpecIDVec(); // so simID corresponds to ExpID
+   std::vector<string> simID = myProject->getExpSpecIDVec(); // so simID corresponds to ExpID
 
 //---------Table-------------
 
@@ -389,7 +386,7 @@ void MainWindow::slotOpen2DAnalysis()
          return;
      }
     ContaminationController *contaminationController = new ContaminationController();
-    contaminationController->addContamination(qExpId, qFileName, qHistId, qIntensity);
+    contaminationController->addContamination(qExpId, qFileName, qHistId, qIntensity, 0);
     contaminationController->SaveAll();
     delete contaminationController;
 
@@ -412,7 +409,6 @@ void MainWindow::slotRemoveContamination()
 
      for(int i=0; i< selection.count(); i++)
      {
-        cout << "in selection " << i << endl;
          QModelIndex index = selection.at(i);
          qDebug() << index.row();
          QTableWidgetItem* itm = ui->tableContamination->item( index.row(), 0 );
@@ -490,10 +486,15 @@ void MainWindow::slotAutoFit()
              FitController* fitController = new FitController();
              std::vector< std::pair<Histogram*, int> > bayesianHistograms;
 
+             qDebug() << "Spectra to be fitted" << idList;
+             qDebug() << "First spectrum: " << idList.at(0);
+             qDebug() << "Second spectrum: " << idList.at(1);
+//             qDebug() << "Third spectrum: " <<idList.at(2);
              for(int i = 0; i < idList.size(); i++)
              {
                  int histId = idList.at(i).toInt();
                  Histogram* tmpHis = myProject->getHistFromExpMap(histId);
+                   cout << "Impporting histId: " << histId << endl;
                  cout << tmpHis->GetNrOfBins() << endl;
                  if(tmpHis == 0L)
                  {
@@ -600,6 +601,7 @@ void MainWindow::OpenLevelSchemeEditor()
         QString QElementName = QString::fromStdString(PeriodicTable::GetAtomicName(atomicNumber_));
         QString QQBeta = QString::number(nuclides_->at(n).GetQBeta());
         QString QT12 = QString::number(levels_->at(0).GetHalfLifeTime());
+        QString QSn = QString::number(nuclides_->at(n).GetSn());
 
         if(n == 0)
         {
@@ -613,7 +615,8 @@ void MainWindow::OpenLevelSchemeEditor()
             }
             t1->uiT->labelMotherT12->setText("T1/2 : " + QT12 +" s");
             t1->uiT->labelMotherIsotope ->setText("Isotope : " +QElementName+"-"+QMassNumber + "(Z = " +QAtomicNumber+")");
-            t1->uiT->labelMotherQvalue->setText("QBeta : " +QQBeta + " keV");
+            t1->uiT->labelMotherQvalue->setText("QBeta = " +QQBeta + " keV");
+            t1->uiT->labelMotherSn->setText("Sn = "+QSn + " keV");
 
          } else if(n == 2)
              {
@@ -627,7 +630,8 @@ void MainWindow::OpenLevelSchemeEditor()
             }
             t1->uiT->labelGrandDaughterT12->setText("T1/2 : " + QT12 +" s");
             t1->uiT->labelGrandDaughterIsotope ->setText("Isotope : " +QElementName+"-"+QMassNumber + "(Z = " +QAtomicNumber+")");
-            t1->uiT->labelGrandDaughterQValue->setText("QBeta : " +QQBeta + " keV");
+            t1->uiT->labelGrandDaughterQValue->setText("QBeta = " +QQBeta + " keV");
+            t1->uiT->labelGrandDaughterSn->setText("Sn = "+QSn + " keV");
          } else if (n==1)
              {
             std::vector <Level>* motherLevels = nuclides_->at(0).GetNuclideLevels();
@@ -652,7 +656,8 @@ void MainWindow::OpenLevelSchemeEditor()
               }
             t1->uiT->labelDaughterT12->setText("T1/2 : " + QT12 +" s");
             t1->uiT->labelDaughterIsotope ->setText("Isotope : " +QElementName+"-"+QMassNumber + "(Z = " +QAtomicNumber+")");
-            t1->uiT->labelDaughterQvalue->setText("QBeta : " +QQBeta + " keV");
+            t1->uiT->labelDaughterQvalue->setText("QBeta = " +QQBeta + " keV");
+            t1->uiT->labelDaughterSn->setText("Sn = "+QSn + " keV");
 
            }
         if(n > 2)cout <<" TOO many nuclides cutting to 3" << endl;
@@ -684,7 +689,10 @@ void MainWindow::CloseLevelSchemeEditor(bool)
     ui->buttonEditLevelScheme->setChecked(false);
     t1->close();
 }
-
+void MainWindow::CloseExportFilesWindow(bool)
+{
+    e1->close();
+}
 
 void MainWindow::cleanHistogram(Histogram* hist)
 {
@@ -735,6 +743,15 @@ void MainWindow::slotMakeDirsAndCheckFiles()
 void MainWindow::slotMakeSimulations()
 {
     std::cout << "Make simulations button pressed." << endl;
+    Project* myProject = Project::get();
+    bool ok;
+    QString s =   QString::number(  myProject->getNumberOfSimulations());
+    QString text = QInputDialog::getText(this, tr("REsponse Functions to be calculated"),
+                                          tr("Please give a total numner of simulations"), QLineEdit::Normal,
+                                          s , &ok);
+
+    myProject->setNumberOfSimulations(text.toInt());
+
 
     DecaySpectrum* decaySpectrum = new DecaySpectrum();
     decaySpectrum->MakeSimulations();
@@ -758,6 +775,7 @@ void MainWindow::slotUploadAndCalculateResponse()
     {
         ui->buttonUploadAndCalculateResponse->setEnabled(false);
         ui->buttonCalculateSIMSpec->setEnabled(true);
+        ui->comboBox_ExpSpecID->setEnabled(true);
     }
 }
 
@@ -785,6 +803,7 @@ void MainWindow::slotCalculateDECSpectrum()
     ResponseFunction* responseFunction = ResponseFunction::get();
     DecayPath* decayPath = DecayPath::get();
 
+    // 20230807 Observe if this can be commented
     if( !(responseFunction->GetResponseFunctionReady()) )
         responseFunction->CalculateAllLevelsRespFunction();
 
@@ -817,6 +836,7 @@ void MainWindow::slotCalculateDECSpectrum()
         tmpDecHist.Normalize(norm);
 
         myProject->setDecHist( tmpDecHist );
+        myProject->replaceSimHistInMap(expSpectrumID,tmpDecHist);
 
      slotCalculateTotalRECSpectrum();
 }
@@ -829,8 +849,6 @@ void MainWindow::slotCalculateTotalRECSpectrum()
     int expSpectrumID = std::stoi(myProject->getExpSpecID());
 
     cout << "---------------Calculating TOTAL reconstructed spectrum--------------- " << endl;
-//Evaout    Histogram *recHist = Histogram::GetEmptyHistogram();  //why we crate rec his jest zdefiniowane w proj.h
-//     recHist = Histogram::GetEmptyHistogram();
 
     Histogram* recHist = Histogram::GetEmptyHistogram(0, 100, 100 / myProject->getBinning1Dfactor());
     Histogram* difHist = Histogram::GetEmptyHistogram(0, 100, 100 / myProject->getBinning1Dfactor());
@@ -877,6 +895,7 @@ void MainWindow::slotCalculateTotalRECSpectrum()
     difHist ->Add(recHist, -1.);
 
     myProject->setRecHist(*recHist);
+    myProject->replaceRecHistInMap(expSpectrumID,recHist);
     myProject->setDifHist(*difHist);
     emit signalUpdateSpecPlot();
 
@@ -898,7 +917,23 @@ void MainWindow::slotSetMainLogScale(bool checked)
     }
     ui->specPlot->replot();
 }
+void MainWindow::slotSetNormRange()
+{
+    Project* myProject = Project::get();
 
+    double NormMin =  ui -> lineEditNormMin->text().toDouble();
+    double NormMax =  ui -> lineEditNormMax->text().toDouble();
+
+    if (NormMin == NormMax)
+    {
+        NormMin = myProject->getExpHist()->GetXMin();
+        NormMax= myProject->getExpHist()->GetXMax();
+     }
+    myProject->setNormMin(NormMin);
+    myProject->setNormMax(NormMax);
+
+   emit signalUpdateSpecPlot();
+}
 void MainWindow::slotSetAxisRange()
 {
     Project* myProject = Project::get();
@@ -913,7 +948,6 @@ void MainWindow::slotSetAxisRange()
 //    ymax = ymax*1.1; //adding 10% to the scale
     ui->specPlot->yAxis->setRange(yMin,yMax);
     // calculating SUM of displayed exp spectrum
-//MS July 2020     QString qstr = "NoC in Exp. spec. within limits: "+ QString::number(expHist->GetNrOfCounts(xMinEn,xMaxEn));
     QString qstr = "NoC in Exp. spec. within limits: "+ QString::number(myProject->getExpHist()->GetNrOfCounts(xMinEn,xMaxEn));
     ui->labelExpCount->setText(qstr);
 
@@ -964,14 +998,11 @@ void MainWindow::slotUpdateContaminationPanel()
     ui->tableContamination->setHorizontalHeaderLabels(header);
 
 
-//    std::vector< std::pair<int, Contamination> > contaminations = *(myProject->getContaminations());
     std::vector<Contamination> contaminations = myProject->getContaminationsSpecID(expSpectrumID);
     string str;
   //  int row = 0;
-//    std:: cout << "contaminations size " << contaminations.size() << endl;
     for(unsigned int con = 0; con != contaminations.size(); ++con )
     {
-  //      if(contaminations.at(con).first == expSpectrumID)
             for (int column = 0; column != 4; ++column)
             {
                 if (column == 0) {
@@ -986,14 +1017,10 @@ void MainWindow::slotUpdateContaminationPanel()
     //            cout << "dirLength: " << dirLength;
     //            cout << "filename-str: " << str;
                     }
-//                    else {str = contaminations.at(con).second.filename;}
                     else {str = contaminations.at(con).filename;}
                 }
 
-//                if (column == 3) str = std::to_string(contaminations.at(con).second.id);
-//                if (column == 1) str = std::to_string(contaminations.at(con).second.intensity*100) ;
-//                if (column == 2) str =contaminations.at(con).second.GetIntensityFitFlag() ? "true" : "false";
-                if (column == 3) str = std::to_string(contaminations.at(con).id);
+               if (column == 3) str = std::to_string(contaminations.at(con).id);
                 if (column == 1) str = std::to_string(contaminations.at(con).intensity*100) ;
                 if (column == 2) str =contaminations.at(con).GetIntensityFitFlag() ? "true" : "false";
                 cout << "string to be added" << str << endl;
@@ -1104,7 +1131,8 @@ void MainWindow::slotUpdateProjectPanel(bool checked)
     ui->lineProjectName->setText(QString::fromStdString(myProject->getProjectName()));
     ui->lineWorkingDir->setText(QString::fromStdString(myProject->getWorkingDir()));
     ui->lineExpFile->setText(QString::fromStdString(myProject->getExpFile()));
-    ui->lineExpSpecID->setText(QString::fromStdString(myProject->getExpSpecID()));
+//    ui->lineExpSpecID->setText(QString::fromStdString(myProject->getExpSpecID()));
+    ui->comboBox_ExpSpecID->setCurrentText(QString::fromStdString(myProject->getExpSpecID()));
     ui->lineExp2DSpecID->setText(QString::fromStdString(myProject->getExp2DSpecID()));
     ui->lineInputDecayFile->setText(QString::fromStdString(myProject->getInputDecayFile()));
     ui->lineOutputDecayFile->setText(QString::fromStdString(myProject->getOutputDecayFile()));
@@ -1126,8 +1154,10 @@ void MainWindow::slotProjectNameUpdate(){Project* myProject = Project::get(); my
 void MainWindow::slotProjectWorkingDirUpdate()  {Project* myProject = Project::get(); myProject->setWorkingDir(ui->lineWorkingDir->text().toUtf8().constData()); }
 void MainWindow::slotProjectExpFileUpdate()  {Project* myProject = Project::get();
                                               myProject->setExpFile(ui->lineExpFile->text().toUtf8().constData());}
+void MainWindow::slotProjectExpSpecIDUpdate(int ID) {slotProjectExpSpecIDUpdate(); }
 void MainWindow::slotProjectExpSpecIDUpdate()  {Project* myProject = Project::get();
-                                                myProject->setExpSpecID(ui->lineExpSpecID->text().toUtf8().constData());
+//                                                myProject->setExpSpecID(ui->lineExpSpecID->text().toUtf8().constData());
+                                                myProject->setExpSpecID(ui->comboBox_ExpSpecID->currentText().toUtf8().constData());
                                                 myProject->setExpHist();
                                                 emit signalUpdateContaminationPanel();
                                                 emit signalUpdateDecSpec();
@@ -1207,11 +1237,13 @@ void MainWindow::slotUpdateSpecPlot()
 
 // getting Q value from NNDC input data and making a line
         QCPItemLine *QValueLine = new QCPItemLine(ui->specPlot);
+        QCPItemLine *SnValueLine = new QCPItemLine(ui->specPlot);
         DecayPath* decayPath= DecayPath::get();
         if(decayPath != 0L)
         {
             double QValue = decayPath->GetAllNuclides()->at(0).GetQBeta();
-     // add the text label at the top:
+
+            // add the text label at the top:
             QCPItemText *textLabel = new QCPItemText(ui->specPlot);
             textLabel->setPositionAlignment(Qt::AlignLeft|Qt::AlignVCenter);
     //        textLabel->position->setType(QCPItemPosition::ptAxisRectRatio);
@@ -1226,12 +1258,27 @@ void MainWindow::slotUpdateSpecPlot()
             QValueLine->end->setCoords(QValue, 1);
             QValueLine->setHead(QCPLineEnding::esSpikeArrow);
             QValueLine->setPen(QPen(Qt::red));
+            // time for SN
+            double Sn = decayPath->GetAllNuclides()->at(1).GetSn();
+            if (Sn < QValue)
+            {
+            QCPItemText *textLabel2 = new QCPItemText(ui->specPlot);
+            textLabel2->setPositionAlignment(Qt::AlignLeft|Qt::AlignVCenter);
+            textLabel2->position->setCoords(Sn, yMax/4);
+            QString Snstr = "Sn=" + QString::number(Sn) + " keV";
+            textLabel2->setText(Snstr);
+            textLabel2->setFont(QFont(font().family(), 16)); // make font a bit larger
+            textLabel2->setPen(QPen(Qt::black)); // show black border around text
+            textLabel2->setRotation(-90);
+            SnValueLine->start->setParentAnchor(textLabel2->left);
+            SnValueLine->end->setCoords(Sn, 1);
+            SnValueLine->setHead(QCPLineEnding::esSpikeArrow);
+            SnValueLine->setPen(QPen(Qt::red));
+            }
+
         }
 
-
-//MS July 2020    QVector<double> x = QVector<double>::fromStdVector(expHist->GetEnergyVectorD());
         QVector<double> x = QVector<double>::fromStdVector(myProject->getExpHist()->GetEnergyVectorD());
-//MS July 2020    QVector<double> y1 = QVector<double>::fromStdVector(expHist->GetAllDataD());
         QVector<double> y1 = QVector<double>::fromStdVector(myProject->getExpHist()->GetAllDataD());
  // calculating SUM of displayed exp spectrum
        double y1Sum = std::accumulate(y1.begin(),y1.end(),0.0);
@@ -1268,9 +1315,15 @@ void MainWindow::slotUpdateSpecPlot()
 
     if(myProject->getRecHist()!= 0L)
     {
-        //Histogram *recHist1 = myProject->getRecHist();
-        QVector<double> x2 = QVector<double>::fromStdVector(myProject->getRecHist()->GetEnergyVectorD());
-        QVector<double> y2 = QVector<double>::fromStdVector(myProject->getRecHist()->GetAllDataD());
+        Histogram *recHist1 = myProject->getRecHist();
+        double normMin =myProject->getNormMin();
+        double normMax = myProject->getNormMax();
+        double norm = myProject->getExpHist()->GetNrOfCounts(normMin,normMax);
+        recHist1->Normalize(norm,normMin,normMax);
+        QVector<double> x2 = QVector<double>::fromStdVector(recHist1->GetEnergyVectorD());
+        QVector<double> y2 = QVector<double>::fromStdVector(recHist1->GetAllDataD());
+//        QVector<double> x2 = QVector<double>::fromStdVector(myProject->getRecHist()->GetEnergyVectorD());
+//        QVector<double> y2 = QVector<double>::fromStdVector(myProject->getRecHist()->GetAllDataD());
 
         ui->specPlot->addGraph();
         ui->specPlot->graph(2)->setName("Reconstruction");
@@ -1402,23 +1455,25 @@ void MainWindow::openProject(bool trigered)
 
     }
 
-    if(!trigered)
+    string sfileName = myProject->getProjectInputFileName();
+    if(sfileName == "")
     {
-//        const QSignalBlocker blocker(ui->tableContamination);
+
     QString qfileName;
     qfileName = QFileDialog::getOpenFileName(this,
         tr("Load MTAS Project File"), QString::fromStdString(myProject->getWorkingDir()), tr("MTAS project files (*.tas)"));
-//    qDebug() << "Project file name: " << qfileName;
 
     if(qfileName.isEmpty()&& qfileName.isNull())
         return;
+    sfileName = qfileName.toStdString();
 
+    }
     myProject->New();
     //slotClearContaminations();
 
-    string sfileName = qfileName.toStdString();
-    myProject->Open(sfileName);
 
+    bool OK = myProject->Open(sfileName);
+    if(!OK) return;
     qDebug() << "Current working directory is: " << QDir::currentPath();
     if(QDir::currentPath() != QString::fromStdString(myProject->getWorkingDir()))
     {
@@ -1433,13 +1488,9 @@ void MainWindow::openProject(bool trigered)
     {
       int histId = stoi(IDVec.at(i));
       Histogram tmpHis = new Histogram(myProject->getExpFile(),histId);
-      //tmpHis.Rebin(10);
       myProject->addExpHist(histId,tmpHis);
     }
-
-//    int hisId = std::stoi(myProject->getExpSpecID());
-//    Histogram tmp = myProject->getHistFromExpMap(hisId);
-//    myProject->setExpHist( tmp );
+    SetcomboBoxExpSpecID();
     myProject->setExpHist();
     myProject->getExpHist()->Rebin( myProject->getBinning1Dfactor() );
 
@@ -1464,9 +1515,14 @@ void MainWindow::openProject(bool trigered)
         string fileName = myProject->getInputContaminations().at(i).at(1);
         int hisId = std::stoi(myProject->getInputContaminations().at(i).at(3));
         double inten = std::stod(myProject->getInputContaminations().at(i).at(2));
+        //additional binning/smoothening factor
+        int smoothFactor = 0;
+        if(myProject->getInputContaminations().at(i).size() > 4)
+            smoothFactor = std::stoi(myProject->getInputContaminations().at(i).at(4));
         std::cout << "contam(file,ID): (" << fileName <<","<< hisId<< ")" << endl;
 
-        contaminationController->addContamination(QString::number(expId),QString::fromStdString(fileName), QString::number(hisId), QString::number(inten));
+        contaminationController->addContamination(QString::number(expId),QString::fromStdString(fileName),
+                                                  QString::number(hisId), QString::number(inten), smoothFactor);
      }
      contaminationController->SaveAll();
      delete contaminationController;
@@ -1486,7 +1542,7 @@ void MainWindow::openProject(bool trigered)
     emit signalUpdateSpecPlot();
     projectOpen_ = true;
 
-    }
+  //  }
 }
 
 void MainWindow::loadDecayFile(bool trigered)
@@ -1523,7 +1579,7 @@ void MainWindow::loadHISFile(bool trigered)
   bool ok;
   QString qHistId = QInputDialog::getText(this, tr("Histogram ID to be read"), tr("HistID"),QLineEdit::Normal, "HistID",&ok);
   int hisId = qHistId.toInt();
-  if(ok & hisId!=0)
+  if(ok & (hisId!=0))
   {
       myProject->setExpSpecID(qHistId.toStdString());
   }
@@ -1552,7 +1608,13 @@ void MainWindow::exportENSFile(bool trigered)
 }
 */
 
-string MainWindow::checkAndPreparePath()
+
+void MainWindow::slotExportFiles(bool triggered)
+{
+    e1 = new ExportFiles();
+    e1->show();
+}
+/*string MainWindow::checkAndPreparePath()
 {
     QDateTime now = QDateTime::currentDateTime();
     const QString timestamp = now.toString(QLatin1String("yyyyMMdd-hhmm"));
@@ -1584,6 +1646,7 @@ void MainWindow::exportXMLDecayFiles(bool triggered)
 
 void MainWindow::exportRecSpec(bool trigered)
 {
+    if(!trigered)respFunNorm_=0;
     Project* myProject = Project::get();
     qDebug() << "Exporting Reconstructed HIS spectrum";
     QString fileName = QFileDialog::getSaveFileName(this,
@@ -1599,6 +1662,28 @@ void MainWindow::exportRecSpec(bool trigered)
     int histId = std::stoi(myProject->getExpSpecID());
     saveLevelResp(histId, fileName);  // All components should be included not ONLY simulated
 
+}
+
+void MainWindow::exportResponseFunctions(bool trigered)
+{
+    bool ok;
+    QString text = QInputDialog::getText(this, tr("Normalisation"),
+                                          tr("Normalisatio of the Response Functions"), QLineEdit::Normal,
+                                          "100000", &ok);
+
+    respFunNorm_ = text.toInt();
+
+    if (ok && respFunNorm_ !=0)
+     {
+     } else {
+         QMessageBox msgBox;
+         msgBox.setText("Data not correct - norm set to 10e5 counts");
+         msgBox.exec();
+         return;
+         respFunNorm_ = 10e5;
+     }
+
+    exportRecSpec(true);
 }
 
 void MainWindow::exportDecayInfo(bool triggered)
@@ -1658,9 +1743,16 @@ void MainWindow::saveLevelResp(int histId, QString outputFile)
 //        cout << " number of counts in resp fun: " << tmpHist->GetNrOfCounts() << endl;
 //        cout << " number of counts in dec: " << myProject->getDecHist()->GetNrOfCounts() << endl;
         cout << "saveLevelResp 7 " << i << endl;
-        double norm_ = (*it)->GetIntensity() * myProject->getExpHist()->GetNrOfCounts() *(1-sumNormCont);
-        std::cout<< norm_ << " W SAve" << std::endl;
-       tmpHist->Scale(norm_);
+        double norm_ ; // = (*it)->GetIntensity() * myProject->getExpHist()->GetNrOfCounts() *(1-sumNormCont);
+        if (respFunNorm_ != 0)
+        {
+          norm_ = respFunNorm_;
+        } else
+        {
+            norm_ = (*it)->GetIntensity() * myProject->getExpHist()->GetNrOfCounts() *(1-sumNormCont);
+        }
+        std::cout<< norm_ << " In Save" << std::endl;
+        tmpHist->Scale(norm_);
         cout << " number of counts in resp fun after NORM: " << tmpHist->GetNrOfCounts() << endl;
         cout << "saveLevelResp 8 " << i << endl;
         levelsOutController->saveHistogram(tmpHist,i);
@@ -1671,7 +1763,7 @@ void MainWindow::saveLevelResp(int histId, QString outputFile)
    cout << "ALL levels saved" << endl;
 
 }
-
+*/
 
 void MainWindow::slotPileupSignalBackground()
 {
@@ -1718,8 +1810,7 @@ void MainWindow::slotManualFit()
     std::vector <Level>* motherLevels = decayPath->GetAllNuclides()->at(0).GetNuclideLevels();
     std::vector<Transition*>transitionsUsed;
     std::vector<Transition*>* transitions_ = motherLevels->at(0).GetTransitions();
-//out    for(std::vector<Level*>::iterator it = motherLevels.begin(); it != levels.end(); ++it)
-    for(std::vector<Transition*>::iterator it = transitions_->begin(); it != transitions_->end(); ++it)
+   for(std::vector<Transition*>::iterator it = transitions_->begin(); it != transitions_->end(); ++it)
     {
         futureResults.push_back(true);
         displayStatus.push_back(true);
@@ -1728,8 +1819,6 @@ void MainWindow::slotManualFit()
 
     for(unsigned int i = 0; i != futureResults.size(); ++i)
     {
-//       std::cout<< "test levelschemeEditor Energy, feeding " << levels.at(i)->GetEnergy() << " ; " <<
-//           levels.at(i)->GetBetaFeedingFunction() <<std::endl;
     QString QDisplayStatus_ = displayStatus.at(i) ? "true" : "false";
     Transition* tmpTransition = transitionsUsed.at(i);
     Level* currentLevel = tmpTransition->GetPointerToFinalLevel();
@@ -1745,9 +1834,7 @@ void MainWindow::slotManualFit()
     //Histogram *recHist1 = myProject->getRecHist();
     //Histogram *difHist1 = myProject->getDifHist();
 
-//MS July 2020    QVector<double> x = QVector<double>::fromStdVector(expHist->GetEnergyVectorD());
     QVector<double> x = QVector<double>::fromStdVector(myProject->getExpHist()->GetEnergyVectorD());
-//MS July 2020    QVector<double> y1 = QVector<double>::fromStdVector(expHist->GetAllDataD());
     QVector<double> y1 = QVector<double>::fromStdVector(myProject->getExpHist()->GetAllDataD());
     QVector<double> y2 = QVector<double>::fromStdVector(myProject->getRecHist()->GetAllDataD());
     QVector<double> x2 = QVector<double>::fromStdVector(myProject->getRecHist()->GetEnergyVectorD());
@@ -1769,12 +1856,7 @@ void MainWindow::updateHistogram()
 
     if(m1->isVisible())
     {
-        //Histogram *recHist1 = myProject->getRecHist();
-        //Histogram *difHist1 = myProject->getDifHist();
-
-    //MS July 2020    QVector<double> x = QVector<double>::fromStdVector(expHist->GetEnergyVectorD());
         QVector<double> x = QVector<double>::fromStdVector(myProject->getExpHist()->GetEnergyVectorD());
-    //MS July 2020    QVector<double> y1 = QVector<double>::fromStdVector(expHist->GetAllDataD());
         QVector<double> y1 = QVector<double>::fromStdVector(myProject->getExpHist()->GetAllDataD());
         QVector<double> x2 = QVector<double>::fromStdVector(myProject->getRecHist()->GetEnergyVectorD());
         QVector<double> y2 = QVector<double>::fromStdVector(myProject->getRecHist()->GetAllDataD());
@@ -1823,7 +1905,6 @@ std::vector<float> MainWindow::cutVector (std::vector<float> data, int min, int 
 //    if(max >= data.size())
 //        throw Exception(":(");
     std::vector<float> cutData;
-    std::cout<< "cutvector" << std::endl;
     cutData.insert (cutData.begin(),data.begin()+ min, data.begin()+ max );
     return cutData;
 }
@@ -1837,6 +1918,17 @@ void MainWindow::showLevelSchemePDF()
     QDesktopServices::openUrl(QUrl::fromLocalFile(levelSchemePDFFile));
 }
 */
+void MainWindow::SetcomboBoxExpSpecID()
+{
+    Project* myProject = Project::get();
+    vector<string> expSpecIDVec_ = myProject->getExpSpecIDVec();
+    ui->comboBox_ExpSpecID->setToolTip("Only spectra defined in int input *.tas file");
+
+    for(int i=0; i != expSpecIDVec_.size(); ++i)
+    {
+       ui->comboBox_ExpSpecID->addItem(QString::fromStdString(expSpecIDVec_.at(i)));
+    }
+}
 
 void MainWindow::SetcomboBoxFit()
 {

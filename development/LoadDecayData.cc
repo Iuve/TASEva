@@ -2,10 +2,12 @@
 #include "DeclareHeaders.hh"
 #include "QDebug"
 #include "pugixml.hh"
+#include "project.h"
 
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 
 std::string g_xmlInputFileName;
 
@@ -163,6 +165,7 @@ Nuclide LoadDecayData::LoadNuclideData(const string filename)
 	std::vector<Level> nuclideLevels;
 	pugi::xml_document doc;
     if (!doc.load_file(filename.c_str())) cout << "Error connected to " << filename << " file." << endl; // Exception
+    Project* myProject = Project::get();
 
     pugi::xml_node nuclide = doc.child("Nuclide");
     int atNumber = nuclide.attribute("AtomicNumber").as_int();
@@ -170,6 +173,11 @@ Nuclide LoadDecayData::LoadNuclideData(const string filename)
     //double qBeta = nuclide.attribute("QBeta").as_double();
     string qBetaStr = nuclide.attribute("QBeta").value();
     double qBeta = stringToDouble(qBetaStr);
+    string d_QBetaStr = nuclide.attribute("d_QBeta").value();
+    double d_QBeta = stringToDouble(d_QBetaStr);
+    string SnStr = nuclide.attribute("Sn").value();
+    double Sn = stringToDouble(SnStr);
+
 	
     for (pugi::xml_node level = nuclide.first_child(); level; level = level.next_sibling())
     {       
@@ -181,10 +189,8 @@ Nuclide LoadDecayData::LoadNuclideData(const string filename)
         for (pugi::xml_node transition = level.first_child(); transition; transition = transition.next_sibling())
 		{									
 			string type = transition.attribute("Type").value();
-            //double transitionQval = transition.attribute("TransitionQValue").as_double();
             string transitionQvalStr = transition.attribute("TransitionQValue").value();
             double transitionQval = stringToDouble(transitionQvalStr);
-            //double intensity = transition.attribute("Intensity").as_double();
             string intensityStr = transition.attribute("Intensity").value();
             double intensity = stringToDouble(intensityStr);
             string originString = transition.attribute("Origin").value();
@@ -282,10 +288,12 @@ Nuclide LoadDecayData::LoadNuclideData(const string filename)
         //double lvlEnergy = level.attribute("Energy").as_double();
         string lvlEnergyStr = level.attribute("Energy").value();
         double lvlEnergy = stringToDouble(lvlEnergyStr);
+        std::cout << "LoadDecayData Level Energy = " << lvlEnergy << std::endl;
         //double lvlSpin = level.attribute("Spin").as_double();
         string lvlSpinStr = level.attribute("Spin").value();
         double lvlSpin = stringToDouble(lvlSpinStr);
 		string lvlParity = level.attribute("Parity").value();
+        string lvlSpinParity = level.attribute("SpinParity").value();
         //double lvlHalfLifeTime = level.attribute("HalfLifeTime").as_double();
         string lvlHalfLifeTimeStr = level.attribute("HalfLifeTime").value();
         double lvlHalfLifeTime = stringToDouble(lvlHalfLifeTimeStr);
@@ -296,15 +304,36 @@ Nuclide LoadDecayData::LoadNuclideData(const string filename)
         if( lvlTypeString == "Added" )
             isPseudoLevel = true;
 		
+        if(myProject->getSortXML())
+        {
+            sort(gammasFromLvL.begin(), gammasFromLvL.end());
+            sort(betasFromLvL.begin(), betasFromLvL.end());
+            sort(neutronsFromLvL.begin(), neutronsFromLvL.end());
+            sort(alphasFromLvL.begin(), alphasFromLvL.end());
+        }
+
 		nuclideLevels.push_back(Level(lvlEnergy, lvlSpin, lvlParity, lvlHalfLifeTimeInSeconds,
 		 gammasFromLvL, betasFromLvL, neutronsFromLvL, alphasFromLvL));
         if( isPseudoLevel )
             nuclideLevels.back().setAsPseudoLevel();
+        if(!lvlSpinParity.empty())
+            nuclideLevels.back().SetSpinParity(lvlSpinParity);
+        if(lvlHalfLifeTimeInSeconds > 0.)
+        {
+            string d_T12Str = level.attribute("d_T12").value();
+            double d_T12 = stringToDouble(d_T12Str);
+            nuclideLevels.back().SetD_T12(d_T12);
+        }
     }
+
+    if(myProject->getSortXML())
+        sort(nuclideLevels.begin(), nuclideLevels.end());
+
     
-    cout << "Nuclide data uploaded successfully." << endl; //or not
-	
-    return Nuclide(atNumber, atMass, qBeta, nuclideLevels);
+    cout << "Nuclide data uploaded successfully. Sn= " << Sn  << endl; //or not
+    Nuclide tempNuclide = Nuclide(atNumber, atMass, qBeta, Sn, nuclideLevels);
+    tempNuclide.SetD_QBeta(d_QBeta);
+    return tempNuclide;
 }
 
 void LoadDecayData::SetPointersToTransitions()
@@ -373,7 +402,10 @@ void LoadDecayData::FindPointersToInitialLevels()
 
 Level* LoadDecayData::FindPointerToLevel(int atomicNumber, int atomicMass, double energy, double energyLvlUnc)
 {
-	for ( auto it = allNuclides_.begin(); it != allNuclides_.end(); ++it )
+
+ //   cout << "Looking for: " << energy<< " kev level in A=" << atomicMass << " and Z=" <<atomicNumber << endl;
+
+    for ( auto it = allNuclides_.begin(); it != allNuclides_.end(); ++it )
 	{
 		int atNumber = it->GetAtomicNumber();
 		int atMass = it->GetAtomicMass();
@@ -388,7 +420,7 @@ Level* LoadDecayData::FindPointerToLevel(int atomicNumber, int atomicMass, doubl
 	
 	// throw Exception
 //    cout << "Pointer to level " << energy << " in " << atomicMass << " " << atomicNumber <<
-//        " not found with default accuracy of " << energyLevelUncertainty << "keV." << endl;
+ //   " not found with default accuracy of " << energyLevelUncertainty << "keV." << endl;
 	
 		// additional security
 	for ( auto it = allNuclides_.begin(); it != allNuclides_.end(); ++it )

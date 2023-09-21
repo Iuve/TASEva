@@ -28,6 +28,7 @@ public:
 
     string getProjectName() {return projectName_;} /**< Project Name */
     string getWorkingDir() {return workingDir_;}  /**< Working directory for the Project */
+    string getProjectInputFileName() {return projectInputFileName_; } /**< REturns name of the project input file (*.tas) */
     string getExpFile() {return expFile_;}         /**< Experimental HIS File Name */
     string getExpSpecID() {return expSpecID_;}     /**< MTAS Total Spetrum ID from Experimental HIS File*/
     vector<string> getExpSpecIDVec() {return expSpecIDVec_;}
@@ -37,8 +38,10 @@ public:
     string getOutputDecayFile() {return outputDecayFile_;}  /**< Levelscheme output file  */
     string getOutputSIMFile() {return outputSIMFile_;}  /**< Simulated spectrum output HIS file name */
     string getOutputLEVFile() {return outputLEVFile_;}  /**< HIS file with level response functions */
-    string getCodeGEANTName() {return codeGEANT_ ;}        /**< GEANT4 simulation program file name to be used */
-//c    string contamination(int row, int column) {return contamination_[row].at(column);} /**< Returns string value from the contamination table (fileName,normalization,SpecID) */
+    string getCodeGEANTName() {return codeGEANT_ ;} /**< GEANT4 simulation program file name to be used */
+    string getCodeGEANTver() { return codeGEANTver_ ;}
+    int getNumberOfSimulations() {return numberOfSimulations_;}
+    //c    string contamination(int row, int column) {return contamination_[row].at(column);} /**< Returns string value from the contamination table (fileName,normalization,SpecID) */
     vector<vector <string> > getInputContaminations() {return inputContamination_;} /**< Returns Contamination matrix  (vec(vec()) */
     //vector<vector <string> > getInputContaminationsBayesian() {return inputContaminationBayesian_;}
     double getFitEnergyFrom() { return fitEnergyFrom_ ;}
@@ -53,6 +56,8 @@ public:
     Histogram* getDecHist() {return &decHist_;}
     Histogram* getRecHist() {return &recHist_;}
     Histogram* getDifHist() {return &difHist_;}
+    double getNormMin() {return normMin_;}
+    double getNormMax() {return normMax_;}
 //    vector<Histogram*> conHist() {return conHist_;}
 //    vector<double> getConNorm() {return conNorm_;}
     std::vector< std::pair<int, Contamination> >* getContaminations() {return &contaminations_;}
@@ -66,6 +71,9 @@ public:
 
 
     void setProjectName(string s) { projectName_ = s;}
+    void setProjectInputFileName(string s) {projectInputFileName_ =s;
+                                           cout << "w proej h" << projectInputFileName_
+                                           << " s " << s << endl;}
     void setWorkingDir(string s); // { workingDir_ = s;}
     void setExpFile(string s) {expFile_ = s;}
     void setExpSpecID(string s) { expSpecID_ = s;}
@@ -74,8 +82,10 @@ public:
     void setOutputDecayFile(string s) { outputDecayFile_ = s;}
     void setOutputSIMFile(string s) { outputSIMFile_ = s;}
     void setOutputLEVFile(string s) { outputLEVFile_ = s;}
-    void setCodeGEANTName(string s) { codeGEANT_ =s ;}
-//c    void setContamination(int row, int column, string item) {contamination_[row].at(column) = item;}
+    void setCodeGEANTName(string s) { codeGEANT_ = s ;}
+    void setCodeGEANTver(string s) { codeGEANTver_ = s ;}
+    void setNumberOfSimulations(int n){numberOfSimulations_ = n;}
+    //c    void setContamination(int row, int column, string item) {contamination_[row].at(column) = item;}
     void setFitEnergyFrom(double d) { fitEnergyFrom_ = d;}
     void setFitEnergyTo(double d) { fitEnergyTo_ = d;}
     void setFitLevelsFrom(double d) {fitLevelsFrom_ =d;}
@@ -89,11 +99,13 @@ public:
     void setDecHist(Histogram h) {decHist_ = h;}
     void setRecHist(Histogram h) {recHist_ = h;}
     void setDifHist(Histogram h) {difHist_ = h;}
+    void setNormMin(double value) {normMin_ = value;}
+    void setNormMax(double value) {normMax_ = value;}
 //Eva    void setConHist(vector<Histogram*> con) {conHist_ = con;}
 //Eva    void setConNorm(vector<double> vec) {conNorm_ = vec;}
     void setContaminations(std::vector< std::pair<int, Contamination> > newContaminations ) {contaminations_ = newContaminations;}
     void setOneContamination(int row, Contamination newContamination) {contaminations_.at(row).second = newContamination;}
-    void Open(string fileName);
+    bool Open(string fileName);
     void set2DGate1Low(double d){gate1Low = d;}
     void set2DGate1High(double d){gate1High = d;}
     Level* GetCurrent2DFitLevel(){return fit2DCurrentLevel_;}
@@ -120,15 +132,43 @@ public:
     int getBinning2Dfactor(){return binning2Dfactor_;}
     void setActiveCoresForSimulation(int number){activeCoresForSimulation_ = number;}
     int getActiveCoresForSimulation(){return activeCoresForSimulation_;}
+    void setSiliThreshold(int siliThreshold){siliThreshold_ = siliThreshold;}
+    int getSiliThreshold(){return siliThreshold_;}
+    void setIMOThreshold(int imoThreshold){IMOThreshold_ = imoThreshold;}
+    int getIMOThreshold(){return IMOThreshold_;}
+    void setSortXML(bool sortXML){sortXML_ = sortXML;}
+    bool getSortXML(){return sortXML_;}
+    void setCheckOutputROOT(bool outputROOT){checkOutputROOT_ = outputROOT;}
+    bool getCheckOutputROOT(){return checkOutputROOT_;}
+    void setGammaEvolutionEnergies(std::pair<double, double> energies){gammaEvolutionEnergies_ = energies;}
+    std::pair<double, double> getGammaEvolutionEnergies(){return gammaEvolutionEnergies_;}
 
+    QString getSortProgramName(){return codeSORT_;}
+    void setSortProgramName(string s){codeSORT_ = QString::fromStdString(s);}
     QString getSortOutputFileName(){return sortOutputFileName_;}
     QString getSortOutputFileExtension(){return sortOutputFileExtension_;}
+    QString getSortInputFileName(){return sortInputFileName_;}
+    void setSortInputFileName(QString s){sortInputFileName_ = s;}
+    void readSortXMLInputFile(QString qfilename);
+    vector<QString> getSortXMLInputFile(){return sortInputXML_;}
 
     void SetLastAutofitResults( std::vector< std::pair<double, double> > results ){ fitResults_ = results; }
     std::vector< std::pair<double, double> > GetLastAutofitResults(){ return fitResults_; }
+
     void addExpHist(int Id, Histogram hist);
     void replaceExpHistInMap(int Id, Histogram hist);
     Histogram* getHistFromExpMap(int Id);
+
+    void addSimHist(int Id, Histogram hist);
+    void setSimHist();
+    void replaceSimHistInMap(int Id, Histogram hist);
+    Histogram* getHistFromSimMap(int Id);
+    int getSimMapSize(){return simHistMap_.size();}
+
+    void addRecHist(int Id, Histogram hist);
+    void setRecHist();
+    void replaceRecHistInMap(int Id, Histogram hist);
+    Histogram* getHistFromRecMap(int Id);
 
     //public slots:
     void New();
@@ -138,12 +178,15 @@ public:
 private:
     Project();
     Project(Project const&);
+    string projectInputFileName_; /**< input file name with project data */
     string projectName_;    /**< Project Name */
     string workingDir_;     /**< Working directory */
     string expFile_;        /**< Experimental file name */
     string expSpecID_;      /**< Current Experimental spectrum ID */
     vector<string> expSpecIDVec_ ; /**< VEctor with all exp IDs to be read */
     string exp2DSpecID_;
+    double normMin_;    /**< Min value for the normalisation of the reconstructed to experimental spectrum */
+    double normMax_;  /**< Max value for the normalisation of the reconstructed to experimental spectrum */
 //    string inputENSFile_;
 //    string outputENSFile_;
     string inputDecayFile_;
@@ -151,6 +194,7 @@ private:
     string outputSIMFile_;
     string outputLEVFile_;
     string codeGEANT_;
+    string codeGEANTver_;
     std::vector<std::vector <std::string> > inputContamination_;
     double fitEnergyFrom_;
     double fitEnergyTo_;
@@ -168,14 +212,21 @@ private:
 //Evaout    vector<double> conNorm_;
     std::vector< std::pair<int, Contamination> > contaminations_;
     std::map<int,Histogram> expHistMap_;
+    std::map<int,Histogram> simHistMap_;
+    std::map<int,Histogram> recHistMap_;
     std::vector<double> customTransitionIntensities_;
 
     //autofit 1D results: beta intensities and uncertainties
     std::vector< std::pair<double, double> > fitResults_;
 
 // response function calculation
+    QString codeSORT_;
     QString sortOutputFileName_ = "sort";
     QString sortOutputFileExtension_ = ".root";
+    QString sortInputFileName_ ;
+    QString sortInputFileNameExtension_ ;
+    vector<QString> sortInputXML_;
+
 
  //2Dfitvariables
     double Display2DXmin_, Display2DXmax_;
@@ -195,6 +246,13 @@ private:
     int binning1Dfactor_;
     int binning2Dfactor_;
     int activeCoresForSimulation_;
+    int siliThreshold_;
+    int IMOThreshold_;
+    int numberOfSimulations_;
+    bool sortXML_;
+    bool checkOutputROOT_;
+    // variable below contains energy range of gamma rays intensities evolution
+    std::pair<double, double> gammaEvolutionEnergies_;
 
     void operator=(Project const&);
     static Project* instance;//

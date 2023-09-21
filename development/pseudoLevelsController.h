@@ -32,7 +32,9 @@ public:
     ~PseudoLevelsController();
 
     void addPseudoLevels(double stepEnergy, double minEn, double maxEn, double totInt,
-                         std::string gammaIntensityMethod, double finalNeutronE, double Sn);
+                         std::string gammaIntensityMethod, double finalNeutronE);
+    void addPseudoLevels(double stepEnergy, double minEn, double maxEn, double totInt,
+                         std::string pathMethod);
 //EVa    void applyStatisticalModel();
 
     /** Add pseudolevels with no information about spin.
@@ -41,28 +43,59 @@ public:
       **/
     void addSimplePseudoLevels();
     void addCustomPseudoLevels();
-    void addRemainingTransition(std::string method);
+    void addRemainingGammaTransitions();
     void addNeutronLevels();
-//EVa    void addStatPseudoLevels();
+    void addRemainingNeutronTransition(double LevelEnergy);
+//    void addRemainingNeutronTransitions();
+    //EVa    void addStatPseudoLevels();
 //Eva    double findTransitionIntensity
 //            ( Level* finalLevel, double atomicMass, double energy, SpinAndParity spin);
 //EVa    double findTotalTransitionIntensity
  //           (Level* finalLevel, double atomicMass, double energy, std::vector<SpinAndParity> allSpins);
  //Eva   Level* createPseudoLevel(Level* parentLevel, double energy);
  //Eva   void setSpinAndParity(Level* parentLevel, Level* pseudoLevel);
-    std::vector<std::string> getIntensityMethodList();
-    std::vector<QString> getIntensityMethodListToolTip(){return intensityMethodListToolTip_;}
-    void setIntensityMethod(std::string method){intensityMethod_ = method;}
-    std::string getIntensityMethod(){return intensityMethod_;}
+    std::vector<QString> getGammaIntensityMethodList(){ return intensityGammaMethodList_;}
+    std::vector<QString> getGammaIntensityMethodListToolTip(){return intensityGammaMethodListToolTip_;}
+    std::vector<QString> getGammaPathMethodList(){return pathGammaMethodList_;};
+    std::vector<QString> getGammaPathMethodListToolTip(){return pathGammaMethodListToolTip_;}
+    std::vector<QString> getParticleIntensityMethodList(){  return intensityParticleMethodList_;}
+    std::vector<QString> getParticleIntensityMethodListToolTip(){return intensityParticleMethodListToolTip_;}
+    std::vector<QString> getParticlePathMethodList(){return pathParticleMethodList_;};
+    std::vector<QString> getParticlePathMethodListToolTip(){return pathParticleMethodListToolTip_;}
+    std::vector<QString> getMainPathMethodList(){return pathMainMethodList_;};
+    std::vector<QString> getMainPathMethodListToolTip(){return pathMainMethodListToolTip_;}
+
+    void setGammaIntensityMethod(std::string method){intensityGammaMethod_ = QString::fromStdString(method);}
+    void setGammaIntensityMethod(QString qmethod){intensityGammaMethod_ = qmethod;}
+    void setParticleIntensityMethod(std::string method){intensityParticleMethod_ = QString::fromStdString(method);}
+    void setParticleIntensityMethod(QString qmethod){intensityParticleMethod_ = qmethod;}
+    void setPathMainMethod(std::string method){pathMainMethod_ = QString::fromStdString(method);}
+    void setPathMainMethod(QString qmethod){pathMainMethod_ = qmethod;}
+    void setParticlePathMethod(QString qmethod){pathParticleMethod_ = qmethod;}
+    void setGammaPathMethod(QString qmethod){pathGammaMethod_ = qmethod;}
+
+    std::string getGammaIntensityMethod(){return intensityGammaMethod_.toStdString();}
+    std::string getParticleIntensityMethod(){return intensityParticleMethod_.toStdString();}
+    std::string getPathMainMethod() {return pathMainMethod_.toStdString();}
+    std::string getParticlePathMethod(){return pathParticleMethod_.toStdString();}
+    std::string getGammaPathMethod(){return pathGammaMethod_.toStdString();}
     void setNuclideIndex(int tabIndex){currentNuclideIndex_ = tabIndex;}
     void changeIntensitiesToChoosenMethod(Level*, std::string);
-    void createIntensityMethodList();
+    void createGammaIntensityMethodList();
+    void createGammaPathMethodList();
+    void createParticleIntensityMethodList();
+    void createParticlePathMethodList();
+    void createMainDeExcitationPathPathMethodList();
+
 
 private:
+    double calculateIntensity(std::string method, double transitionEnergy, int atomicMass);
+
     double getE2Intensity(double atomicMass, double energy);
     double getE1Intensity(double atomicMass, double energy);
     double getM2Intensity(double atomicMass, double energy);
     double getM1Intensity(double atomicMass, double energy);
+    double getEnPowerIntensity(double energy, double power);
     std::vector<SpinAndParity> findSpinAndParity(Level* parentLevel, double energy);
     void applyModelM1();
     std::vector<double> CalculateModelIntensities(std::string, int, int, double);
@@ -77,10 +110,24 @@ private:
     double Sn_;
     bool ifStatisticalModel_;
     double deltaE_;
-    std::vector<std::string> intensityMethodList_;
-    std::vector<QString> intensityMethodListToolTip_;
-    std::string intensityMethod_;
     int currentNuclideIndex_;
+    std::vector<QString> intensityGammaMethodList_;
+    std::vector<QString> intensityGammaMethodListToolTip_;
+    std::vector<QString> pathGammaMethodList_;
+    std::vector<QString> pathGammaMethodListToolTip_;
+    QString intensityGammaMethod_;
+    std::vector<QString> intensityParticleMethodList_;
+    std::vector<QString> intensityParticleMethodListToolTip_;
+    QString intensityParticleMethod_;
+    std::vector<QString> pathParticleMethodList_;
+    std::vector<QString> pathParticleMethodListToolTip_;
+    std::vector<QString> pathMainMethodList_;
+    std::vector<QString> pathMainMethodListToolTip_;
+    QString pathMainMethod_;
+    QString pathGammaMethod_;
+    QString pathParticleMethod_;
+
+
 
     //Eva    LevelDensity* levelDensity_;
 };

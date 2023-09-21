@@ -70,20 +70,20 @@ TransitionEditor::~TransitionEditor()
 void TransitionEditor::setComboBoxMethod()
 {
     uiL->comboBoxIntensity->clear();
-    pseudoLevelsController_->createIntensityMethodList();
-    vector<string> methodList = pseudoLevelsController_->getIntensityMethodList();
-    vector<QString> methodListToolTip = pseudoLevelsController_->getIntensityMethodListToolTip();
+    pseudoLevelsController_->createGammaIntensityMethodList();
+    vector<QString> methodList = pseudoLevelsController_->getGammaIntensityMethodList();
+    vector<QString> methodListToolTip = pseudoLevelsController_->getGammaIntensityMethodListToolTip();
     for (unsigned i=0; i< methodList.size(); i++)
     {
-        QString qtext = QString::fromStdString(methodList.at(i));
-        uiL->comboBoxIntensity->addItem(qtext);
+  //      QString qtext = QString::fromStdString(methodList.at(i));
+        uiL->comboBoxIntensity->addItem(methodList.at(i));
     }
 
 }
 
 void TransitionEditor::slotSetGammaIntensityMethod(QString qmethod)
 {
-    pseudoLevelsController_->setIntensityMethod(qmethod.toStdString());
+    pseudoLevelsController_->setGammaIntensityMethod(qmethod.toStdString());
     //gammaIntensityMethod_ = qmethod.toStdString();
 
 }
@@ -96,7 +96,7 @@ void TransitionEditor::slotChangeIntensitiesToMethod()
     std::vector<Level>* levels_ = nuclides_->at(currentNuclideIndex_).GetNuclideLevels();
     Level* level = (&levels_->at(currentLevelIndex_));
 
-    string method = pseudoLevelsController_->getIntensityMethod();
+    string method = pseudoLevelsController_->getGammaIntensityMethod();
     pseudoLevelsController_->changeIntensitiesToChoosenMethod(level, method);
 
     responseFunction->UpdateWholeContainerIntensities();

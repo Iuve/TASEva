@@ -180,7 +180,7 @@ void Histogram::Add(Histogram* hist, double weight)
     //cout << "Histogram::Add FINAL firstBin: " << firstBin << endl;
     for(int i=firstBin; i<this->GetNrOfBins(); i++)
     {
-        nrOfCountsNew.at(i) +=this->GetBinValue(i);
+        nrOfCountsNew.at(i) =this->GetBinValue(i);
     }
 
     firstBin = hist->FindBin(hist->GetBinCenter(0));

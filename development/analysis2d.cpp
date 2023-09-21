@@ -9,6 +9,7 @@
 
 #include <string>
 #include <iostream>
+#include <fstream>
 
 
 Analysis2D::Analysis2D(QWidget *parent) :
@@ -52,6 +53,8 @@ Analysis2D::Analysis2D(QWidget *parent) :
 // FIt
     connect(ui2D->buttonFit, SIGNAL(clicked(bool)), this, SLOT(slot2DFitControler()));
     connect(m1, SIGNAL(signalRecalculateGamma(bool)), this, SLOT(slotShowGate1ExpVsSim(bool)));
+//  Whole spectrum Chi2 calculation
+    connect(ui2D->buttonChi2Calc, SIGNAL(clicked(bool)), this, SLOT(slotChi2Calculation()));
 
     std::cout << " ============== Analysis 2D =================" << std::endl;
 
@@ -184,6 +187,8 @@ void Analysis2D::setGraphics()
     cout << "number of bins : " << myProject->getExp2DHist()->GetNrOfBins() << endl;
     cout << " Xmax: " << Display2DXmax << " Ymax: " <<Display2DYmax << " iloczyn: " <<  (Display2DXmax+1)*(Display2DYmax+1)<< endl;
 
+    //=========== MK <-> MS place to change ==============
+    //int expSpectra2Dbinning = 1;
     int expSpectra2Dbinning = myProject->getBinning2Dfactor();
 
     for (unsigned int x=0; x<xSize_; ++x)
@@ -505,6 +510,112 @@ void Analysis2D::slotShowGate1ExpVsSim(bool recalculateTransitions)
 //----- end of spectra display code ------
     m1->show();
 
+}
+
+void Analysis2D::slotChi2Calculation()
+{
+    // path creation copy-pasted checkAndPreparePath from exportFIles.cpp
+    QDateTime now = QDateTime::currentDateTime();
+    const QString timestamp = now.toString(QLatin1String("yyyyMMdd-hhmm"));
+    QDir newDir(timestamp);
+    QDir().mkdir(timestamp);
+    QDir currentDir = QDir::current();
+    string currentPath = currentDir.absolutePath().toStdString();
+    string path = currentPath + "/" + timestamp.toStdString() + "/";
+
+    string generalFilename = "WholeSpectrumChi2.txt";
+    string outputFilename = path + generalFilename;
+    ofstream outputFile(outputFilename.c_str());
+    if (!outputFile.is_open())
+        cout << "Warning message: The file " + (string) outputFilename + " is not open!" << endl;
+
+    int binWidth = ui2D->lineChi2Bin->text().toInt();
+    int startE = ui2D->lineChi2StartE->text().toInt();
+    int stopE = ui2D->lineChi2StopE->text().toInt();
+    int startChi2 = ui2D->lineChi2StartChi2->text().toInt();
+
+    double chi2WholeGate = 0.;
+    outputFile << "StartE | StopE | Chi2WholeGate from " + to_string(startChi2) << endl;
+
+    for(int i = startE; i < stopE; i += binWidth)
+    {
+        string specificFilename = to_string(i) + "_" + to_string(i + binWidth) + ".txt";
+        string outputSpecificFilename = path + specificFilename;
+        ofstream outputSpecificFile(outputSpecificFilename.c_str());
+        if (!outputSpecificFile.is_open())
+            cout << "Warning message: The file " + (string) outputSpecificFilename + " is not open!" << endl;
+
+        if(fit2DController_ == 0L)
+            fit2DController_ = new TwoDimFitController();
+
+        int expSpectra2Dbinning = myProject->getBinning2Dfactor();
+        projectionOnX = gateOnY(i / expSpectra2Dbinning, (i + binWidth) / expSpectra2Dbinning);
+        //next section is probably overcomplicated
+        int min = 0;
+        int max = i + binWidth;
+        std::vector<float> fvect;
+        for(int k = min; k < max / expSpectra2Dbinning; k++)
+            fvect.push_back(static_cast<float>(projectionOnX.at(k)));
+        Histogram* tmpHist = new Histogram(min, max, fvect);
+        tmpHist->Normalize(10. / expSpectra2Dbinning);
+        myProject->setExpGate( *tmpHist );
+        delete tmpHist;
+        fit2DController_->setExperimentalHistogram( myProject->getExpGate() );
+        // overcomlication ends here
+
+        fit2DController_->setHistId(ui2D->lineHistID->text().toInt());
+        fit2DController_->setLeftLimit( i );
+        fit2DController_->setRightLimit( i + binWidth );
+
+        fit2DController_->prepareRestLevelsResponseFromOutside();
+        fit2DController_->calculateSimulatedHistogram();
+
+        vector<double> expEnergyVector = fit2DController_->getExperimentalHistogram()->GetEnergyVectorD();
+        vector<double> expDataVector = fit2DController_->getExperimentalHistogram()->GetAllDataD();
+        vector<double> simEnergyVector = fit2DController_->getRecalculatedHistogram()->GetEnergyVectorD();
+        vector<double> simDataVector = fit2DController_->getRecalculatedHistogram()->GetAllDataD();
+        //outputSpecificFile << "expEnergyVector.size() = " << expEnergyVector.size() << endl;
+        //outputSpecificFile << "expDataVector.size() = " << expDataVector.size() << endl;
+        //outputSpecificFile << "simEnergyVector.size() = " << simEnergyVector.size() << endl;
+        //outputSpecificFile << "simDataVector.size() = " << simDataVector.size() << endl;
+        outputSpecificFile << "expEnergy | expData | simEnergy | simData | Chi2" << endl;
+
+        double chi2EachBin = 0.;
+        int maxVectorSize = 0;
+        if(expEnergyVector.size() <= simEnergyVector.size())
+            maxVectorSize = expEnergyVector.size();
+        else
+            maxVectorSize = simEnergyVector.size();
+
+        for(int j = 0; j < maxVectorSize; j++)
+        {
+            if(expEnergyVector.at(j) == 0)
+            {
+                outputSpecificFile << "0 0 0 0 0" << endl;
+                continue;
+            }
+            double simCounts = simDataVector.at(j);
+            double expCounts = expDataVector.at(j);
+            if(expEnergyVector.at(j) >= startChi2)
+                chi2EachBin = (simCounts - expCounts) * (simCounts - expCounts) / expCounts;
+            else
+                chi2EachBin = 0.;
+            outputSpecificFile << expEnergyVector.at(j) << " " << expDataVector.at(j) << " " <<
+                                  simEnergyVector.at(j) << " " << simDataVector.at(j) << " " << chi2EachBin << endl;
+
+            chi2WholeGate += chi2EachBin;
+        }
+
+
+// Chi2 as in Pearson's chi-square test https://en.wikipedia.org/wiki/Goodness_of_fit
+        outputFile << i << " " << i + binWidth << " " << chi2WholeGate << endl;
+
+        chi2WholeGate = 0.;
+        delete fit2DController_;
+        fit2DController_ = 0L;
+        outputSpecificFile.close();
+    }
+    outputFile.close();
 }
 
 //===== functions repeated from HistogramGraph

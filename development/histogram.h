@@ -175,7 +175,7 @@ public:
 
     void Scale(double c= 1.)
     {
-        cout << "Histogram::Scale nrOfCounts.size:" << nrOfCounts_.size()
+        cout << "Histogram::Scale nrOfCounts.size: " << nrOfCounts_.size()
              << " scaling factor c: " << c << endl;
         for(unsigned int i=0; i<nrOfCounts_.size(); ++i)
             nrOfCounts_.at(i) *= c;
@@ -199,7 +199,7 @@ public:
 
     double Normalize(double c = 1.)
     {
-        cout << "Histogram::Scale factor: " << c << " GetNrOfCounts: " << GetNrOfCounts() << endl;
+        cout << "Histogram::Normalize factor: " << c << " GetNrOfCounts: " << GetNrOfCounts() << endl;
         this->Scale(c/GetNrOfCounts());
         return c/GetNrOfCounts();
     }
@@ -208,12 +208,12 @@ public:
      double Normalize(double c, double xMin, double xMax)
      {
 //         cout<<"void Normalize(double c, double xMin, double xMax) "<<endl;
-         cout << "Histogram::Normalize factor: " << c << " GetNrOfCounts: " << GetNrOfCounts()
+         cout << "Histogram::Normalize(dnorm for the region) factor: " << c << " GetNrOfCounts: " << GetNrOfCounts()
               << " GEtNrOfCounts("<<xMin<<","<<xMax<<"): " << GetNrOfCounts( xMin, xMax) << endl;
          double ratio =c/GetNrOfCounts( xMin, xMax);
          cout << "RAtio: " << ratio << endl;
          this->Scale(ratio);
-         cout << "Histogram::Normalize factor POScale: " << c << " GetNrOfCounts: " << GetNrOfCounts() << endl;
+         cout << "Histogram::Normalize factor check after the normalization: " << c << " GetNrOfCounts: " << GetNrOfCounts() << endl;
          return c/GetNrOfCounts( xMin, xMax);
      }
     void Fill(float energy, float peakHight)

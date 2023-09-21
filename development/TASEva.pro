@@ -88,7 +88,8 @@ SOURCES += main.cpp\
     status.cpp \
     calibrateenergy.cpp \
     simplefigure.cpp \
-    tableinput.cpp
+    tableinput.cpp \
+    exportFiles.cpp
 
 HEADERS  += mainwindow.h \
     PeriodicTable.hh \
@@ -137,7 +138,8 @@ HEADERS  += mainwindow.h \
     status.h \
     calibrateenergy.h \
     simplefigure.h \
-    tableinput.h
+    tableinput.h \
+    exportFiles.h
 
 FORMS    += mainwindow.ui \
     analysis2d.ui \
@@ -148,7 +150,8 @@ FORMS    += mainwindow.ui \
     transitionEditor.ui \
     status.ui \
     simplefigure.ui \
-    tableinput.ui
+    tableinput.ui \
+    exportFiles.ui
 
 DISTFILES += \
     Decay.xml

@@ -11,6 +11,7 @@ class HistogramOutputController
 {
 public:
     HistogramOutputController(std::string fileName, int nrOfLevels, int ID);
+    HistogramOutputController(std::string fileName, set<int> ids);
     ~HistogramOutputController();
     void saveHistogram(Histogram* hist, int id);
     void makeInputToHisDrrClass();

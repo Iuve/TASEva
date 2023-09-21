@@ -18,7 +18,7 @@ HistogramOutputController::HistogramOutputController(string fileName, int nrOfLe
     makeInputToHisDrrClass();
     int dotPossition = fileName.rfind(".");
     string fileName1 =fileName.substr(0,dotPossition);
-    cout <<"HHHHHHHHHHHH" << fileName << fileName1 << endl;
+ //   cout <<"HHHHHHHHHHHH" << fileName << fileName1 << endl;
     std::string nameHis = fileName1+".his";
     std::string nameDrr = fileName1+".drr";
 
@@ -35,7 +35,32 @@ HistogramOutputController::HistogramOutputController(string fileName, int nrOfLe
         cout << "Error: " << err.show() << endl;
     }
 }
+HistogramOutputController::HistogramOutputController(string fileName, set<int> ID)
+{
+    outputName = fileName;
+    inputToHisDrrName = "hisInputTemp.txt";
+    size = 16384;
+    ids =ID;
+    makeInputToHisDrrClass();
+    int dotPossition = fileName.rfind(".");
+    string fileName1 =fileName.substr(0,dotPossition);
+//    cout <<"HHHHHHHHHHHH" << fileName << fileName1 << endl;
+    std::string nameHis = fileName1+".his";
+    std::string nameDrr = fileName1+".drr";
 
+    try
+    {
+        output = new HisDrr(nameDrr, nameHis, inputToHisDrrName);
+    }
+    catch (IOError &err)
+    {
+        cout << "I/O Error: " << err.show() << endl;
+    }
+    catch (GenError &err)
+    {
+        cout << "Error: " << err.show() << endl;
+    }
+}
 HistogramOutputController::~HistogramOutputController()
 {
     delete output;
@@ -54,9 +79,9 @@ void HistogramOutputController::makeInputToHisDrrClass()
 
 void HistogramOutputController::saveHistogram(Histogram* hist, int id)
 {
-    cout<< "histogramOutputController::saveHistogram - POCZATEK" << endl;
-    cout<< "histogramOutputController::saveHistogram - 1" << endl;
-    cout<< "hist size " << hist->GetNrOfCounts() << endl;
+    cout << "+++ Saving histogram with HistID: " << id << endl;
+//    cout<< "histogramOutputController::saveHistogram - POCZATEK" << endl;
+//    cout<< "hist size " << hist->GetNrOfCounts() << endl;
     if(ids.find(id) == ids.end())
     { //   throw Exception("histogramOutputController::saveHistogram : No ids");
         cout << "histogramOutputController::saveHistogram : No ids" << endl;
@@ -64,7 +89,6 @@ void HistogramOutputController::saveHistogram(Histogram* hist, int id)
     vector<int> values = hist->GetAllIntData();
 //eva    int binSize = BinningController::getBinningFactor();
     int binSize = 1;
-    cout<< "histogramOutputController::saveHistogram - 1" << endl;
 
     vector<unsigned> unbinValues;
     for(unsigned int i = 0; i != values.size(); ++i)
@@ -72,7 +96,6 @@ void HistogramOutputController::saveHistogram(Histogram* hist, int id)
             unbinValues.push_back(values.at(i));
 
     unbinValues.resize(size);
-    cout<< "histogramOutputController::saveHistogram - 2" << endl;
     try
     {
         output->setValue(id, unbinValues);
@@ -85,7 +108,7 @@ void HistogramOutputController::saveHistogram(Histogram* hist, int id)
     {
         cout << "Error: " << err.show() << endl;
     }
-    cout<< "histogramOutputController::saveHistogram - KONIEC" << endl;
+//    cout<< "histogramOutputController::saveHistogram - KONIEC" << endl;
 
 }
 

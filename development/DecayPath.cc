@@ -31,13 +31,20 @@ DecayPath* DecayPath::get()
 void DecayPath::LoadDecay(std::string xmlFileName)
 {
 	loadDecayData_ = new LoadDecayData(xmlFileName);
-	allNuclides_ = loadDecayData_->GetAllNuclides();
-	startLevel_ = loadDecayData_->GetStartLevel();
-	stopLevel_ = loadDecayData_->GetStopLevel();
-	cycleDurationInSeconds_ = loadDecayData_->GetCycleDurationInSeconds();
-	eventDurationInSeconds_ = loadDecayData_->GetEventDurationInSeconds();
+    allNuclides_ = loadDecayData_->GetAllNuclides();
+    startLevel_ = loadDecayData_->GetStartLevel();
+    stopLevel_ = loadDecayData_->GetStopLevel();
+    cycleDurationInSeconds_ = loadDecayData_->GetCycleDurationInSeconds();
+    eventDurationInSeconds_ = loadDecayData_->GetEventDurationInSeconds();
     FindAndMarkNeutronLevels();
+
+    std::cout << std::endl;
+    std::cout << "NUMBER OF BETA TRANSITIONS = " << startLevel_->GetTransitions()->size();
+    std::cout << std::endl;
+    std::cout << "NUMBER OF MOTHER LEVELS = " << allNuclides_->at(1).GetNuclideLevels()->size();
+    std::cout << std::endl;
 }
+
 
 void DecayPath::RecalculatePointers()
 {
@@ -70,6 +77,7 @@ std::vector<Transition*>* DecayPath::GetBetaTransitionsFromFirstNuclide()
 void DecayPath::FindAndMarkNeutronLevels()
 {
     std::vector<Transition*>* betaTransitions = GetBetaTransitionsFromFirstNuclide();
+
 
     for(auto itb = betaTransitions->begin(); itb != betaTransitions->end(); ++itb)
     {

@@ -168,30 +168,35 @@ void Level::UpdateTransitionVector()
             transitions_.push_back( &(*it) );
 }
 
-void Level::AddTransition(std::string type, double transitionQValue, double intensity,
-                          double neutronFinalLvlEnergy)
+void Level::AddTransition(std::string type, double transitionQValue, double intensity) //,
+//                          double neutronFinalLvlEnergy)
 {
     double finalLevelEnergy;
     int finalLevelAtomicMass;
     int finalLevelAtomicNumber;
     int atomicMass, atomicNumber;
-    double qBeta;
+    double qBeta, Sn;
 
     DecayPath* decayPath = DecayPath::get();
     std::vector<Nuclide>* nuclidesVector = decayPath->GetAllNuclides();
 
+    int nuclideIndex = 0 ;
     for ( auto it = nuclidesVector->begin(); it != nuclidesVector->end(); ++it )
     {
+
         for ( auto jt = it->GetNuclideLevels()->begin(); jt != it->GetNuclideLevels()->end(); ++jt )
         {
             if( &(*jt) == this )
             {
                 atomicMass = it->GetAtomicMass();
                 atomicNumber = it->GetAtomicNumber();
-                qBeta = it->GetQBeta();
-                //nSeparationEnergy = it;
+                qBeta = it->GetQBeta();   // what is is for?
+                if(nuclideIndex < nuclidesVector->size()-1)
+                Sn = nuclidesVector->at(nuclideIndex).GetSn();  //gets Sn of the next nuclide in chain
+//                //nSeparationEnergy = it;
             }
         }
+        nuclideIndex++;
     }
 
     if(type == "B-")
@@ -237,16 +242,18 @@ void Level::AddTransition(std::string type, double transitionQValue, double inte
     {
         finalLevelAtomicMass = atomicMass - 1;
         finalLevelAtomicNumber = atomicNumber;
-        //not ready! Sn needed
-        //finalLevelEnergy = levelEnergy_ - Sn - transitionQValue;
-        //finalLevelEnergy = 0.;
+        std::cout << "Level::AddTransitions: "
+                    << levelEnergy_ << " " << Sn << " " << transitionQValue << std::endl;;
+        finalLevelEnergy = levelEnergy_ - Sn - transitionQValue;
 
+//        neutronsFromLvL_.push_back(Neutron(type, transitionQValue, intensity,
+//            neutronFinalLvlEnergy, finalLevelAtomicMass, finalLevelAtomicNumber));
         neutronsFromLvL_.push_back(Neutron(type, transitionQValue, intensity,
-            neutronFinalLvlEnergy, finalLevelAtomicMass, finalLevelAtomicNumber));
+              finalLevelEnergy, finalLevelAtomicMass, finalLevelAtomicNumber));
         transitions_.push_back(&neutronsFromLvL_.back());
-        neutronLevel_ = true;
+        neutronLevel_ = true;    //what is this for?
     }
-    else if(type == "A")
+    else if(type == "A")    //not checked in TASEva
     {
         finalLevelAtomicMass = atomicMass - 4;
         finalLevelAtomicNumber = atomicNumber - 2;

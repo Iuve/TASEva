@@ -38,7 +38,7 @@ public:
 //signals:
 //    void UpdateContaminationPanel(bool);
 public slots:
-    void addContamination(QString expID, QString name, QString id, QString intensity);
+    void addContamination(QString expID, QString name, QString id, QString intensity, int smoothFactor);
     void editContamination(QString expID, QString name, QString id, QString intensity);
     void removeContamination(QString name, QString id);
     void removeAll();

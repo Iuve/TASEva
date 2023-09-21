@@ -63,8 +63,12 @@ private:
     QString macroToGeantName_;
     QString inputToSortName_;
 
+    string codeGEANTver_;
+
     vector<string> xmlFilenames_;
     vector<string> xmlFilenamesFullDirectory_;
+    bool xmlYesAll_;
+    bool xmlAnsAll_;
 
 };
 

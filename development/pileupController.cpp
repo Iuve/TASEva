@@ -56,7 +56,7 @@ void PileupController::slotSaveAndAdd()
     QString inten = "1";   // 1% intensity of the pileup in the total spectrum
      ContaminationController *contaminationController_ = new  ContaminationController();
      int expSpectrumID = std::stoi(myProject->getExpSpecID());
-     contaminationController_->addContamination(QString::number(expSpectrumID), outputFile_, QHistOutId_, inten);
+     contaminationController_->addContamination(QString::number(expSpectrumID), outputFile_, QHistOutId_, inten, 0);
      delete contaminationController_;
      emit signalSavedAndAdded(false);
 }

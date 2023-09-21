@@ -140,6 +140,7 @@ void HistogramGraph::showDataExpSimDiff(QVector<double> xx, QVector<double> yy, 
 
     // getting Q value from NNDC input data and making a line
             QCPItemLine *QValueLine = new QCPItemLine(uiH->histogramPlot);
+            QCPItemLine *SnValueLine = new QCPItemLine(uiH->histogramPlot);
             DecayPath* decayPath= DecayPath::get();
             if(decayPath != 0L)
             {
@@ -160,8 +161,25 @@ void HistogramGraph::showDataExpSimDiff(QVector<double> xx, QVector<double> yy, 
             QValueLine->end->setCoords(QValue, 1);
             QValueLine->setHead(QCPLineEnding::esSpikeArrow);
             QValueLine->setPen(QPen(Qt::red));
+            // time for SN
+            double Sn = decayPath->GetAllNuclides()->at(1).GetSn();
+            if (Sn < QValue)
+            {
+            QCPItemText *textLabel2 = new QCPItemText(uiH->histogramPlot);
+            textLabel2->setPositionAlignment(Qt::AlignLeft|Qt::AlignVCenter);
+    //        textLabel->position->setType(QCPItemPosition::ptAxisRectRatio);
+            textLabel2->position->setCoords(Sn, yMax/4);
+            QString Snstr = "Sn=" + QString::number(Sn) + " keV";
+            textLabel2->setText(Snstr);
+            textLabel2->setFont(QFont(font().family(), 16)); // make font a bit larger
+            textLabel2->setPen(QPen(Qt::black)); // show black border around text
+            textLabel2->setRotation(-90);
+            SnValueLine->start->setParentAnchor(textLabel2->left);
+            SnValueLine->end->setCoords(Sn, 1);
+            SnValueLine->setHead(QCPLineEnding::esSpikeArrow);
+            SnValueLine->setPen(QPen(Qt::red));
             }
-
+            }
 
 
     uiH->histogramPlot->addGraph();

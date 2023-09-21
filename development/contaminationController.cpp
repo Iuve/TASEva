@@ -98,7 +98,8 @@ Histogram* ContaminationController::getTotalContamination()
     return totalContamination;
 }
 */
-void ContaminationController::addContamination(QString expID, QString name, QString id, QString intensity)
+void ContaminationController::addContamination(QString expID, QString name, QString id,
+                                               QString intensity, int smoothFactor)
 {
     int expIDvalue = expID.toInt();
     std::string filename = name.toStdString();
@@ -123,6 +124,40 @@ void ContaminationController::addContamination(QString expID, QString name, QStr
     std::cout << "intensityValue: " <<test->intensity <<std::endl;
     std::cout << "Normalization: " <<test->normalization <<std::endl;
     std::cout << "histnr of counts: " << test->hist.GetNrOfCounts() <<std::endl;
+
+    if(smoothFactor > 1)
+    {
+        Histogram* contHistogram = test->GetHistogram();
+        vecFloat oldData = contHistogram->GetAllData();
+        //int newBinSize = 5;
+        double countsSum = 0.;
+        vecFloat binnedDataVector;
+        for(int i = 0; i < oldData.size(); i++)
+        {
+            if( (i % smoothFactor == 0) && (i != 0) )
+            {
+                binnedDataVector.push_back(countsSum / smoothFactor);
+                countsSum = 0.;
+            }
+            countsSum += oldData.at(i);
+        }
+        binnedDataVector.push_back(countsSum);
+
+        vecFloat newData = oldData;
+        int j = 0;
+        for(int i = 0; i < oldData.size(); i++)
+        {
+            if( (i % smoothFactor == 0) && (i != 0) )
+                j++;
+            newData.at(i) = binnedDataVector.at(j);
+        }
+
+        Histogram newContHistogram = Histogram(contHistogram->GetXMin(), contHistogram->GetXMax(),
+                                               newData);
+        test->hist = newContHistogram;
+    }
+
+
     contaminations_.emplace_back( expIDvalue, *test );
     std::cout << "size: " << contaminations_.size() << std::endl;
     std::cout << "----------------------------------" << std::endl;

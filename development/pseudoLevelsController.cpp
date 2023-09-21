@@ -21,7 +21,11 @@ PseudoLevelsController::PseudoLevelsController()
     {
         decayPath_= DecayPath::get();
 //TasEva        levelDensity_ = new LevelDensity();
-        createIntensityMethodList();
+        createGammaIntensityMethodList();
+        createGammaPathMethodList();
+        createParticleIntensityMethodList();
+        createParticlePathMethodList();
+        createMainDeExcitationPathPathMethodList();
     }
     catch(GenError e)
     {
@@ -34,103 +38,197 @@ PseudoLevelsController::~PseudoLevelsController()
 
 }
 
-void PseudoLevelsController::createIntensityMethodList()
+void PseudoLevelsController::createGammaIntensityMethodList()
 {
-    intensityMethodList_.clear();
-    intensityMethodListToolTip_.clear();
-    intensityMethodList_.push_back("--choose--");
-    intensityMethodListToolTip_.push_back("");
-    intensityMethodList_.push_back("Equal");
-    intensityMethodListToolTip_.push_back("All intensities are equal");
-    intensityMethodList_.push_back("AllE1");
-    intensityMethodListToolTip_.push_back("All intensitites are of E1 type");
-    intensityMethodList_.push_back("AllE2");
-    intensityMethodListToolTip_.push_back("All intensitites are of E2 type");
-    intensityMethodList_.push_back("AllM1");
-    intensityMethodListToolTip_.push_back("All intensitites are of M1 type");
-    intensityMethodList_.push_back("AllM2");
-    intensityMethodListToolTip_.push_back("All intensitites are of M2 type");
-    intensityMethodList_.push_back("87Br");
-    intensityMethodListToolTip_.push_back("");
-    intensityMethodList_.push_back("ModelM1"); // no pseudo lvls, but deexcitation model
-    intensityMethodListToolTip_.push_back("");
-    intensityMethodList_.push_back("Neutron"); // single neutron levels
-    intensityMethodListToolTip_.push_back("");
+    intensityGammaMethodList_.clear();
+    intensityGammaMethodListToolTip_.clear();
+    intensityGammaMethodList_.push_back("--choose--");
+    intensityGammaMethodListToolTip_.push_back("");
+    intensityGammaMethodList_.push_back("Equal");
+    intensityGammaMethodListToolTip_.push_back("All intensities are equal");
+    intensityGammaMethodList_.push_back("AllE1");
+    intensityGammaMethodListToolTip_.push_back("All intensitites are of E1 type");
+    intensityGammaMethodList_.push_back("AllE2");
+    intensityGammaMethodListToolTip_.push_back("All intensitites are of E2 type");
+    intensityGammaMethodList_.push_back("AllM1");
+    intensityGammaMethodListToolTip_.push_back("All intensitites are of M1 type");
+    intensityGammaMethodList_.push_back("AllM2");
+    intensityGammaMethodListToolTip_.push_back("All intensitites are of M2 type");
+//    intensityGammaMethodList_.push_back("87Br");
+//    intensityGammaMethodListToolTip_.push_back("");
+//    intensityGammaMethodList_.push_back("ModelM1"); // no pseudo lvls, but deexcitation model
+ //   intensityGammaMethodListToolTip_.push_back("");
 
     Project *myProject = Project::get();
     if( myProject->getCustomTransitionIntensities()->size() )
-        intensityMethodList_.push_back("Custom");
+        intensityGammaMethodList_.push_back("Custom");
 }
 
-std::vector<string> PseudoLevelsController::getIntensityMethodList()
+void PseudoLevelsController::createMainDeExcitationPathPathMethodList()
 {
-    return intensityMethodList_;
+    pathMainMethodList_.clear();
+    pathMainMethodListToolTip_.clear();
+    pathMainMethodList_.push_back("--choose--");
+    pathMainMethodListToolTip_.push_back("");
+    pathMainMethodList_.push_back("G");
+    pathMainMethodListToolTip_.push_back("Gamma ONLY");
+    pathMainMethodList_.push_back("N");
+    pathMainMethodListToolTip_.push_back("Neutron ONLY");
+    pathMainMethodList_.push_back("G+N");
+    pathMainMethodListToolTip_.push_back("Gamma + Neutron ");
+//    pathMainMethodList_.push_back("P");
+//    pathMainMethodListToolTip_.push_back("Proton ONLY not fully implemented");
 }
 
+void PseudoLevelsController::createGammaPathMethodList()
+{
+    pathGammaMethodList_.clear();
+    pathGammaMethodListToolTip_.clear();
+    pathGammaMethodList_.push_back("--choose--");
+    pathGammaMethodListToolTip_.push_back("");
+    pathGammaMethodList_.push_back("ToAllLevels");
+    pathGammaMethodListToolTip_.push_back("Gamma Transitions to ALL levels (not pseudolevels");
+}
+void PseudoLevelsController::createParticleIntensityMethodList()
+{
+    intensityParticleMethodList_.clear();
+    intensityParticleMethodListToolTip_.clear();
+    intensityParticleMethodList_.push_back("--choose--");
+    intensityParticleMethodListToolTip_.push_back("");
+    intensityParticleMethodList_.push_back("100%");
+    intensityParticleMethodListToolTip_.push_back("100% to selected level");
+    intensityParticleMethodList_.push_back("En**2");
+    intensityParticleMethodListToolTip_.push_back("Proportional to the Energy (MeV) square");
+}
+
+void PseudoLevelsController::createParticlePathMethodList()
+{
+    pathParticleMethodList_.clear();
+    pathParticleMethodListToolTip_.clear();
+    pathParticleMethodList_.push_back("--choose--");
+    pathParticleMethodListToolTip_.push_back("");
+    pathParticleMethodList_.push_back("GS only");
+    pathParticleMethodListToolTip_.push_back("Transition to GroundeState only. Intensity fixed to 100%");
+    pathParticleMethodList_.push_back("FE only");
+    pathParticleMethodListToolTip_.push_back("Transition to First Excited only. Intensity fixed to 100%");
+    pathParticleMethodList_.push_back("GS+FE");
+    pathParticleMethodListToolTip_.push_back("Transition to GroundState and FirstExcited ");
+    pathParticleMethodList_.push_back("All allowed");
+    pathParticleMethodListToolTip_.push_back("All energy allowed transition ");
+
+}
+
+
+
+//mk void PseudoLevelsController::addPseudoLevels(double stepEnergy, double minEn, double maxEn, double totInt,
+//mk                                             string gammaModel, double finalNeutronE)
 
 void PseudoLevelsController::addPseudoLevels(double stepEnergy, double minEn, double maxEn, double totInt,
-                                             string gammaModel, double finalNeutronE, double Sn)
+                                             string pathModel)
 {
 
     double QValue = decayPath_->GetAllNuclides()->at(0).GetNuclideLevels()->at(0).GetTransitions()->at(0)->GetTransitionQValue();
-
+    Sn_ = decayPath_->GetAllNuclides()->at(1).GetSn();  //check if NucleiIndex can be used should be 1
     if(QValue <  maxEn )
     {
         QMessageBox msgBox;
         msgBox.setText("Max pseudolevel energy cannt be higher than Q-Beta");
         int r = msgBox.exec();
-//       int r = QMessageBox::warning(this, tr("Information"),
-//                                     tr("Please first select method for gamma intensity calculation"),
-//                                     QMessageBox::Ok);
-        if (r == QMessageBox::Ok)
-            return;
+        if (r == QMessageBox::Ok) return;
     }
     //decay_->RemoveAllPseudoLevels();
     deltaE_ = stepEnergy;
     minEnergy_ = minEn;
     maxEnergy_ = maxEn;
     totIntensity_ = totInt;
-    finalNeutronE_ = finalNeutronE;
-    Sn_ = Sn;
-    if( intensityMethod_ != gammaModel ) cout << " Model Problem " << endl;
-//    ifStatisticalModel_ =  ifStatModel;
 
-    std::cout<<"PseudoLevelsController::addPseudoLevels() "<<
-            minEnergy_<<" "<< maxEnergy_<<" "<< deltaE_<< " " << totIntensity_ << " " <<ifStatisticalModel_ <<std::endl;
-    if(intensityMethod_ == intensityMethodList_.at(0))
+    qDebug() << "pseudoLevelController::pathMainMethod_ "  << pathMainMethod_ ;
+    qDebug() << "pseudoLevelController::pathModel "  << QString::fromStdString(pathModel) ;
+
+    if(pathModel != pathMainMethod_.toStdString())
     {
+        QMessageBox msgBox;
+        msgBox.setText("Something is WRONG. PathMethods do not match.");
+        int r = msgBox.exec();
+        if (r == QMessageBox::Ok) return;
+    }
+
+    if(pathMainMethod_ == "N")
+    {
+        int index = currentNuclideIndex_ +1;
+        qDebug() << "pseudoLevelController::pathParticleMEthod_" << pathParticleMethod_ ;
+        if(pathParticleMethod_ == "GS only")
+        {
+            finalNeutronE_ = decayPath_->GetAllNuclides()->at(index).GetNuclideLevels()->at(0).GetLevelEnergy();
+            intensityParticleMethod_ = "100%";
+            addNeutronLevels();
+        } else if (pathParticleMethod_ == "FE only")
+        {
+            finalNeutronE_ = decayPath_->GetAllNuclides()->at(index).GetNuclideLevels()->at(1).GetLevelEnergy();
+            intensityParticleMethod_ = "100%";
+            addNeutronLevels();
+        } else if(pathParticleMethod_ == "GS+FE")
+        {
+            // ades new levels like for GS only
+            finalNeutronE_ = decayPath_->GetAllNuclides()->at(index).GetNuclideLevels()->at(0).GetLevelEnergy();
+            addNeutronLevels();
+            // adds remainnig transitions and adjusts intensity do GS
+            double energyFE = decayPath_->GetAllNuclides()->at(index).GetNuclideLevels()->at(1).GetLevelEnergy();
+            std::cout << ""
+                         "PseudoLevelController::AddPseudoLevels: energyFE" << std::endl;
+            addRemainingNeutronTransition(energyFE);
+        } else if (pathParticleMethod_ == "All allowed")
+        {
+            finalNeutronE_ = decayPath_->GetAllNuclides()->at(index).GetNuclideLevels()->at(0).GetLevelEnergy();
+            addNeutronLevels();
+            addRemainingNeutronTransition(-1.0);
+        } else
+        {
+            QMessageBox msgBox;
+            msgBox.setText("Something is WRONG. pathParticleMethod is not specified");
+            int r = msgBox.exec();
+            if (r == QMessageBox::Ok) return;
+        }
+    } else if (pathMainMethod_ == "G")
+    {
+//      if( intensityGammaMethod_ != QString::fromStdString(gammaModel) ) cout << " Model Problem " << endl;
+//      ifStatisticalModel_ =  ifStatModel;
+
+      std::cout<<"PseudoLevelsController::addPseudoLevels() "<<
+              minEnergy_<<" "<< maxEnergy_<<" "<< deltaE_<< " " << totIntensity_ << " " <<ifStatisticalModel_ <<std::endl;
+      if(pathGammaMethod_ == pathGammaMethodList_.at(0))
+      {
 
         QMessageBox msgBox;
-        msgBox.setText("Please first select method for gamma intensity calculation");
+        msgBox.setText("Please. First select method for gamma intensity calculation");
         msgBox.exec();
 //       int r = QMessageBox::warning(this, tr("Information"),
 //                                     tr("Please first select method for gamma intensity calculation"),
 //                                     QMessageBox::Ok);
 //        if (r == QMessageBox::Ok)
-            return;
-    } else if (intensityMethod_ == intensityMethodList_.at(1)) //EqualIntensity
-    {
+//        return;
+      } else if (pathGammaMethod_ == "ToAllLevels") //Transitions to all levels excluding pseudoLevels
+      {
         addSimplePseudoLevels();
-        addRemainingTransition(intensityMethod_);
-    } else if (intensityMethod_ == intensityMethodList_.at(2))  //AllE1
-    {   addSimplePseudoLevels();
-        addRemainingTransition(intensityMethod_);
-    } else if (intensityMethod_ == intensityMethodList_.at(3))  //AllE2
-    {   addSimplePseudoLevels();
-        addRemainingTransition(intensityMethod_);
-    } else if (intensityMethod_ == intensityMethodList_.at(4)) //AllM1
-    {   addSimplePseudoLevels();
-        addRemainingTransition(intensityMethod_);
-    } else if (intensityMethod_ == intensityMethodList_.at(5)) //AllM2
-    {   addSimplePseudoLevels();
-        addRemainingTransition(intensityMethod_);
-    } else if (intensityMethod_ == intensityMethodList_.at(6)) //87Br
-    {   addCustomPseudoLevels();
-    } else if (intensityMethod_ == intensityMethodList_.at(7)) //ModelM1
-    {   applyModelM1();
-    } else if (intensityMethod_ == intensityMethodList_.at(8)) //Neutron levels
-    {   addNeutronLevels();
-    } else cout << "method not on the list " << endl;
+//        addRemainingGammaTransition(intensityGammaMethod_.toStdString());
+        addRemainingGammaTransitions();
+      } /*else if (intensityGammaMethod_ == intensityGammaMethodList_.at(2))  //AllE1
+      {   addSimplePseudoLevels();
+          addRemainingGammaTransitions();
+      } else if (intensityGammaMethod_ == intensityGammaMethodList_.at(7)) //ModelM1
+      {   applyModelM1();
+      }*/
+        else cout << "method not on the list " << endl;
+    } else if (pathMainMethod_ == "G+N")
+    {
+
+    } else if (pathMainMethod_ == "A")
+    {
+
+    } else
+    {
+        //choose any path model
+    }
 }
 
 
@@ -151,7 +249,7 @@ void PseudoLevelsController::addSimplePseudoLevels()
     for(int i =0; i<nrOfPseudolevels; i++)
     {
      double levelEnergy = minEnergy_ + i*deltaE_;
-     decayPath_->GetAllNuclides()->at(currentNuclideIndex_).AddLevelEI(levelEnergy,singleIntensity/100.);
+     decayPath_->GetAllNuclides()->at(currentNuclideIndex_).AddLevelEnergyInten(levelEnergy,singleIntensity/100.);
     }
 }
 
@@ -175,13 +273,16 @@ void PseudoLevelsController::addNeutronLevels()
 
     for(int i = 0; i<nrOfPseudolevels; i++)
     {
+        double inten = totIntensity_ /nrOfPseudolevels/100;
         double levelEnergy = minEnergy_ + i * deltaE_;
-        decayPath_->GetAllNuclides()->at(currentNuclideIndex_).AddLevel(levelEnergy,-1,"",1e-15,0.001,finalNeutronE_,Sn_);
+        decayPath_->GetAllNuclides()->at(currentNuclideIndex_).AddLevel(levelEnergy,-1,"",1e-15,inten,finalNeutronE_,"N");
     }
 }
 
-void PseudoLevelsController::addRemainingTransition(string method)
+void PseudoLevelsController::addRemainingGammaTransitions()
 {
+    std::string method = intensityGammaMethod_.toStdString();
+
       int nrOfPseudolevels = (int)(maxEnergy_ - minEnergy_)/ deltaE_;
     std::vector<Level> *levels = decayPath_->GetAllNuclides()->at(currentNuclideIndex_).GetNuclideLevels();
     double atomicMass = static_cast<double>(decayPath_->GetAllNuclides()->at(currentNuclideIndex_).GetAtomicMass());
@@ -195,6 +296,7 @@ void PseudoLevelsController::addRemainingTransition(string method)
             if(plevelEnergy == energy )  // found pseudolevel
             {
                 //it->setAsPseudoLevel();
+                //add check if it is pseudolevel?
                 for(auto ik=levels->begin(); ik != it; ik++) //scaning for final levels
                 {
 
@@ -202,22 +304,7 @@ void PseudoLevelsController::addRemainingTransition(string method)
                 double intensity;
                 double transitionEnergy = plevelEnergy - ik->GetLevelEnergy();
                     if(transitionEnergy <= 0) continue;
-                if (method == "Equal"){
-                    intensity = 1;
-                }
-                else if(method == "AllE1"){
-                    intensity = getE1Intensity(atomicMass, transitionEnergy);
-                } else if (method == "AllE2")
-                {
-                    intensity = getE2Intensity(atomicMass, transitionEnergy);
-                } else if (method == "AllM1")
-                {
-                    intensity = getM1Intensity(atomicMass, transitionEnergy);
-                } else if (method == "AllM2")
-                {
-                    intensity = getM2Intensity(atomicMass, transitionEnergy);
-                } else {
-                    intensity = 1; }
+                intensity = calculateIntensity(method, transitionEnergy, atomicMass);
                 if(ik->GetLevelEnergy() == 0)
                 {
                     cout << "found level 0 " << ik->GetLevelEnergy() << endl;
@@ -237,6 +324,159 @@ void PseudoLevelsController::addRemainingTransition(string method)
     }
 }
 
+void PseudoLevelsController::addRemainingNeutronTransition(double finalEnergy)
+{
+// if finalEnergy = -1.0 than we go through all levels in GrandDoughter
+// if finaleEnergy >=0 we add (to the existing transitions) neutron transition ONLY to that level
+
+    std::string method = intensityParticleMethod_.toStdString();
+      int nrOfPseudolevels = (int)(maxEnergy_ - minEnergy_)/ deltaE_;
+    std::vector<Level> *levels = decayPath_->GetAllNuclides()->at(currentNuclideIndex_).GetNuclideLevels();
+    std::vector<Level> *levelsD = decayPath_->GetAllNuclides()->at(currentNuclideIndex_+1).GetNuclideLevels();
+
+    double atomicMass = static_cast<double>(decayPath_->GetAllNuclides()->at(currentNuclideIndex_).GetAtomicMass());
+    for(auto it=levels->begin(); it< levels->end(); it++)  //loop over all levels to locate  pseudolevels
+    {
+        double energy = it->GetLevelEnergy();
+        if(energy < minEnergy_) continue;  //fast out for levels below minEnergy_
+        for (int i=0; i<nrOfPseudolevels; i++)  //looking for pseudolevel matching (it) pointer
+        {
+            double plevelEnergy = minEnergy_ + i*deltaE_;
+            if(plevelEnergy == energy )  // found pseudolevel
+             {
+                //it->setAsPseudoLevel();
+                //add check if it is pseudolevel?
+                for(auto ik=levelsD->begin(); ik < levelsD->end(); ik++) //scaning for final levels
+                {
+
+                    if(ik->isPseudoLevel()) continue;  //out to other levels
+                    if(ik->GetLevelEnergy() == finalEnergy || finalEnergy == -1.)
+                    {
+                      double intensity;
+                      double transitionEnergy = plevelEnergy - Sn_ - ik->GetLevelEnergy();
+                      if(transitionEnergy <= 0) continue;
+
+                      intensity = calculateIntensity(method, transitionEnergy, atomicMass);
+
+                      if(ik->GetLevelEnergy() == 0)
+                      {
+                         cout << "found level 0 " << ik->GetLevelEnergy() << endl;
+                         std::vector<Transition*> *transitions_ = it->GetTransitions();
+                         for(auto ikk=transitions_->begin(); ikk<transitions_->end(); ikk++)
+                         {
+                            double transitionEnergy = (*ikk)->GetTransitionQValue();
+                            if(energy - Sn_ - transitionEnergy < 1.0)(*ikk)->ChangeIntensity(intensity);
+                         }
+                      } else
+                      {
+                        it->AddTransition("N",transitionEnergy, intensity);
+                      }
+                    } else { continue;}
+               }
+           }
+           it->NormalizeTransitionIntensities();
+       }
+   }
+}
+/*void PseudoLevelsController::addRemainingNeutronTransitions()
+{
+    std::string method = intensityParticleMethod_.toStdString();
+      int nrOfPseudolevels = (int)(maxEnergy_ - minEnergy_)/ deltaE_;
+    std::vector<Level> *levels = decayPath_->GetAllNuclides()->at(currentNuclideIndex_).GetNuclideLevels();
+    std::vector<Level> *levelsD = decayPath_->GetAllNuclides()->at(currentNuclideIndex_+1).GetNuclideLevels();
+
+    double atomicMass = static_cast<double>(decayPath_->GetAllNuclides()->at(currentNuclideIndex_).GetAtomicMass());
+    for(auto it=levels->begin(); it< levels->end(); it++)  //loop over all levels to locate  pseudolevels
+    {
+        double energy = it->GetLevelEnergy();
+        if(energy < minEnergy_) continue;  //fast out for levels below minEnergy_
+        for (int i=0; i<nrOfPseudolevels; i++)  //looking for pseudolevel matching (it) pointer
+        {
+            double plevelEnergy = minEnergy_ + i*deltaE_;
+            if(plevelEnergy == energy )  // found pseudolevel
+            {
+                //it->setAsPseudoLevel();
+                //add check if it is pseudolevel?
+                for(auto ik=levelsD->begin(); ik < levelsD->end(); ik++) //scaning for final levels
+                {
+
+                    if(ik->isPseudoLevel()) continue;  //out for other pseudolevels
+                  double intensity;
+                  double transitionEnergy = plevelEnergy - Sn_ - ik->GetLevelEnergy();
+                  if(transitionEnergy <= 0) continue;
+                  if (method == "Equal")
+                  {
+                    intensity = 1;
+                  } else if(method == "AllE1")
+                  {
+                    intensity = getE1Intensity(atomicMass, transitionEnergy);
+                  }  else
+                  {
+                    intensity = 1;
+                  }
+
+                  if(ik->GetLevelEnergy() == 0)
+                  {
+                    cout << "found level 0 " << ik->GetLevelEnergy() << endl;
+                    std::vector<Transition*> *transitions_ = it->GetTransitions();
+                    for(auto ikk=transitions_->begin(); ikk<transitions_->end(); ikk++)
+                    {
+                        double transitionEnergy = (*ikk)->GetTransitionQValue();
+                        if(energy - Sn_ - transitionEnergy < 1.0)(*ikk)->ChangeIntensity(intensity);
+                    }
+
+                  } else
+                  {
+                    it->AddTransition("N",transitionEnergy, intensity);}
+                  }
+            }
+        }
+        it->NormalizeTransitionIntensities();
+    }
+}
+*/
+
+double PseudoLevelsController::calculateIntensity(string method,double transitionEnergy, int atomicMass)
+{
+    double intensity;
+    // all possible intensity methods are called here (for Gamma,neutron,particle etc.)
+    if (method == "100%")
+    {
+      intensity = 1;
+    } else if(method == "Equal")
+    {
+      intensity = 1;
+    } else if(method == "En**2")
+    {
+      intensity = getEnPowerIntensity(transitionEnergy,2.0);
+    } else if(method == "AllE1"){
+        intensity = getE1Intensity(atomicMass, transitionEnergy);
+    } else if (method == "AllE2")
+    {
+        intensity = getE2Intensity(atomicMass, transitionEnergy);
+    } else if (method == "AllM1")
+    {
+        intensity = getM1Intensity(atomicMass, transitionEnergy);
+    } else if (method == "AllM2")
+    {
+        intensity = getM2Intensity(atomicMass, transitionEnergy);
+    }
+
+    else
+    {
+      intensity = 1;
+    }
+
+    return intensity;
+
+}
+
+double PseudoLevelsController::getEnPowerIntensity(double energy, double power)
+{
+// convert energy to MeV nad square
+    double intensity = pow(energy/1000., power) ;
+    return  intensity;
+}
 
 double PseudoLevelsController::getE1Intensity(double atomicMass, double energy)
 {
