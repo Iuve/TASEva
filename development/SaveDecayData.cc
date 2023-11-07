@@ -587,6 +587,7 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
 
     double averageBetaEnergy = 0.;
     double averageGammaEnergy = 0.;
+    double averageNeutronEnergy = 0.;
     double neutronPercentage = 0.;
     double growingIntensity = 0.;
 
@@ -678,6 +679,8 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
                         //neutronsEnergies += "E" + to_string_with_precision((*nt)->GetTransitionQValue(),0);
                         nEnergy = (*nt)->GetTransitionQValue();
                         targetLvlEnergy = (*nt)->GetFinalLevelEnergy();
+                        double nIntensity = (*nt)->GetIntensity();
+                        averageNeutronEnergy += nEnergy * intensity / 100 * nIntensity;
                     }
 
                     outputFile << finalLevelEnergy << " " << intensity << " " << uncertainty << " "
@@ -686,7 +689,7 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
                 else
                 {
                     growingIntensity += intensity;
-                    averageGammaEnergy += finalLevelEnergy * intensity;
+                    averageGammaEnergy += finalLevelEnergy * intensity / 100;
                     outputFile << finalLevelEnergy << " " << intensity << " "
                                << uncertainty << " " << growingIntensity << endl;
                 }
@@ -694,9 +697,10 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
         }
     }
 
-    averageGammaEnergy /= (100 - neutronPercentage);
+    //averageGammaEnergy /= (100 - neutronPercentage);
     outputFile << "#AverageGammaEnergy = " << averageGammaEnergy << endl;
     outputFile << "#AverageBetaEnergy = " << averageBetaEnergy << endl;
+    outputFile << "#AverageNeutronEnergy = " << averageNeutronEnergy << endl;
     outputFile << "#NeutronPercentage = " << neutronPercentage;
     outputFile.close();
 }

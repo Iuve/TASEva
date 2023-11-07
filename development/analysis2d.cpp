@@ -596,7 +596,7 @@ void Analysis2D::slotChi2Calculation()
             }
             double simCounts = simDataVector.at(j);
             double expCounts = expDataVector.at(j);
-            if(expEnergyVector.at(j) >= startChi2)
+            if(expEnergyVector.at(j) >= startChi2 && expCounts > 0)
                 chi2EachBin = (simCounts - expCounts) * (simCounts - expCounts) / expCounts;
             else
                 chi2EachBin = 0.;

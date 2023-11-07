@@ -638,7 +638,8 @@ void FitController::findErrors()
             if(experiment.at(k)!=0)sum += (responses.at(i)).at(k)* (responses.at(i)).at(k)/experiment.at(k);  //check expNorm added mar 1, 2020
         }
         double error = pow(4./(lambda* lambda) * feedings.at(i)* feedings.at(i) * sum, 0.5);
-        errors.push_back(error/feedings.at(i) * 100.);
+        //errors.push_back(error/feedings.at(i) * 100.);
+        errors.push_back(error);
     }
 }
 
