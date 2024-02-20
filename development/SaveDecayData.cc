@@ -97,6 +97,7 @@ void SaveDecayData::SaveDecayStructure()
                 string particleType =  (*kt)->GetParticleType();
                 double transitionQValue =  (*kt)->GetTransitionQValue();
                 double intensity = (*kt)->GetIntensity() * 100.;
+                double d_intensity = (*kt)->GetD_Intensity() * 100.;
                 double finalLevelEnergy = (*kt)->GetFinalLevelEnergy();
                 int finalLevelAtomicMass = (*kt)->GetFinalLevelAtomicMass();
                 int finalLevelAtomicNumber = (*kt)->GetFinalLevelAtomicNumber();
@@ -106,6 +107,8 @@ void SaveDecayData::SaveDecayStructure()
                 nodeTransition.append_attribute("Type") = particleType.c_str();
                 nodeTransition.append_attribute("TransitionQValue").set_value(toStringPrecision(transitionQValue,2).c_str());
                 nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,6).c_str());
+                if(d_intensity >= 1e-6)
+                    nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,6).c_str());
                 if( isAddedTransition )
                     nodeTransition.append_attribute("Origin") = "Added";
                 else
@@ -591,36 +594,16 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
     double neutronPercentage = 0.;
     double growingIntensity = 0.;
 
-    //Uncertainty calculation part 1 start
-    Project* myProject = Project::get();
-    Histogram* tempExpHist = myProject->getExpHist();
-    double minEnergy = 0.;
-    double maxEnergy = 16000.;
-    double expSum = tempExpHist->GetNrOfCounts(minEnergy,maxEnergy);
-    //Uncertainty calculation part 1 end
-
-
     for ( auto lt = motherNuclide->GetNuclideLevels()->begin(); lt != motherNuclide->GetNuclideLevels()->end(); ++lt )
     {
-        //Uncertainty calculation part 2 start
-        double highestIntensity = 0.;
-        Transition* highestIntensityTransition;
-        for ( auto kt = lt->GetTransitions()->begin(); kt != lt->GetTransitions()->end(); ++kt )
-        {
-            double intensity = (*kt)->GetIntensity();
-            if(intensity > highestIntensity)
-            {
-                highestIntensity = intensity;
-                highestIntensityTransition = (*kt);
-            }
-        }
-        //Uncertainty calculation part 2 end
-
         for ( auto kt = lt->GetTransitions()->begin(); kt != lt->GetTransitions()->end(); ++kt )
         {
             string particleType =  (*kt)->GetParticleType();
             //double transitionQValue =  (*kt)->GetTransitionQValue();
             double intensity = (*kt)->GetIntensity() * 100.;
+            double uncertainty = (*kt)->GetD_Intensity() * 100.;
+            if(uncertainty < 1e-6)
+                uncertainty = 0.;
             double finalLevelEnergy = (*kt)->GetFinalLevelEnergy();
             //int finalLevelAtomicMass = (*kt)->GetFinalLevelAtomicMass();
             //int finalLevelAtomicNumber = (*kt)->GetFinalLevelAtomicNumber();
@@ -632,40 +615,6 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
                 (*kt)->CalculateAverageBetaEnergy();
                 double averageLvlBetaEnergy = (*kt)->GetAverageBetaEnergy();
                 averageBetaEnergy += intensity * averageLvlBetaEnergy / 100;
-
-                //Uncertainty calculation part 3 start
-
-                //to calculate uncertainties I need:
-                // beta transition with max intensity - which one is it and what is the intensity
-                // experimental number of cDecayStructureounts - better if it would be in fit range, not whole spectrum
-                // intensities should be in range [0, 1]
-
-                double uncertainty(0.), firstPart(0.), secondPart(0.), sumForSecondPart(0.);
-                double arbitraryFactor = 0.02;
-                //if( *kt == highestIntensityTransition)
-                //    firstPart = pow(arbitraryFactor, 2);
-                    //firstPart = pow((1 - intensity/100.) * arbitraryFactor * intensity/100., 2);
-                //else
-                firstPart = pow((1 - intensity/100.), 2) * intensity/100. / expSum;
-
-                for ( auto kt2 = lt->GetTransitions()->begin(); kt2 != lt->GetTransitions()->end(); ++kt2 )
-                {
-                    if( *kt2 == *kt )
-                        continue;
-
-                    double tempIntensity = (*kt2)->GetIntensity();
-                    if( *kt2 == highestIntensityTransition)
-                        sumForSecondPart += pow(arbitraryFactor * tempIntensity, 2);
-                    else
-                        sumForSecondPart += tempIntensity / expSum;
-                }
-                secondPart = sumForSecondPart * intensity/100. * intensity/100.;
-                if( *kt == highestIntensityTransition)
-                    uncertainty = arbitraryFactor * 100.;
-                else
-                    uncertainty = pow(firstPart + secondPart, 0.5) * 100.;
-                (*kt)->SetD_Intensity(uncertainty);
-                //Uncertainty calculation part 3 end
 
                 if(finalLevel->GetNeutronLevelStatus())
                 {
@@ -680,6 +629,8 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
                         nEnergy = (*nt)->GetTransitionQValue();
                         targetLvlEnergy = (*nt)->GetFinalLevelEnergy();
                         double nIntensity = (*nt)->GetIntensity();
+                        if(targetLvlEnergy > 1.)
+                            averageGammaEnergy += targetLvlEnergy * intensity / 100;
                         averageNeutronEnergy += nEnergy * intensity / 100 * nIntensity;
                     }
 

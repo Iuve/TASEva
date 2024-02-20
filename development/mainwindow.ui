@@ -1061,6 +1061,7 @@ Container</string>
     <addaction name="separator"/>
     <addaction name="loadFiles"/>
     <addaction name="actionExport_Files"/>
+    <addaction name="actionCalculate_Uncertainties"/>
    </widget>
    <widget class="QMenu" name="menuContaminations">
     <property name="enabled">
@@ -1277,6 +1278,11 @@ Container</string>
   <action name="actionExport_Files">
    <property name="text">
     <string>Export Files</string>
+   </property>
+  </action>
+  <action name="actionCalculate_Uncertainties">
+   <property name="text">
+    <string>Calculate Uncertainties</string>
    </property>
   </action>
  </widget>

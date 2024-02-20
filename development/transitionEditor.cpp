@@ -224,97 +224,105 @@ void TransitionEditor::slotAddTransition()
 
     std::vector <Level>* levels_ = nuclides_->at(currentNuclideIndex_).GetNuclideLevels();
 
-    QString text = QInputDialog::getText(this, tr("New Transition"),
+    QString fullText = QInputDialog::getText(this, tr("New Transition"),
                                           tr("Type (a,b+,b-,g,n) : Energy(keV) : Intensity(%)"), QLineEdit::Normal,
-                                          "type:energy:intensity", &ok);
-    QStringList stringList= text.split(":",QString::SkipEmptyParts);
+                                          "type1:energy1:intensity1;type2:energy2:intensity2;...", &ok);
 
-    for (int i = 0; i < stringList.size(); i++) qDebug(stringList.at(i).toUtf8());
-    double energy(-1);
-    double intensity(101);
-    std::string transitionType = "";
-     if (ok && stringList.size() == 3 )
-     {
-         transitionType = stringList.at(0).toStdString();
-         energy = stringList.at(1).toDouble();
-         intensity = stringList.at(2).toDouble();
-         std::cout << transitionType <<" : "<< energy << ": " << intensity  << std::endl ;
-     } else {
-         QMessageBox msgBox;
-         msgBox.setText("Data not correct - no changes applied");
-         msgBox.exec();
-         return;
-     }
-     if(intensity > 100 || energy < 0){
-         QMessageBox msgBox;
-         msgBox.setText("Energy or Intensity data not correct - no changes applied");
-         msgBox.exec();
-         energy = 0;
-         intensity = 0;
-         return;
-     }
+    QStringList fullStringList= fullText.split(";",QString::SkipEmptyParts);
 
-     int atomicNumber = nuclides_->at(currentNuclideIndex_).GetAtomicNumber();
-     int atomicMass = nuclides_->at(currentNuclideIndex_).GetAtomicMass();
-     //double finalLevelEnergy = 0;
-     int finalLevelAtomicMass;
-     int finalLevelAtomicNumber;
-     if(transitionType =="a" || transitionType =="A")
-     {
-         finalLevelAtomicMass = atomicMass - 4;
-         finalLevelAtomicNumber  =  atomicNumber -2 ;
-         transitionType = "A";
-     } else if(transitionType =="b-" || transitionType =="B-")
-     {
-         finalLevelAtomicMass = atomicMass ;
-         finalLevelAtomicNumber  =  atomicNumber +1 ;
-         transitionType = "B-";
-     } else if(transitionType =="b+" || transitionType =="B+")
-     {
-         finalLevelAtomicMass = atomicMass ;
-         finalLevelAtomicNumber  =  atomicNumber -1 ;
-         transitionType = "B+";
-     } else if(transitionType =="n" || transitionType =="N")
-     {
-         finalLevelAtomicMass = atomicMass -1 ;
-         finalLevelAtomicNumber  =  atomicNumber  ;
-         transitionType = "N";
-     }else if(transitionType =="g" || transitionType =="G")
-     {
-         finalLevelAtomicMass = atomicMass ;
-         finalLevelAtomicNumber  =  atomicNumber  ;
-         transitionType = "G";
-     } else
-     {
-         QMessageBox msgBox;
-         msgBox.setText("Transition type data not correct - no changes applied");
-         msgBox.exec();
-         energy = 0;
-         intensity = 0;
-         transitionType = "";
-         return;
-     }
-
-     intensity = intensity/100;  //converting to numbers not perCent
-
-
-/*
-    Level *finalLevel = decay->FindFinalLevel(newGamma, levels.at(currentLevelIndex_));
-    if(levels.at(currentLevelIndex_) == finalLevel)
+    // below loop enables adding multiple transitions at once if info are divided by ';'
+    for (int k = 0; k < fullStringList.size(); k++)
     {
-        int r = QMessageBox::warning(this, tr("Error"),
-                                     tr("Too small gamma energy, no final level"),
-                                     QMessageBox::Ok);
-        if (r == QMessageBox::Ok)
-            return;
+        QString text = fullStringList.at(k);
+        QStringList stringList= text.split(":",QString::SkipEmptyParts);
+
+        for (int i = 0; i < stringList.size(); i++) qDebug(stringList.at(i).toUtf8());
+        double energy(-1);
+        double intensity(101);
+        std::string transitionType = "";
+         if (ok && stringList.size() == 3 )
+         {
+             transitionType = stringList.at(0).toStdString();
+             energy = stringList.at(1).toDouble();
+             intensity = stringList.at(2).toDouble();
+             std::cout << transitionType <<" : "<< energy << ": " << intensity  << std::endl ;
+         } else {
+             QMessageBox msgBox;
+             msgBox.setText("Data not correct - no changes applied");
+             msgBox.exec();
+             return;
+         }
+         if(intensity > 100 || energy < 0){
+             QMessageBox msgBox;
+             msgBox.setText("Energy or Intensity data not correct - no changes applied");
+             msgBox.exec();
+             energy = 0;
+             intensity = 0;
+             return;
+         }
+
+         int atomicNumber = nuclides_->at(currentNuclideIndex_).GetAtomicNumber();
+         int atomicMass = nuclides_->at(currentNuclideIndex_).GetAtomicMass();
+         //double finalLevelEnergy = 0;
+         int finalLevelAtomicMass;
+         int finalLevelAtomicNumber;
+         if(transitionType =="a" || transitionType =="A")
+         {
+             finalLevelAtomicMass = atomicMass - 4;
+             finalLevelAtomicNumber  =  atomicNumber -2 ;
+             transitionType = "A";
+         } else if(transitionType =="b-" || transitionType =="B-")
+         {
+             finalLevelAtomicMass = atomicMass ;
+             finalLevelAtomicNumber  =  atomicNumber +1 ;
+             transitionType = "B-";
+         } else if(transitionType =="b+" || transitionType =="B+")
+         {
+             finalLevelAtomicMass = atomicMass ;
+             finalLevelAtomicNumber  =  atomicNumber -1 ;
+             transitionType = "B+";
+         } else if(transitionType =="n" || transitionType =="N")
+         {
+             finalLevelAtomicMass = atomicMass -1 ;
+             finalLevelAtomicNumber  =  atomicNumber  ;
+             transitionType = "N";
+         }else if(transitionType =="g" || transitionType =="G")
+         {
+             finalLevelAtomicMass = atomicMass ;
+             finalLevelAtomicNumber  =  atomicNumber  ;
+             transitionType = "G";
+         } else
+         {
+             QMessageBox msgBox;
+             msgBox.setText("Transition type data not correct - no changes applied");
+             msgBox.exec();
+             energy = 0;
+             intensity = 0;
+             transitionType = "";
+             return;
+         }
+
+         intensity = intensity/100;  //converting to numbers not perCent
+
+
+    /*
+        Level *finalLevel = decay->FindFinalLevel(newGamma, levels.at(currentLevelIndex_));
+        if(levels.at(currentLevelIndex_) == finalLevel)
+        {
+            int r = QMessageBox::warning(this, tr("Error"),
+                                         tr("Too small gamma energy, no final level"),
+                                         QMessageBox::Ok);
+            if (r == QMessageBox::Ok)
+                return;
+        }
+        newGamma->SetFinalLevel(finalLevel);
+    */
+
+        levels_->at(currentLevelIndex_).AddTransition(transitionType, energy,intensity);
+
+        emit signalTransitionsEdited();
+        emit signalUpdateTransitionTable(currentNuclideIndex_,  currentLevelIndex_);
     }
-    newGamma->SetFinalLevel(finalLevel);
-*/
-
-    levels_->at(currentLevelIndex_).AddTransition(transitionType, energy,intensity);
-
-    emit signalTransitionsEdited();
-    emit signalUpdateTransitionTable(currentNuclideIndex_,  currentLevelIndex_);
 
 }
 

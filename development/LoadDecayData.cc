@@ -193,6 +193,8 @@ Nuclide LoadDecayData::LoadNuclideData(const string filename)
             double transitionQval = stringToDouble(transitionQvalStr);
             string intensityStr = transition.attribute("Intensity").value();
             double intensity = stringToDouble(intensityStr);
+            string d_intensityStr = transition.attribute("d_Intensity").value();
+            double d_intensity = stringToDouble(d_intensityStr);
             string originString = transition.attribute("Origin").value();
             bool isAddedTransition = false;
             if( originString == "Added" )
@@ -229,6 +231,8 @@ Nuclide LoadDecayData::LoadNuclideData(const string filename)
 			if(type == "B-")
 			{
 				betasFromLvL.push_back(Beta(type, transitionQval, intensity, finalLvlEnergy, finalLvlAtMass, finalLvlAtNumber));
+                if(d_intensity > 0.)
+                    betasFromLvL.back().SetD_Intensity(d_intensity);
                 if( isAddedTransition )
                     betasFromLvL.back().SetAsAddedTransition();
 			}
@@ -258,12 +262,16 @@ Nuclide LoadDecayData::LoadNuclideData(const string filename)
 					}
 
 					gammasFromLvL.push_back(gammaTransition);
+                    if(d_intensity > 0.)
+                        gammasFromLvL.back().SetD_Intensity(d_intensity);
                     if( isAddedTransition )
                         gammasFromLvL.back().SetAsAddedTransition();
 				}
 				else
 				{
 					gammasFromLvL.push_back(Gamma(type, transitionQval, intensity, finalLvlEnergy, finalLvlAtMass, finalLvlAtNumber));
+                    if(d_intensity > 0.)
+                        gammasFromLvL.back().SetD_Intensity(d_intensity);
                     if( isAddedTransition )
                         gammasFromLvL.back().SetAsAddedTransition();
 				}
@@ -271,12 +279,16 @@ Nuclide LoadDecayData::LoadNuclideData(const string filename)
 			else if(type == "N")
 			{
 				neutronsFromLvL.push_back(Neutron(type, transitionQval, intensity, finalLvlEnergy, finalLvlAtMass, finalLvlAtNumber));
+                if(d_intensity > 0.)
+                    neutronsFromLvL.back().SetD_Intensity(d_intensity);
                 if( isAddedTransition )
                     neutronsFromLvL.back().SetAsAddedTransition();
 			}
 			else if(type == "A")
 			{
 				alphasFromLvL.push_back(Alpha(type, transitionQval, intensity, finalLvlEnergy, finalLvlAtMass, finalLvlAtNumber));
+                if(d_intensity > 0.)
+                    alphasFromLvL.back().SetD_Intensity(d_intensity);
                 if( isAddedTransition )
                     alphasFromLvL.back().SetAsAddedTransition();
 			}	

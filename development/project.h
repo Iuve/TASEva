@@ -152,8 +152,8 @@ public:
     void readSortXMLInputFile(QString qfilename);
     vector<QString> getSortXMLInputFile(){return sortInputXML_;}
 
-    void SetLastAutofitResults( std::vector< std::pair<double, double> > results ){ fitResults_ = results; }
-    std::vector< std::pair<double, double> > GetLastAutofitResults(){ return fitResults_; }
+    //void SetLastAutofitResults( std::vector< std::pair<double, double> > results ){ fitResults_ = results; }
+    //std::vector< std::pair<double, double> > GetLastAutofitResults(){ return fitResults_; }
 
     void addExpHist(int Id, Histogram hist);
     void replaceExpHistInMap(int Id, Histogram hist);

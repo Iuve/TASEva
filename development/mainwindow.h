@@ -54,6 +54,7 @@ public slots:
 //mk    void exportDecayInfo(bool triggered);
  //mk   void exportResponseFunctions(bool triggered);
     void slotExportFiles(bool triggered);
+    void slotCalculate_Uncertainties(bool triggered);
 //Eva    void showLevelSchemePDF();
     void slotProjectNameUpdate();
     void slotProjectExpFileUpdate();

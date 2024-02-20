@@ -97,6 +97,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionStatus, SIGNAL(triggered(bool)), this, SLOT(slotShowStatus(bool)));
 
     connect(ui->actionExport_Files, SIGNAL(triggered(bool)),this,SLOT(slotExportFiles(bool)));
+    connect(ui->actionCalculate_Uncertainties, SIGNAL(triggered(bool)),this,SLOT(slotCalculate_Uncertainties(bool)));
 
 
  //   connect(ui->export_ENS_File, SIGNAL(triggered(bool)), this, SLOT(exportENSFile(bool)));
@@ -447,8 +448,9 @@ void MainWindow::slotAutoFit()
             return;
     }
 
-    std::vector< std::pair<double, double> > fitResults;
-    std::vector <float> errors;
+    // fitResults and errors are not needed
+    //std::vector< std::pair<double, double> > fitResults;
+    //std::vector <float> errors;
 
     switch (fittingMethod_)
     {case 1:
@@ -467,7 +469,7 @@ void MainWindow::slotAutoFit()
 
             fitController->applyMaximumLikelyhoodFit( myProject->getExpHist() );
             ui->buttonErrorCal->setEnabled(true);
-            errors = fitController->getErrors();
+            //errors = fitController->getErrors();
             break;
         }
     case 2:
@@ -508,7 +510,7 @@ void MainWindow::slotAutoFit()
 
              fitController->applyBayesianFit( bayesianHistograms );
              //ui->buttonErrorCal->setEnabled(true);
-             errors = fitController->getErrors();
+             //errors = fitController->getErrors();
              break;
         }
     default:
@@ -536,19 +538,18 @@ void MainWindow::slotAutoFit()
 
      Level* motherLevel = &motherLevels->at(0);
      std::vector<Transition*>* transitions = motherLevel->GetTransitions();  // getting transitions
-    int i=-1;
+
      cout << "Level energy  Feeding(%)  Uncertainty"<< endl;
      for(auto itt = transitions->begin(); itt != transitions->end(); ++itt)
      {
-         i++;
          cout << (*itt) -> GetFinalLevelEnergy() << " "
-         << (*itt) -> GetIntensity()*100
-         << " " << errors.at(i) << endl;
-         fitResults.emplace_back( (*itt) -> GetIntensity()*100, errors.at(i) );
+         << (*itt) -> GetIntensity() * 100
+         << " " << (*itt) -> GetD_Intensity() * 100 << endl;
      }
-     myProject->SetLastAutofitResults(fitResults);
+//     myProject->SetLastAutofitResults(fitResults);
      cout << "FIT RESULT: CONTAMINATION" << endl;
      cout << "<File name>  :  intensity " << endl;
+
 //    for(unsigned int i = 0; i < contaminationController_->getContaminations().size(); i++)
 
      std::vector< std::pair<int, Contamination> >* contaminations = myProject->getContaminations();
@@ -1614,6 +1615,24 @@ void MainWindow::slotExportFiles(bool triggered)
     e1 = new ExportFiles();
     e1->show();
 }
+
+
+void MainWindow::slotCalculate_Uncertainties(bool triggered)
+{
+    cout << "Calculate uncertainties started." << endl;
+    Project* myProject = Project::get();
+    Histogram* tempExpHist = myProject->getExpHist();
+    double minEnergy = 0.;
+    double maxEnergy = 16000.;
+    double expSum = tempExpHist->GetNrOfCounts(minEnergy,maxEnergy);
+
+    DecayPath* decayPath = DecayPath::get();
+    std::vector<Nuclide>* nuclidesVector = decayPath->GetAllNuclides();
+    Nuclide* motherNuclide = &nuclidesVector->at(0);
+    motherNuclide->GetNuclideLevels()->at(0).CalculateBetaTransitionsUncertainties(expSum);
+    cout << "Calculate uncertainties finished." << endl;
+}
+
 /*string MainWindow::checkAndPreparePath()
 {
     QDateTime now = QDateTime::currentDateTime();

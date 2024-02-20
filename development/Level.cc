@@ -319,7 +319,71 @@ Nuclide* Level::GetNuclideAddress()
 }
 
 
+void Level::CalculateBetaTransitionsUncertainties(double expSum)
+{
+    // MS 20240220
+    // This calculation is based on Charlie's Rasco Appendix A
+    // Equation A4 is implemented here. Few assumptions are made:
+    // 1. Number of counts uncertainty of highest fed level is arbitrary, 10% for now (deltaNj/N).
+    // 2. Other levels uncertainties are Poisson, so deltaNj = sqrt(Nj) = sqrt(Ij*N)
+    // 3. First assumption may vary for different nuclides, analysis. Current approach
+    // assumess deltaNj/N = 10% for every level with intensity higher than half of highest intensity.
 
+    //Project* myProject = Project::get();
+    //Histogram* tempExpHist = myProject->getExpHist();
+    //double minEnergy = 0.;
+    //double maxEnergy = 16000.;
+    //double expSum = tempExpHist->GetNrOfCounts(minEnergy,maxEnergy);
+
+    double arbitraryFactor = 0.1;
+    double highestIntensity = 0.;
+    Transition* highestIntensityTransition;
+    for ( auto kt = transitions_.begin(); kt != transitions_.end(); ++kt )
+    {
+        double intensity = (*kt)->GetIntensity();
+        if(intensity > highestIntensity)
+        {
+            highestIntensity = intensity;
+            highestIntensityTransition = (*kt);
+        }
+    }
+
+    std::cout << "highestIntensity = " << highestIntensity << std::endl;
+
+    for ( auto kt = transitions_.begin(); kt != transitions_.end(); ++kt )
+    {
+        double intensity = (*kt)->GetIntensity();
+        double uncertainty(0.), firstPart(0.), secondPart(0.), sumForSecondPart(0.);
+
+        //if( *kt == highestIntensityTransition)
+        if( intensity >= highestIntensity/2. )
+        {
+            std::cout << "highIntensity = " << intensity << std::endl;
+            firstPart = pow(arbitraryFactor * (1 - intensity), 2);
+        }
+        else
+            firstPart = pow((1 - intensity), 2) * intensity / expSum;
+
+        for ( auto kt2 = transitions_.begin(); kt2 != transitions_.end(); ++kt2 )
+        {
+            if( *kt2 == *kt )
+                continue;
+
+            double tempIntensity = (*kt2)->GetIntensity();
+            //if( *kt2 == highestIntensityTransition)
+            if( intensity >= highestIntensity/2. )
+                sumForSecondPart += pow(arbitraryFactor, 2);
+            else
+                sumForSecondPart += tempIntensity / expSum;
+        }
+        secondPart = sumForSecondPart * intensity * intensity;
+        //if( *kt == highestIntensityTransition)
+        //    uncertainty = arbitraryFactor * 100.;
+        //else
+        uncertainty = pow(firstPart + secondPart, 0.5);
+        (*kt)->SetD_Intensity(uncertainty);
+    }
+}
 
 
 

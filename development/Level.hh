@@ -47,6 +47,8 @@ public:
 
     Nuclide* GetNuclideAddress();
 
+    void CalculateBetaTransitionsUncertainties(double expSum);
+
     //MK Added
     bool isPseudoLevel(){return isPseudoLevel_;}
     void setAsPseudoLevel(){isPseudoLevel_ = true;}

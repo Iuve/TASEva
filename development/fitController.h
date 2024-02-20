@@ -3,6 +3,9 @@
 
 #include <QWidget>
 #include <vector>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 #include "histogram.h"
 #include "project.h"
 
@@ -40,6 +43,7 @@ private:
     void makeLikelyhoodFit();
     void makeBayesianFit();
     void findErrors();
+    void findBayesianErrors();
     void notifyContaminations();
     void notifyDecay();
 

@@ -118,8 +118,7 @@ bool Project::Open(string fileName)
         else if (b1 == "OutputLEVFile:") {outputLEVFile_ = b2;}
         else if (b1 == "CodeGEANT:") {codeGEANT_ = b2;}
         else if (b1 == "CodeGEANTver:") {codeGEANTver_ = b2;}
-        else if (b1 == "NumberOfSimulations") {numberOfSimulations_ = stoi(b2);
-        cout << "aaaa" << numberOfSimulations_ << endl;}
+        else if (b1 == "NumberOfSimulations:") {numberOfSimulations_ = stoi(b2);}
         else if (b1 == "Contamination:")
             {
             std::string b5, b6;

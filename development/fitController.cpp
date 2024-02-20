@@ -2,6 +2,7 @@
 #include "fitController.h"
 #include "DeclareHeaders.hh"
 #include "responsefunction.h"
+#include "Randomize.hh"
 
 FitController::FitController()
 {
@@ -67,9 +68,14 @@ void FitController::applyBayesianFit (std::vector< std::pair<Histogram*, int> > 
         bayesianExpNorms.push_back(expNorm);
     }
 
-    makeBayesianFit();
-    findErrors(); //to be corrected
-    notifyDecay();
+    if(nrOfIterations >= 1)
+    {
+        makeBayesianFit();
+        // lambda defined only for error calculations
+        lambda = 1;
+        findErrors();
+        notifyDecay();
+    }
     //contaminations shouldn't be fitted here
 }
 
@@ -643,6 +649,160 @@ void FitController::findErrors()
     }
 }
 
+void FitController::findBayesianErrors()
+{
+    cout << "------------- findBayesianErrors start.-----------------" << endl;
+    // chi2EachBin = (simCounts - expCounts) * (simCounts - expCounts) / expCounts;
+    // chi2WholeGate += chi2EachBin;
+
+    string outputFilename = "Chi2Test.txt";
+    ofstream outputFile(outputFilename.c_str());
+    if (!outputFile.is_open())
+        cout << "Warning message: The file " + (string) outputFilename + " is not open!" << endl;
+
+    outputFile << "# weightedIntensityChange   chi2AllSpectra" << endl;
+
+    //vector< vector<float> > bayesianChiSquare;
+    vector< vector<float> > bayesianRespFunction;
+    vector< vector<float> > referenceRespFunction;
+    double referenceChi2WholeSpectrum;
+
+    int nrOfHistograms = bayesianFeedings.at(0).size();
+    int nrOfPoints = bayesianExperiments.at(0).size();
+    int nrOfBetaTransitions = nrOfHistograms - nrOfContaminations;
+
+    int iterationNumber = 1e4;
+    double percentageChange = 0.2;
+    vector<float> randomNumber(nrOfBetaTransitions, 0);
+    vector< vector<float> > newBayesianFeedings(bayesianExperiments.size(), randomNumber);
+    //double weightedIntensityChange = 0.;
+    double minimalChiSquare = 1e10;
+
+    for(int it = 0; it < iterationNumber; it++)
+    {
+        if(it % 100 == 0)
+            std::cout << "Calculate uncertainties iteration # " << it << "\r" <<  std::flush;
+        bayesianRespFunction.clear();
+
+        if(it == 0)
+        {
+            for(auto it = transitionsUsed.begin(); it != transitionsUsed.end(); ++it)
+                outputFile << (*it)->GetFinalLevelEnergy() << " ";
+            outputFile << endl;
+        }
+
+
+        for(int id = 0; id < bayesianExperiments.size(); id++)
+        {
+            vector<float> oneIdRespFunction(nrOfPoints, 0);
+            double sumForNormalization = 0.;
+            for(int i = 0; i < nrOfBetaTransitions; ++i)
+            {
+                //double responseNrOfCounts = 0;
+                //double expNrOfCounts;
+                for(int j = 0; j < (bayesianResponses.at(id).at(i)).size(); j++)
+                {
+                    if(it == 0)
+                    {
+                        oneIdRespFunction.at(j)+= (bayesianResponses.at(id).at(i)).at(j) * bayesianFeedings.at(id).at(i);
+                    }
+                    else
+                    {
+                        oneIdRespFunction.at(j)+= (bayesianResponses.at(id).at(i)).at(j) * newBayesianFeedings.at(id).at(i);
+                    }
+                    //expNrOfCounts = bayesianExperiments.at(id).at(j);
+                }
+
+                if(id == 0)
+                {
+                    double intensityDiff = newBayesianFeedings.at(id).at(i) / bayesianFeedings.at(id).at(i) - 1.;
+                    outputFile << intensityDiff << " ";
+                }
+            }
+            for(int j = 0; j < oneIdRespFunction.size(); j++)
+                sumForNormalization += oneIdRespFunction.at(j);
+
+            //double checkNormSum = 0.;
+            for(int j = 0; j < oneIdRespFunction.size(); j++)
+            {
+                oneIdRespFunction.at(j) *= bayesianExpNorms.at(id) / sumForNormalization;
+                //checkNormSum += oneIdRespFunction.at(j);
+            }
+
+            bayesianRespFunction.push_back(oneIdRespFunction);
+            //cout << bayesianExpNorms.at(id) << " " << checkNormSum << endl;
+        }
+
+        if(it == 0)
+            referenceRespFunction = bayesianRespFunction;
+
+        double chi2AllSpectra = 0.;
+        for(int id = 0; id < bayesianExperiments.size(); id++)
+        {
+            double chi2WholeSpectrum = 0.;
+            for(int j = 0; j < nrOfPoints; j++)
+            {
+                double difference = bayesianRespFunction.at(id).at(j) - bayesianExperiments.at(id).at(j);
+                double chi2EachBin = 0.;
+                if(bayesianExperiments.at(id).at(j) > 0.)
+                    chi2EachBin = difference * difference / bayesianExperiments.at(id).at(j);
+                chi2WholeSpectrum += chi2EachBin;
+                //outputFile << (j+1)*binning << " " << chi2EachBin << endl;
+            }
+            chi2AllSpectra += chi2WholeSpectrum;
+            //outputFile << "Chi2 whole spectrum = " << chi2WholeSpectrum << endl;
+        }
+
+        if(it == 0)
+            referenceChi2WholeSpectrum = chi2AllSpectra;
+
+        outputFile << chi2AllSpectra << endl;
+        //outputFile << weightedIntensityChange << " " << chi2AllSpectra << endl;
+        //weightedIntensityChange = 0.;
+        if(chi2AllSpectra < minimalChiSquare)
+        {
+            minimalChiSquare = chi2AllSpectra;
+            for(int i = 0; i < nrOfBetaTransitions; ++i)
+            {
+                newBayesianFeedings.at(0).at(i) /= bayesianNormalizationFactors.at(0);
+            }
+            feedings = newBayesianFeedings.at(0);
+        }
+
+            vector<double> sumNewBayesianFeedings(bayesianExperiments.size(), 0.);
+            //double checkFeedingsSum = 0.;
+            for(int i = 0; i < nrOfBetaTransitions; ++i)
+            {
+                randomNumber.at(i) = G4UniformRand();
+                double intensityChange = randomNumber.at(i) * percentageChange * 2 - percentageChange;
+                //outputFile << intensityChange << endl;
+                for(int id = 0; id < bayesianExperiments.size(); id++)
+                {
+                    //if(id == 0)
+                    //    weightedIntensityChange += bayesianFeedings.at(id).at(i) * abs(intensityChange);
+                    newBayesianFeedings.at(id).at(i) = bayesianFeedings.at(id).at(i) * (1 - intensityChange);
+                    sumNewBayesianFeedings.at(id) += newBayesianFeedings.at(id).at(i);
+                }
+            }
+
+            for(int id = 0; id < bayesianExperiments.size(); id++)
+            {
+                for(int i = 0; i < nrOfBetaTransitions; ++i)
+                {
+                    newBayesianFeedings.at(id).at(i) *= bayesianNormalizationFactors.at(id) / sumNewBayesianFeedings.at(id);
+                    //checkFeedingsSum += newBayesianFeedings.at(id).at(i);
+                }
+                //outputFile << "check: " << id << " " << sumNewBayesianFeedings.at(id) << " " << checkFeedingsSum << " " << bayesianNormalizationFactors.at(id) << endl;
+                //checkFeedingsSum = 0.;
+            }
+    }
+
+    //outputFile << "Chi2 all spectra = " << chi2AllSpectra << endl;
+    outputFile.close();
+
+    cout << "------------- findBayesianErrors end.-----------------" << endl;
+}
+
 void FitController::notifyDecay()
 {
     cout << "-------------Notify Decay ------------" << endl;
@@ -659,6 +819,7 @@ void FitController::notifyDecay()
         //double newIntensity = feedings.at(levelIndex)*normBeforeFit/normAfterFit;
         double newIntensity = feedings.at(levelIndex);
         (*it)->ChangeIntensity(newIntensity);
+        (*it)->SetD_Intensity(errors.at(levelIndex));
         responseFunction->ChangeContainerDaughterLevelIntensity( (*it)->GetPointerToFinalLevel(), newIntensity );
     }
     responseFunction->RefreshFlags();
