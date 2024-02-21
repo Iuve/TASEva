@@ -589,8 +589,11 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
     outputFile << "#LevelEnergy | BetaFeeding | Uncertainty | GrowingBetaFeeding(gammas)/Energy(neutrons) | FinalLevel(neutrons)" << endl;
 
     double averageBetaEnergy = 0.;
+    double d_averageBetaEnergy = 0.;
     double averageGammaEnergy = 0.;
+    double d_averageGammaEnergy = 0.;
     double averageNeutronEnergy = 0.;
+    double d_averageNeutronEnergy = 0.;
     double neutronPercentage = 0.;
     double growingIntensity = 0.;
 
@@ -615,6 +618,7 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
                 (*kt)->CalculateAverageBetaEnergy();
                 double averageLvlBetaEnergy = (*kt)->GetAverageBetaEnergy();
                 averageBetaEnergy += intensity * averageLvlBetaEnergy / 100;
+                d_averageBetaEnergy += pow( averageLvlBetaEnergy * uncertainty / 100., 2 );
 
                 if(finalLevel->GetNeutronLevelStatus())
                 {
@@ -630,7 +634,10 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
                         targetLvlEnergy = (*nt)->GetFinalLevelEnergy();
                         double nIntensity = (*nt)->GetIntensity();
                         if(targetLvlEnergy > 1.)
+                        {
                             averageGammaEnergy += targetLvlEnergy * intensity / 100;
+                            d_averageGammaEnergy += pow( targetLvlEnergy * uncertainty / 100., 2);
+                        }
                         averageNeutronEnergy += nEnergy * intensity / 100 * nIntensity;
                     }
 
@@ -641,6 +648,7 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
                 {
                     growingIntensity += intensity;
                     averageGammaEnergy += finalLevelEnergy * intensity / 100;
+                    d_averageGammaEnergy += pow( finalLevelEnergy * uncertainty / 100, 2);
                     outputFile << finalLevelEnergy << " " << intensity << " "
                                << uncertainty << " " << growingIntensity << endl;
                 }
@@ -648,9 +656,11 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
         }
     }
 
+    d_averageGammaEnergy = sqrt(d_averageGammaEnergy);
+    d_averageBetaEnergy = sqrt(d_averageBetaEnergy);
     //averageGammaEnergy /= (100 - neutronPercentage);
-    outputFile << "#AverageGammaEnergy = " << averageGammaEnergy << endl;
-    outputFile << "#AverageBetaEnergy = " << averageBetaEnergy << endl;
+    outputFile << "#AverageGammaEnergy = " << averageGammaEnergy << " +- " << d_averageGammaEnergy << endl;
+    outputFile << "#AverageBetaEnergy = " << averageBetaEnergy << " +- " << d_averageBetaEnergy << endl;
     outputFile << "#AverageNeutronEnergy = " << averageNeutronEnergy << endl;
     outputFile << "#NeutronPercentage = " << neutronPercentage;
     outputFile.close();
