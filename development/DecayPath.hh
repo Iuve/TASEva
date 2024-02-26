@@ -38,6 +38,7 @@ public:
     double GetCycleDurationInSeconds() { return cycleDurationInSeconds_; }
     double GetEventDurationInSeconds() { return eventDurationInSeconds_; }
     Level* GetPointerToStartLevel() { return startLevel_; }
+    Level* GetPointerToStopLevel() { return stopLevel_; }
     std::vector<Transition*>* GetBetaTransitionsFromFirstNuclide();
     void FindAndMarkNeutronLevels();
 	

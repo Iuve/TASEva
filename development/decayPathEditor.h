@@ -73,6 +73,7 @@ public slots:
     void slotUpdateTablesForward();
     void slotDaughterTableChanged( int row, int column);
     void slotApplyPathAndInten(bool);
+    void slotMultiplyNeutronIntensity();
     void InitLabels();
 
 signals:

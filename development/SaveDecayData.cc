@@ -573,7 +573,6 @@ void SaveDecayData::CreateDecayXML(Transition* firstTransition, Transition* seco
     //cout << "File Name: " << xmlFileName << endl;
 }
 
-
 void SaveDecayData::SaveGeneralDecayInfo(std::string path)
 {
     DecayPath* decayPath = DecayPath::get();
@@ -596,6 +595,38 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
     double d_averageNeutronEnergy = 0.;
     double neutronPercentage = 0.;
     double growingIntensity = 0.;
+    int numberOfGammaAddedLevels = 0;
+    int numberOfGammaDatabaseLevels = 0;
+    int numberOfNeutronAddedLevels = 0;
+    int numberOfNeutronDatabaseLevels = 0;
+    int numberOfUniqueAddedGammas = 0;
+    int numberOfUniqueDatabaseGammas = 0;
+
+
+    // Find gamma multiplicy beginning. Neutron and gamma levels have to be separated!
+    // It doesn't take IC into account.
+    Level* motherLevel = &motherNuclide->GetNuclideLevels()->at(0);
+    double gammaAverageMultiplicity = 0.;
+    Level* stopLevel = decayPath->GetPointerToStopLevel();
+    for ( auto it = motherLevel->GetTransitions()->begin(); it != motherLevel->GetTransitions()->end(); ++it )
+    {
+        string particleType =  (*it)->GetParticleType();
+        if (particleType != "B-" && particleType != "B+")
+        {
+            outputFile << "Something is WRONG with motherLevel and gammaAverageMultiplicity!" << endl;
+            continue;
+        }
+        double betaIntensity = (*it)->GetIntensity();
+        Level* daughterLevel = (*it)->GetPointerToFinalLevel();
+        if( daughterLevel->GetNeutronLevelStatus() )
+        {
+            continue;
+        }
+
+        // It assumes if it doesn't deexctitate by neutron, it always does by gamma
+        gammaAverageMultiplicity += betaIntensity * CalcGammaMultiplictyFromLevel(daughterLevel, stopLevel);
+    }
+    // End of gamma multiplicy calculations
 
     for ( auto lt = motherNuclide->GetNuclideLevels()->begin(); lt != motherNuclide->GetNuclideLevels()->end(); ++lt )
     {
@@ -612,6 +643,8 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
             //int finalLevelAtomicNumber = (*kt)->GetFinalLevelAtomicNumber();
             //bool isAddedTransition = (*kt)->IsAddedTransition();
             Level* finalLevel = (*kt)->GetPointerToFinalLevel();
+            bool isPseudoLevel = finalLevel->isPseudoLevel();
+            int numberOfTransitionsFromFinalLevel = finalLevel->GetTransitions()->size();
 
             if (particleType == "B-" || particleType == "B+")
             {
@@ -622,6 +655,11 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
 
                 if(finalLevel->GetNeutronLevelStatus())
                 {
+                    if(isPseudoLevel)
+                        numberOfNeutronAddedLevels ++;
+                    else
+                        numberOfNeutronDatabaseLevels ++;
+
                     neutronPercentage += intensity;
                     //string neutronsEnergies = " ";
                     int nEnergy = 0;
@@ -646,6 +684,22 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
                 }
                 else
                 {
+                    if(isPseudoLevel)
+                        numberOfGammaAddedLevels ++;
+                    else
+                        numberOfGammaDatabaseLevels ++;
+
+                    for(auto llt = finalLevel->GetTransitions()->begin(); llt != finalLevel->GetTransitions()->end(); ++llt)
+                    {
+                        if((*llt)->GetParticleType() != "G")
+                            continue;
+                        bool isAddedTransition = (*llt)->IsAddedTransition();
+                        if(isAddedTransition)
+                            numberOfUniqueAddedGammas++;
+                        else
+                            numberOfUniqueDatabaseGammas++;
+                    }
+
                     growingIntensity += intensity;
                     averageGammaEnergy += finalLevelEnergy * intensity / 100;
                     d_averageGammaEnergy += pow( finalLevelEnergy * uncertainty / 100, 2);
@@ -662,10 +716,42 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
     outputFile << "#AverageGammaEnergy = " << averageGammaEnergy << " +- " << d_averageGammaEnergy << endl;
     outputFile << "#AverageBetaEnergy = " << averageBetaEnergy << " +- " << d_averageBetaEnergy << endl;
     outputFile << "#AverageNeutronEnergy = " << averageNeutronEnergy << endl;
-    outputFile << "#NeutronPercentage = " << neutronPercentage;
+    outputFile << "#NeutronPercentage = " << neutronPercentage << endl;
+    outputFile << "#AverageGammaMultiplicity = " << gammaAverageMultiplicity << endl;
+    outputFile << "#numberOfGammaAddedLevels + numberOfGammaDatabaseLevels = "
+               << numberOfGammaAddedLevels << " + " << numberOfGammaDatabaseLevels << endl;
+    outputFile << "#numberOfNeutronAddedLevels + numberOfNeutronDatabaseLevels = "
+               << numberOfNeutronAddedLevels << " + " << numberOfNeutronDatabaseLevels << endl;
+    outputFile << "#numberOfUniqueAddedGammas + numberOfUniqueDatabaseGammas = "
+               << numberOfUniqueAddedGammas << " + " << numberOfUniqueDatabaseGammas << endl;
     outputFile.close();
 }
 
+double SaveDecayData::CalcGammaMultiplictyFromLevel(Level* currentLevel, Level* stopLevel, int gammaMultiplicity)
+{
+    double averageGammaMultiplicityFromThisLvl = 0.;
+    for( auto kt = currentLevel->GetTransitions()->begin(); kt != currentLevel->GetTransitions()->end(); ++kt)
+    {
+        double gammaIntensity = (*kt)->GetIntensity();
+        //double gammaEnergy = (*kt)->GetTransitionQValue();
+        string particleType =  (*kt)->GetParticleType();
+        if( particleType == "Fake")
+            continue;
+        Level* nextLevel = (*kt)->GetPointerToFinalLevel();
+        double nextLevelEnergy = nextLevel->GetLevelEnergy();
+        if(nextLevel == stopLevel || nextLevel->GetTransitions()->empty() || nextLevelEnergy < 1)
+        {
+            averageGammaMultiplicityFromThisLvl += gammaIntensity * gammaMultiplicity;
+            continue;
+        }
+        else
+        {
+            double intensityMultiplier = CalcGammaMultiplictyFromLevel(nextLevel, stopLevel, gammaMultiplicity + 1);
+            averageGammaMultiplicityFromThisLvl += intensityMultiplier * gammaIntensity;
+        }
+    }
+    return averageGammaMultiplicityFromThisLvl;
+}
 
 void SaveDecayData::SaveGammaEvolution()
 {

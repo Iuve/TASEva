@@ -50,6 +50,7 @@ DecayPathEditor::DecayPathEditor(QWidget *parent) :
     connect(uiT->comboBoxDeExcitationPath  , SIGNAL(currentTextChanged(QString)), this, SLOT(slotSetDeExcitationPath(QString)));
     connect(uiT->comboBoxGammaParticleRatio, SIGNAL(currentTextChanged(QString)), this, SLOT(slotSetGammaParticleIntensityRatio(QString)));
     connect(uiT->buttonApplyPathAndInten, SIGNAL(clicked(bool)), this, SLOT(slotApplyPathAndInten(bool)) );
+    connect(uiT->buttonMultiplyNeutronIntensity, SIGNAL(clicked(bool)), this, SLOT(slotMultiplyNeutronIntensity()));
 
     connect(g1, SIGNAL(signalTransitionsEdited()), this, SIGNAL(signalDecayPathEdited()));
 
@@ -575,7 +576,8 @@ void DecayPathEditor::slotNormalizeBetaIntensity()
     Level* motherLevel = &motherLevels->at(0);
 
     motherLevel->NormalizeTransitionIntensities();
-    responseFunction->UpdateWholeContainerIntensities();
+    //responseFunction->UpdateWholeContainerIntensities();
+    responseFunction->UpdateMotherLevelBetaIntensities(motherLevel);
     responseFunction->RefreshFlags();
 
     emit signalUpdateTables();
@@ -798,4 +800,36 @@ void DecayPathEditor::slotDaughterTableChanged(int row,int column)
         }
 
     }
+}
+
+void DecayPathEditor::slotMultiplyNeutronIntensity()
+{
+
+    ResponseFunction* responseFunction = ResponseFunction::get();
+    DecayPath* decayPath= DecayPath::get();
+    std::vector<Nuclide>* nuclides_ = decayPath->GetAllNuclides();
+    std::vector<Level>* motherLevels_ = nuclides_->at(0).GetNuclideLevels();
+    std::vector<Transition*>* betaTransitions = motherLevels_->at(0).GetTransitions();
+
+    double intensityMultiplier = uiT->lineMultiplyNeutronIntensity->text().toDouble();
+
+    for(auto it = betaTransitions->begin(); it != betaTransitions->end(); ++it)
+    {
+        Level* tempFinalLevel = (*it)->GetPointerToFinalLevel();
+        if(tempFinalLevel->GetNeutronLevelStatus())
+        {
+            double currentIntensity = (*it)->GetIntensity();
+            (*it)->ChangeIntensity(intensityMultiplier * currentIntensity);
+        }
+
+    }
+
+        Level* motherLevel = &motherLevels_->at(0);
+        motherLevel->NormalizeTransitionIntensities();
+        responseFunction->UpdateMotherLevelBetaIntensities(motherLevel);
+        responseFunction->RefreshFlags();
+
+        emit signalUpdateTables();
+        setTotalIntensityLabel();
+
 }

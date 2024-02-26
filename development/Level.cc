@@ -356,10 +356,11 @@ void Level::CalculateBetaTransitionsUncertainties(double expSum)
         double uncertainty(0.), firstPart(0.), secondPart(0.), sumForSecondPart(0.);
 
         //if( *kt == highestIntensityTransition)
-        if( intensity >= highestIntensity/2. )
+        //if( intensity >= highestIntensity/2. )
+        if( intensity >= 0.1 )
         {
             std::cout << "highIntensity = " << intensity << std::endl;
-            firstPart = pow(arbitraryFactor * (1 - intensity), 2);
+            firstPart = pow(arbitraryFactor * intensity * (1 - intensity), 2);
         }
         else
             firstPart = pow((1 - intensity), 2) * intensity / expSum;
@@ -371,8 +372,9 @@ void Level::CalculateBetaTransitionsUncertainties(double expSum)
 
             double tempIntensity = (*kt2)->GetIntensity();
             //if( *kt2 == highestIntensityTransition)
-            if( intensity >= highestIntensity/2. )
-                sumForSecondPart += pow(arbitraryFactor, 2);
+            //if( intensity >= highestIntensity/2. )
+            if( intensity >= 0.1 )
+                sumForSecondPart += pow(arbitraryFactor * intensity, 2);
             else
                 sumForSecondPart += tempIntensity / expSum;
         }

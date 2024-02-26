@@ -407,6 +407,18 @@ void ResponseFunction::UpdateWholeContainerIntensities()
 }
 
 
+void ResponseFunction::UpdateMotherLevelBetaIntensities(Level* motherLevel)
+{
+    MotherLevelRespContainer* motherRespContainer = GetPointerToMotherLevelResp(motherLevel);
+
+    for( auto lt = motherRespContainer->LevelResp_.begin(); lt != motherRespContainer->LevelResp_.end(); ++lt )
+    {
+        Transition* transition = lt->pointerToBetaTransitionToThisLevel;
+        lt->betafeedingtothatLevel = transition->GetIntensity();
+    }
+    motherRespContainer->motherLevelResponseReady = false;
+}
+
 
 
 Histogram ResponseFunction::loadXGate(QDir dirName_, int histId, double xMin, double xMax)

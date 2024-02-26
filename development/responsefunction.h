@@ -77,6 +77,7 @@ public:
     void ChangeContainerTransitionIntensity(Transition* transition, double newIntensity);
     void ChangeContainerDaughterLevelIntensity(Level* level, double newIntensity);
     void UpdateWholeContainerIntensities();
+    void UpdateMotherLevelBetaIntensities(Level* motherLevel);
     void CreateFlagVectors();
 
     //Histogram* GetLevelRespoFunction(Nuclide* mothernuclide, Level* motherlevel, Transition* transition, int histID);

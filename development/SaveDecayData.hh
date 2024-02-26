@@ -23,6 +23,7 @@ public:
     void SaveGammaEvolution();
     std::vector<std::string> GetXmlFilenames() {return fullFileNames_;}
     std::vector<std::string> GetShortXmlFilenames() {return shortFileNames_;}
+    double CalcGammaMultiplictyFromLevel(Level* currentLevel, Level* stopLevel, int gammaMultiplicity = 1);
 
     QString setENSIdentificationRec(QString Id, QString header, Nuclide* parent);
     QString setENSQvalueRec(QString header, Nuclide* nuclide);
