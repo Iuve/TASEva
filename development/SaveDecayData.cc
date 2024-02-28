@@ -24,6 +24,16 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
     return out.str();
 }
 
+double round_up_to(double value, double precision = 1.0)
+{
+    return std::round( (value + 0.5*precision) / precision) * precision;
+}
+
+double round_to(double value, double precision = 1.0)
+{
+    return std::round( value / precision) * precision;
+}
+
 SaveDecayData::SaveDecayData(string path)
 {
     path_ = path + "/";
@@ -106,9 +116,50 @@ void SaveDecayData::SaveDecayStructure()
                 pugi::xml_node nodeTransition = nodeLevel.append_child("Transition");
                 nodeTransition.append_attribute("Type") = particleType.c_str();
                 nodeTransition.append_attribute("TransitionQValue").set_value(toStringPrecision(transitionQValue,2).c_str());
-                nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,6).c_str());
-                if(d_intensity >= 1e-6)
-                    nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,6).c_str());
+                if(intensity < 0.001)
+                {
+                    nodeTransition.append_attribute("Intensity") = 0;
+                }
+                else
+                {
+                    // uncertainty should already be corrected (rounded) for precision
+                    nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,4).c_str());
+                    if(d_intensity > 1e-6) // needed for "official" precision
+                    {
+                        string intensityString = toStringPrecision(intensity,3);
+
+                        if(intensityString.find('.') == 2) //feeding >= 10
+                        {
+                            intensity = round_to(intensity, 1);
+                            //nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,0).c_str());
+                            nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,0).c_str());
+                        }
+                        else // feeding < 10
+                        {
+                            if(intensityString[0] == '0')
+                            {
+                                if(intensityString[2] == '0' && intensityString[3] == '0')
+                                {
+                                    intensity = round_to(intensity, 0.001);
+                                    //nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,3).c_str());
+                                    nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,3).c_str());
+                                }
+                                else
+                                {
+                                    intensity = round_to(intensity, 0.01);
+                                    //nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,2).c_str());
+                                    nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,2).c_str());
+                                }
+                            }
+                            else
+                            {
+                                intensity = round_to(intensity, 0.1);
+                                //nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,1).c_str());
+                                nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,1).c_str());
+                            }
+                        }
+                    }
+                }
                 if( isAddedTransition )
                     nodeTransition.append_attribute("Origin") = "Added";
                 else
@@ -607,6 +658,7 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
     // It doesn't take IC into account.
     Level* motherLevel = &motherNuclide->GetNuclideLevels()->at(0);
     double gammaAverageMultiplicity = 0.;
+    double gammaAverageMultiplicityNotBetaWeighted = 0.;
     Level* stopLevel = decayPath->GetPointerToStopLevel();
     for ( auto it = motherLevel->GetTransitions()->begin(); it != motherLevel->GetTransitions()->end(); ++it )
     {
@@ -624,7 +676,9 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
         }
 
         // It assumes if it doesn't deexctitate by neutron, it always does by gamma
-        gammaAverageMultiplicity += betaIntensity * CalcGammaMultiplictyFromLevel(daughterLevel, stopLevel);
+        double tempMultiplicityValue = CalcGammaMultiplictyFromLevel(daughterLevel, stopLevel);
+        gammaAverageMultiplicity += betaIntensity * tempMultiplicityValue;
+        gammaAverageMultiplicityNotBetaWeighted += tempMultiplicityValue;
     }
     // End of gamma multiplicy calculations
 
@@ -718,6 +772,7 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
     outputFile << "#AverageNeutronEnergy = " << averageNeutronEnergy << endl;
     outputFile << "#NeutronPercentage = " << neutronPercentage << endl;
     outputFile << "#AverageGammaMultiplicity = " << gammaAverageMultiplicity << endl;
+    outputFile << "#AverageGammaMultiplicityNotBetaWeighted = " << gammaAverageMultiplicityNotBetaWeighted << endl;
     outputFile << "#numberOfGammaAddedLevels + numberOfGammaDatabaseLevels = "
                << numberOfGammaAddedLevels << " + " << numberOfGammaDatabaseLevels << endl;
     outputFile << "#numberOfNeutronAddedLevels + numberOfNeutronDatabaseLevels = "

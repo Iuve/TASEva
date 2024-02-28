@@ -25,6 +25,11 @@ Level::~Level()
 
 }
 
+double round_up_to_Level(double value, double precision = 1.0)
+{
+    return std::round( (value + 0.5*precision) / precision) * precision;
+}
+
 void Level::CalculateTotalProbability()
 {
     totalIntensity_ = 0.0;
@@ -379,10 +384,36 @@ void Level::CalculateBetaTransitionsUncertainties(double expSum)
                 sumForSecondPart += tempIntensity / expSum;
         }
         secondPart = sumForSecondPart * intensity * intensity;
-        //if( *kt == highestIntensityTransition)
-        //    uncertainty = arbitraryFactor * 100.;
-        //else
         uncertainty = pow(firstPart + secondPart, 0.5);
+
+        // rough correction for:
+        // 87Br: uncertainty Charlie's A4 formula times 10, then added 5% of feeding
+        // 88Br: uncertainty Charlie's A4 formula times 10, then added 7% of feeding
+        // 88Br: for levels 7050+ uncertainty is multiplied by 1.5 on top of everything else
+        uncertainty *= 10;
+        uncertainty += intensity * 0.05;
+        //double levelEnergy = (*kt)->GetFinalLevelEnergy();
+        //if(levelEnergy >= 7050)
+        //    uncertainty *= 1.5;
+
+        // now correct for precision
+            std::string intensityString = std::to_string(intensity * 100);
+
+            if(intensityString.find('.') == 2) //feeding >= 10
+                uncertainty = round_up_to_Level(uncertainty, 0.01);
+            else // feeding < 10
+            {
+                if(intensityString[0] == '0')
+                {
+                    if(intensityString[2] == '0' && intensityString[3] == '0')
+                        uncertainty = round_up_to_Level(uncertainty, 0.00001);
+                    else
+                        uncertainty = round_up_to_Level(uncertainty, 0.0001);
+                }
+                else
+                    uncertainty = round_up_to_Level(uncertainty, 0.001);
+            }
+
         (*kt)->SetD_Intensity(uncertainty);
     }
 }

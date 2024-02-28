@@ -232,7 +232,7 @@ Nuclide LoadDecayData::LoadNuclideData(const string filename)
 			{
 				betasFromLvL.push_back(Beta(type, transitionQval, intensity, finalLvlEnergy, finalLvlAtMass, finalLvlAtNumber));
                 if(d_intensity > 0.)
-                    betasFromLvL.back().SetD_Intensity(d_intensity);
+                    betasFromLvL.back().SetD_Intensity(d_intensity / 100.);
                 if( isAddedTransition )
                     betasFromLvL.back().SetAsAddedTransition();
 			}
