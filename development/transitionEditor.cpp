@@ -125,8 +125,8 @@ void TransitionEditor::slotSaveCustomIntensities()
 
 void TransitionEditor::slotTableChanged(int row, int column)
 {
-//    std::cout << "TransitionEditor::slotTableChanged row " << row << " column " << column << std::endl;
-//    qDebug() << "OPEN bool: " << transitionEditorOpen_ ;
+    qDebug() << "TransitionEditor::slotTableChanged row " << row << " column " << column ;
+    qDebug() << "OPEN bool: " << transitionEditorOpen_ ;
     if(transitionEditorOpen_)
     {
 

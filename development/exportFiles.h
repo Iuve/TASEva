@@ -30,16 +30,20 @@ public:
 
 public slots:
     void slotExportHIS(bool triggered);
+    void slotExportDAT(bool triggered);
     void slotExportASCII(bool triggered);
     void slotExportAll(bool triggered);
     void slotExportResponseFunctions();
     void slotRespFunRaw(int);
     void slotRespFunFit(int);
+    void slotDATRespFunRaw(int);
+    void slotDATRespFunFit(int);
 
 private:
 
     std::string path_;
     int respFunNorm_;
+    int respFunDATNorm_;
  //----HIS
     bool expFlag_;
     bool simFlag_;

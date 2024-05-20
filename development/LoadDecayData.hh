@@ -46,6 +46,7 @@ private:
 	double cycleDurationInSeconds_;
 	double eventDurationInSeconds_;
 
+
 };
 
 #endif	/* DECAY_H */

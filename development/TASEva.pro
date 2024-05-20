@@ -5,25 +5,27 @@
 #-------------------------------------------------
 
 QT       += core gui
+DEFINES +=  QT_NO_INFO_OUTPUT
+DEFINES += QT_NO_DEBUG_OUTPUT
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport concurrent
-#ROOTSYS = /opt/root/root-6.18.04
-#GEANTPATH = /home/iuvenis/Geant4/geant4-10-3-1-install
+ROOTSYS = /opt/root/root-6.18.04
+GEANTPATH = /home/iuvenis/Geant4/geant4-10-3-1-install
 #INCLUDEPATH += $$(ROOTSYS)/include
 #INCLUDEPATH += $${GEANT_PATH}/include/Geant4
 #QMAKE_RPATHDIR += $$(ROOTSYS)/lib
 #QMAKE_RPATHDIR += $${GEANT_PATH}/lib
-QMAKE_RPATHDIR += /opt/root/root-6.18.04/lib
-QMAKE_RPATHDIR += /home/iuvenis/Geant4/geant4-10-3-1-install/lib
-INCLUDEPATH += /opt/root/root-6.18.04/include
-INCLUDEPATH += /home/iuvenis/Geant4/geant4-10-3-1-install/include/Geant4
-LIBS += -L/opt/root/root-6.18.04/lib -lCore  -lRIO -lNet -lHist \
+QMAKE_RPATHDIR += $${ROOTSYS}/lib
+QMAKE_RPATHDIR += $${GEANTPATH}/lib
+INCLUDEPATH += $${ROOTSYS}/include
+INCLUDEPATH += $${GEANTPATH}/include/Geant4
+LIBS += -L$${ROOTSYS}/lib -lCore  -lRIO -lNet -lHist \
         -lGraf -lGraf3d -lGpad -lTree \
         -lRint -lPostscript -lMatrix -lPhysics \
         -lz  -lm -ldl -rdynamic
 #out -lCint
 #        -lGui -lRGL
-LIBS += -L/home/iuvenis/Geant4/geant4-10-3-1-install/lib -lG4global -lG4materials -lG4physicslists \
+LIBS += -L$${GEANTPATH}/lib -lG4global -lG4materials -lG4physicslists \
         -lG4processes -lG4clhep -lG4zlib -lG4particles -lG4intercoms -lG4geometry -lG4track \
         -lG4digits_hits -lG4tracking -lG4event -lG4run  -lG4modeling -lG4FR -lG4parmodels \
         -lG4readout -lG4error_propagation -lG4analysis -lG4persistency -lG4interfaces \

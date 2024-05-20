@@ -19,6 +19,7 @@ DecayPathEditor::DecayPathEditor(QWidget *parent) :
     QWidget(parent),
     uiT(new Ui::DecayPathEditor)
 {
+    qInfo() << "DecayPathEditor::DecayPathEditor " ;
     uiT->setupUi(this);
     myProject = Project::get();
     g1 = new TransitionEditor();
@@ -549,7 +550,6 @@ void DecayPathEditor::slotAddLevelEI()
     emit signalUpdateTables();
 
 }
-
 void DecayPathEditor::slotNormalizeBetaIntensity()
 {
     std::cout << "LevelEditor::slotNormalizeBetaIntensity" << std::endl;
@@ -584,8 +584,6 @@ void DecayPathEditor::slotNormalizeBetaIntensity()
 //    uiT->tableFeeding->update();
     setTotalIntensityLabel();
 }
-
-
 void DecayPathEditor::setTotalIntensityLabel()
 {
     double maxBetaFeeding(0);
@@ -622,7 +620,6 @@ void DecayPathEditor::setTotalIntensityLabel()
     QString qstr = "Total Beta feeding intensity (%): "+ QTotalIntensity_;
     uiT->labelTotalIntensity->setText(qstr);
 }
-
 /*Eva
 
 void LevelEditor::slotUpdateFeedingData(int row, int column)
@@ -667,8 +664,8 @@ void DecayPathEditor::slotEditTransitions(int tableIndex, int rowIndex)
 
     std::vector<Nuclide>* nuclides_=decayPath->GetAllNuclides();
 
-        cout << "table index: " << tableIndex << endl;
-        cout << "row INdex: "  << rowIndex << endl;
+        qDebug() << "table index: " << tableIndex ;
+        qDebug() << "row INdex: "  << rowIndex ;
     std::vector<Level>* levels_ = nuclides_->at(tableIndex).GetNuclideLevels();
     QString QEnergy_ = QString::number(levels_->at(rowIndex).GetLevelEnergy());
     int atomicNumber_ = nuclides_->at(tableIndex).GetAtomicNumber();
@@ -678,7 +675,7 @@ void DecayPathEditor::slotEditTransitions(int tableIndex, int rowIndex)
     QString qstr = "Transtion Editor for Level: "+ QEnergy_ + " keV in "
             + QElementName + "-" +QMassNumber +
             " (Z= "+  QAtomicNumber + ") nuclide";
-
+    qDebug() << qstr;
     g1->setTransitionLabel(qstr);
     g1->setCurrentLevel(rowIndex);
     g1->setCurrentNuclide(tableIndex);
@@ -689,14 +686,14 @@ void DecayPathEditor::slotEditTransitions(int tableIndex, int rowIndex)
     {
         rowData_.clear();
 
+        qDebug() << "Transitions_ size = "  << transitions_->size() ;
         for(unsigned int i = 0; i != transitions_->size(); ++i)
         {
             QString QTransitionType = QString::fromStdString(transitions_->at(i)->GetParticleType());
             QString QEnergy_ = QString::number(transitions_->at(i)->GetTransitionQValue());
-            QString QIntensity_ = QString::number((transitions_->at(i)->GetIntensity() * 100.));
-            QString QFitFlag_ = transitions_->at(i)->GetIntensityFitFlag() ? "true" : "false";
+            QString QIntensity_ = QString::number((transitions_->at(i)->GetIntensity() * 100.));            QString QFitFlag_ = transitions_->at(i)->GetIntensityFitFlag() ? "true" : "false";
             QString QFinalLevel_ = QString::number(transitions_->at(i)->GetFinalLevelEnergy());
-
+            qDebug() << QTransitionType <<  QEnergy_ << QIntensity_<< QFitFlag_ << QFinalLevel_ ;
             rowData_.push_back(RowData(QTransitionType, QEnergy_, QIntensity_, QFitFlag_, QFinalLevel_));
 
         }
@@ -704,7 +701,7 @@ void DecayPathEditor::slotEditTransitions(int tableIndex, int rowIndex)
     else
     {
         rowData_.clear();
-        rowData_.push_back(RowData("n/s", "no transitions", "n/a", "n/a", "n/a"));
+        rowData_.push_back(RowData("n/a", "no transitions", "n/a", "n/a", "n/a"));
     }
 
     tableController_->initializeTable(g1->getUiPointer(), rowData_);
@@ -717,7 +714,6 @@ void DecayPathEditor::slotEditTransitions(int tableIndex, int rowIndex)
     g1->setTotalIntensityLabel();
     g1->show();
 }
-
 void DecayPathEditor::slotUpdateTablesForward()
 {
     emit signalUpdateTables();
@@ -744,7 +740,8 @@ void DecayPathEditor::slotStatusClicked(bool status, int row, int column)
      QTableWidget *pointerToTable_ = 0L;
      QTableWidgetItem* tempQTableWidgetItem = new QTableWidgetItem(status ? "true" : "false");
      pointerToTable_ = uiT->tableDaughterLevels;
-     if(column == 2){
+     QString qstatus = pointerToTable_->item(row,column)->text();
+     if((column == 2) && (qstatus != "n/a")){
      pointerToTable_->setItem(row, 2, tempQTableWidgetItem);
      pointerToTable_->show();
     }
@@ -753,6 +750,8 @@ void DecayPathEditor::slotStatusClicked(bool status, int row, int column)
 }
 void DecayPathEditor::slotDaughterTableCellClicked(int row, int column)
 {
+    qDebug() << "DecayPathEditor::slotDaughterTableCellClicked";
+
     bool status;
     if(column ==0)
     { return;
@@ -765,7 +764,8 @@ void DecayPathEditor::slotDaughterTableCellClicked(int row, int column)
 
 void DecayPathEditor::slotDaughterTableChanged(int row,int column)
 {
-    if(boolDaughterTableDataInitialised){
+    qDebug() << "DecayPathEditor::slotDaughterTableChange";
+    if(boolDaughterTableDataInitialised){ //wydaje sie jakby bylo ustawione na true ???
 
         ResponseFunction* responseFunction = ResponseFunction::get();
 
@@ -777,18 +777,37 @@ void DecayPathEditor::slotDaughterTableChanged(int row,int column)
 
         QString qstr = uiT->tableDaughterLevels->item(row,column)->text();
         string str = qstr.toUtf8().constData();
+        QString qstr_energy = uiT->tableDaughterLevels->item(row,0)->text();
+        double levelEnergy = qstr_energy.toDouble();
+        qDebug() << "LevelEnergy= " << levelEnergy << "new value " << qstr;
+        int transitionIndex = 0;
+        bool transitionExists = "false";
+        for(auto i=0; i!=betaTransitions->size(); ++i)
+        {
+            if(levelEnergy == betaTransitions->at(i)->GetFinalLevelEnergy())
+            {
+                qDebug() << levelEnergy <<" " << betaTransitions->at(i)->GetFinalLevelEnergy() ;
+                transitionIndex = i+1;
+                transitionExists = "true";
+            }
+         }
+        if(transitionIndex == 0){return;} else {transitionIndex-- ;}
+        qDebug() << "transitionIndex =" << transitionIndex << "Bool TransitionExists = " << transitionExists ;
+        if(transitionExists)
+        { // ========szukam tutaj========
         if(column==0){ //Energy
             return;
          } else if (column==1){ //BetaFeeding
             double feeding = qstr.toDouble()/100;
-
-            betaTransitions->at(row)->ChangeIntensity(feeding);
-            responseFunction->ChangeContainerDaughterLevelIntensity( betaTransitions->at(row)->GetPointerToFinalLevel(), feeding );
+            betaTransitions->at(transitionIndex)->ChangeIntensity(feeding);
+            responseFunction->ChangeContainerDaughterLevelIntensity( betaTransitions->at(transitionIndex)->GetPointerToFinalLevel(), feeding );
             responseFunction->RefreshFlags();
                     return;
+
+
         }  else if(column==2){
-            if(qstr=="true")betaTransitions->at(row)->SetIntensityFitFlag(true);
-            if(qstr=="false")betaTransitions->at(row)->SetIntensityFitFlag(false);
+            if(qstr=="true")betaTransitions->at(transitionIndex)->SetIntensityFitFlag(true);
+            if(qstr=="false")betaTransitions->at(transitionIndex)->SetIntensityFitFlag(false);
             return;
         }  else if(column==3) {
                     return;
@@ -798,7 +817,7 @@ void DecayPathEditor::slotDaughterTableChanged(int row,int column)
 
             return;
         }
-
+        }
     }
 }
 

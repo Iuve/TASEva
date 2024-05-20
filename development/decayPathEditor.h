@@ -94,7 +94,7 @@ private:
 
 //Eva    DecaySpectrum *decaySpectrum;
     Project* myProject;
-    bool  boolDaughterTableDataInitialised;
+    bool  boolDaughterTableDataInitialised ="false";
    PseudoLevelsController* pseudoLevelsController_;
 
     double pseudoLevelEnergyStep_=100;

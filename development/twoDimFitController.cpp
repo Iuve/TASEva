@@ -14,7 +14,7 @@ TwoDimFitController::TwoDimFitController(QWidget *parent)
 
     decayPath->FindAndMarkNeutronLevels();
     otherLevelsToFeedingsRatio_ = 0;
-    normalizeStartPoint_ = 100;
+    normalizeStartPoint_ = 100; // 100;
 
     //expSpectra2Dbinning_ should be defferent from 1 only when exp 2D spectrum is binned
     expSpectra2Dbinning_ = myProject->getBinning2Dfactor();
@@ -201,7 +201,7 @@ void TwoDimFitController::calculateSimulatedHistogram()
 void TwoDimFitController::calculateRecHistogram()
 {
       double xMin = normalizeStartPoint_;  // to avoid channel 0
-      double xMax = maxEn_; // - 120;
+      double xMax = maxEn_;
       recGate_ = *Histogram::GetEmptyHistogram(0, 100, 100 / expSpectra2Dbinning_);
 
     double scaleRatio;

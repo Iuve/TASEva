@@ -124,7 +124,7 @@ bool DecaySpectrum::MakeSimulations()
             bool processStartedFlag = false;
             int transitionsSize = transitions->size();
 
-            for(std::vector<Transition*>::iterator itt = transitions->begin(); itt != transitions->end(); ++itt)
+            for(std::vector<Transition*>::reverse_iterator itt = transitions->rbegin(); itt != transitions->rend(); ++itt)
             {
                 Level* currentLevel = (*itt)->GetPointerToFinalLevel();
 

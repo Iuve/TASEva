@@ -103,10 +103,10 @@
      </rect>
     </property>
     <property name="toolTip">
-     <string>6300-&gt; 1- 1000; 6310-&gt;2001-3000; etc.</string>
+     <string extracomment="Spectra between 1-1000 are for 6300 spectrum, 1001-2000 for 6310">6300-&gt; 1- 1000; 6310-&gt;2001-3000; etc.</string>
     </property>
     <property name="text">
-     <string>REsponse Functions (not fitted) 1-1000; 2001-3000; ... up to 6000</string>
+     <string>REsponse Functions (not fitted) 1-1000; 1001-2000; ... -6000</string>
     </property>
    </widget>
    <widget class="QCheckBox" name="checkBox_Contaminations">
@@ -167,7 +167,7 @@
    <widget class="QPushButton" name="button_ExportHIS">
     <property name="geometry">
      <rect>
-      <x>320</x>
+      <x>10</x>
       <y>160</y>
       <width>112</width>
       <height>32</height>
@@ -175,6 +175,145 @@
     </property>
     <property name="text">
      <string>Export HIS</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="button_ExportDAT">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>160</y>
+      <width>112</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Export DAT</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_DATContaminations">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>50</y>
+      <width>31</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_DATexpSpec">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>30</y>
+      <width>51</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_DATSimSpec">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>70</y>
+      <width>86</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_DATRecSpec">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>90</y>
+      <width>31</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_DATRespFunFitted">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>140</y>
+      <width>61</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_DATRespFuncRaw">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>120</y>
+      <width>21</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_HIS">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>18</y>
+      <width>71</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+      <underline>true</underline>
+     </font>
+    </property>
+    <property name="text">
+     <string>HIS format</string>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+    <property name="textInteractionFlags">
+     <set>Qt::NoTextInteraction</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_DAT">
+    <property name="geometry">
+     <rect>
+      <x>370</x>
+      <y>18</y>
+      <width>58</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+      <underline>true</underline>
+     </font>
+    </property>
+    <property name="text">
+     <string>DAT format</string>
     </property>
    </widget>
   </widget>

@@ -27,6 +27,7 @@ ExportFiles::ExportFiles(QWidget *parent) :
     uiEF->setupUi(this);
 
     connect(uiEF->button_ExportHIS, SIGNAL(clicked(bool)), this, SLOT(slotExportHIS(bool)));
+    connect(uiEF->button_ExportDAT, SIGNAL(clicked(bool)), this, SLOT(slotExportDAT(bool)));
     connect(uiEF->buttonClose, SIGNAL(clicked(bool)), this, SLOT(close()));
     connect(uiEF->button_ExportASCII, SIGNAL(clicked(bool)), this, SLOT(slotExportASCII(bool)));
     connect(uiEF->checkBox_RespFuncRaw, SIGNAL(stateChanged(int)),this, SLOT(slotRespFunRaw(int)));
@@ -55,6 +56,7 @@ ExportFiles::ExportFiles(QWidget *parent) :
     }
 }
 
+
 ExportFiles::~ExportFiles()
 {
     delete uiEF;
@@ -79,7 +81,22 @@ ExportFiles::~ExportFiles()
       }
 
   }
+  void ExportFiles::slotDATRespFunRaw(int flag)
+  {
+      if(flag==2)
+      {
+          slotExportResponseFunctions(); //checked
+          uiEF->checkBox_DATRespFunFitted->setCheckState(Qt::Unchecked);
+         uiEF->checkBox_DATRespFunFitted->setEnabled(false);
+      }
+      if(flag==0)                               // unchecked
+      {
+          respFunDATNorm_ = 0;
+          uiEF->checkBox_DATRespFunFitted->setEnabled(true);
+          return;
+      }
 
+  }
   void ExportFiles::slotRespFunFit(int flag)
   {
 //      qDebug() << "FLAG: " << flag;
@@ -98,11 +115,27 @@ ExportFiles::~ExportFiles()
       }
 
   }
+  void ExportFiles::slotDATRespFunFit(int flag)
+  {
+      if(flag==0)
+      {
+         uiEF->checkBox_DATRespFuncRaw->setEnabled(true);
+      }
+      if(flag==2)                               // unchecked
+      {
+          respFunDATNorm_ = 0;
+          uiEF->checkBox_DATRespFuncRaw->setCheckState(Qt::Unchecked);
+          uiEF->checkBox_DATRespFuncRaw->setEnabled(false);
+          return;
+      }
+
+  }
 void ExportFiles::slotExportAll(bool flag)
 {
     qDebug() << "Export files to: " << QString::fromStdString(path_) ;
     slotExportHIS(flag);
     slotExportASCII(flag);
+    slotExportDAT(flag);
     uiEF->buttonClose->click();
 }
 void ExportFiles::slotExportASCII(bool triggered)
@@ -118,8 +151,192 @@ void ExportFiles::slotExportASCII(bool triggered)
     if(decGenInfoFlag_) exportDecayInfo();
     if(feedBGTFlag_) exportFeedingBGT();
     if(gammaEvoFlag_) exportGammaEvolution();
-}
 
+}
+void ExportFiles::slotExportDAT(bool triggered)
+{
+    cout << "ExportFiles::slotExportDAT"  << endl;
+    // seting the envirorment
+        expFlag_ = uiEF->checkBox_DATexpSpec->isChecked();
+        simFlag_ = uiEF->checkBox_DATSimSpec->isChecked();
+        recFlag_ = uiEF->checkBox_DATRecSpec->isChecked();
+        conFlag_ = uiEF->checkBox_DATContaminations->isChecked();
+        respFunFitFlag_ = uiEF->checkBox_DATRespFunFitted->isChecked();
+        respFunRawFlag_ = uiEF->checkBox_DATRespFuncRaw->isChecked();
+        Project* myProject =  Project::get();
+        DecayPath* decayPath_= DecayPath::get();
+        ResponseFunction* responseFunction_ = ResponseFunction::get();
+        std::vector< std::pair<int, Contamination> > contaminations = *(myProject->getContaminations());
+
+        vector<string> expSpecIDVec_ = myProject->getExpSpecIDVec();
+        std::vector< std::pair<int, Contamination> >* contaminations_;
+        std::vector<Contamination> contaminationsSpecID_;
+
+        bool ok1;
+        int binFactor = 1;
+        QString qstr_bin = QString::number(binFactor);
+        QString qtmp = "Please set a binning factor for " ;
+        QString text = QInputDialog::getText(this, tr("ASCI data to be written to disk"),
+                                              qtmp, QLineEdit::Normal,
+                                              qstr_bin , &ok1);
+
+
+        if (ok1 && !text.isEmpty())
+            binFactor = text.toInt();
+
+        qDebug() << "Binning factor = " << binFactor;
+
+        if(expFlag_ || simFlag_ || recFlag_ || conFlag_ )
+        {
+            for(int i=0; i!=expSpecIDVec_.size(); ++i)
+            {
+                int ID = std::stoi(expSpecIDVec_.at(i));
+                cout << "simFlag_ = " << myProject->checkForKeySim(ID) << endl;
+        //        simFlag_ = myProject->checkForKeySim(ID);
+                recFlag_ = myProject->checkForKeyRec(ID);
+                if ((simFlag_)&(!myProject->checkForKeySim(ID)))
+                {
+                  QMessageBox msgBox;
+                  QString qtext;
+                  qtext = "There is no simulation spectrum for ID = " + QString::number(ID);
+                  msgBox.setText(qtext);
+                  msgBox.setInformativeText("Spectra will be exported without simulated one.");
+                msgBox.setStandardButtons(QMessageBox::Ok );
+                msgBox.setDefaultButton(QMessageBox::Ok);
+                msgBox.exec();
+                }
+
+                string outputFilename;
+                if(binFactor == 1)
+                {
+                outputFilename = path_ + "/"+ expSpecIDVec_.at(i) +"_export.dat";
+                } else {
+                    outputFilename = path_ + "/"+ expSpecIDVec_.at(i) +"_export_" + binFactor +"bin.dat";
+                }
+                ofstream outputFile(outputFilename.c_str());
+                if (!outputFile.is_open())
+                    cout << "Warning message: The file " + (string) outputFilename + " is not open!" << endl;
+
+
+                //     -----------Header---------
+                string tmpline;
+                tmpline = "#Energy (keV) |";
+                if(expFlag_) tmpline = tmpline + "Exp |";
+                if(simFlag_) tmpline = tmpline + "Sim |";
+                if(recFlag_) tmpline = tmpline + "Rec |";
+                if(conFlag_)
+                {
+                    int kl = 0;
+ //                   std::vector< std::pair<int, Contamination> > contaminations = *(myProject->getContaminations());
+                    for (unsigned int ii = 0; ii !=  contaminations.size(); ii++)
+                    {
+                        if(contaminations.at(ii).first == ID)
+                        {
+                            ++kl;
+                            tmpline = tmpline + "Cont_"+ kl + " |";
+                            double fact = contaminations.at(ii).second.intensity * myProject->getExpHist()->GetNrOfCounts();
+                            outputFile << "#Normalisation for Cont_" + to_string(kl) + "is = " + fact << endl;
+                     }
+                    }
+                 }
+                outputFile << tmpline << endl;
+ //   ----------END of Header-------------
+                Histogram expHist, simHist, recHist;
+                expHist = Histogram(myProject->getHistFromExpMap(ID));
+                double normMin = myProject->getNormMin();
+                double normMax = myProject->getNormMax();
+                double norm = expHist.GetNrOfCounts(normMin,normMax);
+                qDebug() << "tu 1-";
+                if(binFactor != 1)expHist.Rebin(binFactor);
+                qDebug() << "tu 2-";
+                if(simFlag_) {simHist = Histogram(myProject->getHistFromSimMap(ID));
+                qDebug() << "tu 2a-";
+                if(binFactor != 1)simHist.Rebin(binFactor);
+                }
+                 qDebug() << "tu 3-";
+                if(recFlag_)
+                {
+                    recHist = Histogram(myProject->getHistFromRecMap(ID));
+                    // MS 20240520 REC normalization
+                    recHist.Normalize(norm,normMin,normMax);
+                    if(binFactor != 1)
+                        recHist.Rebin(binFactor);
+                }
+                 qDebug() << "tu 4-";
+                double xMax = expHist.GetXMax();
+                double xMin = expHist.GetXMin();
+//                int xMin = 470;
+//                int xMax = 14000;
+                vector<double> En = expHist.GetEnergyVectorD();
+                vector<double> exp = expHist.GetAllDataD();
+                vector <double> sim, rec;
+                if(simFlag_) sim = simHist.GetAllDataD();
+                if(recFlag_) rec = recHist.GetAllDataD();
+                vector< vector<double> > cont;
+                if(conFlag_)
+                {
+//                    cout << "contaminations.size() = " << contaminations.size() << endl;
+                    for (unsigned int ii = 0; ii !=  contaminations.size(); ii++)
+                    {
+                        if(contaminations.at(ii).first == ID)
+                        {
+                            double fact = contaminations.at(ii).second.intensity * myProject->getExpHist()->GetNrOfCounts();
+                            Histogram *tmpCont = new Histogram(contaminations.at(ii).second.hist);
+                            tmpCont->Normalize(fact);
+                            if(binFactor != 1)tmpCont->Rebin(binFactor);
+                            cont.push_back(tmpCont->GetAllDataD());
+                            delete tmpCont;
+                         }
+                     }
+                }
+                 string tmpline2;
+                 cout << "xMin,xMax " << xMin << " " << xMax << endl;
+
+
+                 bool ok;
+                 QString qstr_ID = QString::number(ID);
+                 QString qstr_xMax = QString::number(xMax*binFactor);
+                 QString qtmp = "Please set xMax for  spectrum " + qstr_ID;
+                 QString text = QInputDialog::getText(this, tr("ASCI data to be written to disk"),
+                                                       qtmp, QLineEdit::Normal,
+                                                       qstr_xMax , &ok);
+
+
+                 if (ok && !text.isEmpty())
+                     xMax =text.toInt()/binFactor;
+
+
+
+                for(int i=xMin; i !=xMax; i++)
+                {
+                    tmpline2 = to_string(En.at(i)) + "  " ;
+                    if(expFlag_)tmpline2 = tmpline2 + to_string(exp.at(i)) + "  " ;
+                   if(simFlag_)
+                    {
+                        string value;
+                        if(i >= sim.size())
+                        {
+                            value = "0" ;
+                        } else {
+                            value = to_string(sim.at(i));
+                        }
+                        tmpline2 = tmpline2 + value  + "  " ;
+                    }
+                    if(recFlag_)tmpline2 = tmpline2 + to_string(rec.at(i)) + "  " ;
+                    if(conFlag_)
+                    {
+                        for(int ic=0; ic!=cont.size(); ic++)
+                        {
+                            tmpline2 = tmpline2 + to_string(cont.at(ic).at(i)) + " " ;
+                        }
+                    }
+                  outputFile << tmpline2 << endl;
+                } outputFile.close();
+            }
+
+        }
+
+}
 void ExportFiles::slotExportHIS(bool triggered)
 {
 // seting the envirorment
@@ -372,8 +589,6 @@ void ExportFiles::exportXMLDecayFiles()
 
 void ExportFiles::exportDecayInfo()
 {
-//    QDir currentDir = QDir::current();
-//    string currentPath = currentDir.absolutePath().toStdString();
     SaveDecayData* tempSaveDecayData = new SaveDecayData();
     tempSaveDecayData->SaveGeneralDecayInfo(path_);
 }
@@ -396,33 +611,14 @@ void ExportFiles::exportENSDecayFile()
     SaveDecayData* outputXMLFiles = new SaveDecayData(path_);
     outputXMLFiles->SaveENSDecayStructure();
     delete outputXMLFiles;
-}
-/*    QFile file;
-    file.setFileName(QString::fromStdString(path_)+"/Isotope.ens");
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))return;
-    QTextStream out(&file);
-    DecayPath* decayPath = DecayPath::get();
-
-    std::vector<Nuclide>* nuclides= decayPath->GetAllNuclides();
-
-    QString parent;
-    parent = setENSParentQString(nuclides->at(0));
-    out << parent;
-//========================== example
-    double energia =12345.0;
-    QString qstr = QString("%1\n").arg(energia,10,'g',2,'+');
-    //arg dla double
-    // precision liczba cyfr total nieliczac kropki np. 3 -> 1.23 ale 2-> 1.2
-    // dla formatu g - foramt z exp np: e+2
-    // dla formatu f precision oznacza liczbe miejsc po przecinku
-    out << qstr;
-    out << QString("%1\n").arg(energia,10,'f',2,'+');
-
-   out << "=====================================================================" << "\n";
-
-
-}
+/*    qDebug()<< "1203.1234, 0.0123 " << outputXMLFiles->getValueAndError(1203.1234, 0.0123);
+    qDebug()<< "0.0123, 0.00123 " << outputXMLFiles->getValueAndError(0.0123, 0.00123);
+    qDebug()<< "13.1, 12.3" << outputXMLFiles->getValueAndError(13.1, 12.3);
+    qDebug()<< "13.1, 1.3" << outputXMLFiles->getValueAndError(13.1, 1.3);
+    qDebug()<< "13.1, 16.3" << outputXMLFiles->getValueAndError(13.1, 16.3);
 */
+}
+
 QString ExportFiles::setENSParentQString(Nuclide parent)
 {
     QChar space = ' ';
@@ -462,101 +658,5 @@ QString ExportFiles::setENSParentQString(Nuclide parent)
 //    qstr.replace(76,4,qstr77to80); // IonizationState(for Ionized Atom decay) otherwise blank
     return qstr;
 }
-/*
-QString ExportFiles::setENSLevelQString(Level level)
-{
-    QChar space = ' ';
-    QString qstr;
-     for (int i=0; i<80; i++)qstr.push_back(space);
-     qstr.push_back("\n");
-    int atomicNumber = parent.GetAtomicNumber();
-    int atomicMass = parent.GetAtomicMass();
-    double qBeta = parent.GetQBeta();
-    // GetSn();
-//    vector<Level>* levels = parent.GetNuclideLevels();
-    double energy = level.GetLevelEnergy();
-    double T12 = level.GetHalfLifeTime();
-    QString unit = "S";
-    int spin = int( level.GetSpin()*2);
-    QString parity = QString::fromStdString(level.GetParity());
-    QString qMass = QString("%1").arg(atomicMass,3,10);
-    QString qstr4to5=QString::fromStdString(PeriodicTable::GetAtomicNameCap(atomicNumber));
-    QString qstr10to19 = QString("%1").arg(energy,10,'f',2,space);
-    QString qstr22to39 = QString("%1/2").arg(spin,14,10,space)+QString("%1").arg(parity,1,space)+space;
-//    QString qstr22to39 = QString("%1").arg(spin,16,'f',1,space)+QString("%1").arg(parity,1,space)+space;
-    QString qstr40to49 = QString("%1").arg(T12,7,'f',2,space)+QString("%1").arg(unit,2,space);
-    QString qstr65to74 = QString("%1").arg(qBeta,10,'f',2,space);
-// output string construction
-    qstr.replace(0,5,qMass+qstr4to5); // Nuclide Identification
-    qstr.replace(5,1,space);
-    qstr.replace(6,1,space);
-    qstr.replace(7,1,"L");   // L for Level
-    qstr.replace(8,1,space); //balnk or integer in case of multiple P records in the data set
-    qstr.replace(9,10,qstr10to19); // energy
-//    qstr.replace(19,2,qstr20to21); //denergy
-    qstr.replace(21,18,qstr22to39); //spin and parity
-    qstr.replace(39,10,qstr40to49); //Half-life with units
-//    qstr.replace(49,6,qstr50to55); // dT1/2
-//    qstr.replace(?,?,qstr56to64); // L Angular momentum transfer in the reacition determianinf the data set.
-//    qstr.replace(64,10,qstr65to74);  // S Spectroscopiv strength for this level as determined from the reaction
-//    qstr.replace(74,2,qstr75to76); // dS
-//      qstr.replace(76,1,"C") ;      // Comment  FLAG used to refer to a particular comment record
-//    qstr.replace(77,2,qstr78to79); // Metastabel state is denoted by 'M' or "M1' for the first (lowest) M2, for the second etc.
-                                    // For ionized atom decay filed gives the atomic electron shell or subshell in which B- particle is captured.
-//    qstr.replace(79,1,qstr80); // The character '?' denotes an uncertain or questionable level.Letter 'S' denotes neutron,proton,alpha,separation
-                                 //energy or a leel expected but not observed.
-    return qstr;
-}
-*/
-/*
-QString ExportFiles::setENSGammaQString(Transition transition)
-{
-    QChar space = ' ';
-    QString qstr;
-     for (int i=0; i<80; i++)qstr.push_back(space);
-     qstr.push_back("\n");
-    int atomicNumber = parent.GetAtomicNumber();
-    int atomicMass = parent.GetAtomicMass();
-    // GetSn();
-    double energy = transition.GetLevelEnergy();
-    QString unit = "S";
-    int spin = int( levels->at(0).GetSpin()*2);
-    QString parity = QString::fromStdString(levels->at(0).GetParity());
-    QString qMass = QString("%1").arg(atomicMass,3,10);
-    QString qstr4to5=QString::fromStdString(PeriodicTable::GetAtomicNameCap(atomicNumber));
-    QString qstr10to19 = QString("%1").arg(energy,10,'f',2,space);
-    QString qstr22to39 = QString("%1/2").arg(spin,14,10,space)+QString("%1").arg(parity,1,space)+space;
-//    QString qstr22to39 = QString("%1").arg(spin,16,'f',1,space)+QString("%1").arg(parity,1,space)+space;
-    QString qstr40to49 = QString("%1").arg(T12,7,'f',2,space)+QString("%1").arg(unit,2,space);
-    QString qstr65to74 = QString("%1").arg(qBeta,10,'f',2,space);
-    qstr.replace(0,5,qMass+qstr4to5); // Nuclide Identification
-    qstr.replace(5,1,space);
-    qstr.replace(6,1,space);
-    qstr.replace(7,1,"G");   // G for gamma
-    qstr.replace(8,1,space); //must be blank
-    qstr.replace(9,10,qstr10to19); // energy
-//    qstr.replace(19,2,qstr20to21); //denergy
-//    qstr.replace(21,18,qstr22to29); //RI, relative photon intensity I
-//    qstr.replace(29,2,qstr30to31); //dRI
-//    qstr.replace(31,10,qstr32to41); //Multipolarity of transition
-//    qstr.replace(41,8,qstr42to49); // MR Mixing ratio (sigma) (Sign must be shown explicitly if known.
-                                    // If no sign is given it will be assumed to be unknown.)
-//    qstr.replace(49,6,qstr50to55); // dMR, Standard uncertainty of Mixing (MR)
-//    qstr.replace(55,7,qstr56to62); // CC, Total conversion coeficient
-//    qstr.replace(62,2,qstr63to64); // dCC
-    qstr.replace(64,10,qstr65to74);  // TI, Relative total transition intensity. (Normalisation given in NORMALISATION record)
-//    qstr.replace(74,2,qstr75to76); // dTI*----
-//    qstr.replace(76,1,qstr77); // Comment FLAG used to refere to particular comment record.
-                              // The symbol '*' denotes multiply placed g-ray.
-                              // '&' - a multiplaced transitions with intensity not divided,
-                              // '@' - a multiplaced transitions with intensity suitably divided.
-                              // '%' - denotes that intensity given as RI is the branching in the SUper DEformed Band.
-    qstr.replace(77,1,' ');  //  Letter 'C' denotes placement confirmed by coincidence.
-                              // Symbol '?' denotes questionable coincidence.
-    qstr.replace(78,1,space);
-    qstr.replace(79,1,qstr80); // The Character '?' denotes an uncertain placement of the transition in the lvel scheme.
-                               // Letter 'S' denotes an expected, but as yet unobserved, transition.
-    return qstr;
-}
 
-*/
+

@@ -71,9 +71,7 @@ public:
 
 
     void setProjectName(string s) { projectName_ = s;}
-    void setProjectInputFileName(string s) {projectInputFileName_ =s;
-                                           cout << "w proej h" << projectInputFileName_
-                                           << " s " << s << endl;}
+    void setProjectInputFileName(string s) {projectInputFileName_ =s;}
     void setWorkingDir(string s); // { workingDir_ = s;}
     void setExpFile(string s) {expFile_ = s;}
     void setExpSpecID(string s) { expSpecID_ = s;}
@@ -164,7 +162,15 @@ public:
     void replaceSimHistInMap(int Id, Histogram hist);
     Histogram* getHistFromSimMap(int Id);
     int getSimMapSize(){return simHistMap_.size();}
+    bool checkForKeySim(int key){return checkForKey(simHistMap_, key);}
+    bool checkForKeyRec(int key){return checkForKey(recHistMap_, key);}
+    bool checkForKey(std::map<int,Histogram> map1, int key_tobechecked)
+    {
+        if(map1.find(key_tobechecked) == map1.end())
+        {return false;}
+            else {return true;}
 
+    }
     void addRecHist(int Id, Histogram hist);
     void setRecHist();
     void replaceRecHistInMap(int Id, Histogram hist);

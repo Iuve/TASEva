@@ -30,6 +30,7 @@ DecayPath* DecayPath::get()
 
 void DecayPath::LoadDecay(std::string xmlFileName)
 {
+    std::cout << "Loading data from "<< xmlFileName << std::endl;
 	loadDecayData_ = new LoadDecayData(xmlFileName);
     allNuclides_ = loadDecayData_->GetAllNuclides();
     startLevel_ = loadDecayData_->GetStartLevel();

@@ -38,11 +38,12 @@ SaveDecayData::SaveDecayData(string path)
 {
     path_ = path + "/";
     //SaveDecayStructure();
+ //   GeneralDecayInfo();
 }
 
 SaveDecayData::SaveDecayData()
 {
-
+ //   GeneralDecayInfo();
 }
 
 SaveDecayData::~SaveDecayData()
@@ -116,50 +117,53 @@ void SaveDecayData::SaveDecayStructure()
                 pugi::xml_node nodeTransition = nodeLevel.append_child("Transition");
                 nodeTransition.append_attribute("Type") = particleType.c_str();
                 nodeTransition.append_attribute("TransitionQValue").set_value(toStringPrecision(transitionQValue,2).c_str());
-                if(intensity < 0.001)
-                {
-                    nodeTransition.append_attribute("Intensity") = 0;
-                }
-                else
-                {
-                    // uncertainty should already be corrected (rounded) for precision
-                    nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,4).c_str());
-                    if(d_intensity > 1e-6) // needed for "official" precision
+                if(particleType == "B-" || particleType == "B+")
+                    if(intensity < 0.001)
                     {
-                        string intensityString = toStringPrecision(intensity,3);
+                        nodeTransition.append_attribute("Intensity") = 0;
+                    }
+                    else
+                    {
+                        // uncertainty should already be corrected (rounded) for precision
+                        nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,4).c_str());
+                        if(d_intensity > 1e-6) // needed for "official" precision
+                        {
+                            string intensityString = toStringPrecision(intensity,3);
 
-                        if(intensityString.find('.') == 2) //feeding >= 10
-                        {
-                            intensity = round_to(intensity, 1);
-                            //nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,0).c_str());
-                            nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,0).c_str());
-                        }
-                        else // feeding < 10
-                        {
-                            if(intensityString[0] == '0')
+                            if(intensityString.find('.') == 2) //feeding >= 10
                             {
-                                if(intensityString[2] == '0' && intensityString[3] == '0')
+                                intensity = round_to(intensity, 1);
+                                //nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,0).c_str());
+                                nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,0).c_str());
+                            }
+                            else // feeding < 10
+                            {
+                                if(intensityString[0] == '0')
                                 {
-                                    intensity = round_to(intensity, 0.001);
-                                    //nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,3).c_str());
-                                    nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,3).c_str());
+                                    if(intensityString[2] == '0' && intensityString[3] == '0')
+                                    {
+                                        intensity = round_to(intensity, 0.001);
+                                        //nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,3).c_str());
+                                        nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,3).c_str());
+                                    }
+                                    else
+                                    {
+                                        intensity = round_to(intensity, 0.01);
+                                        //nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,2).c_str());
+                                        nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,2).c_str());
+                                    }
                                 }
                                 else
                                 {
-                                    intensity = round_to(intensity, 0.01);
-                                    //nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,2).c_str());
-                                    nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,2).c_str());
+                                    intensity = round_to(intensity, 0.1);
+                                    //nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,1).c_str());
+                                    nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,1).c_str());
                                 }
-                            }
-                            else
-                            {
-                                intensity = round_to(intensity, 0.1);
-                                //nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,1).c_str());
-                                nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,1).c_str());
                             }
                         }
                     }
-                }
+                else
+                    nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,4).c_str());
                 if( isAddedTransition )
                     nodeTransition.append_attribute("Origin") = "Added";
                 else
@@ -624,48 +628,39 @@ void SaveDecayData::CreateDecayXML(Transition* firstTransition, Transition* seco
     //cout << "File Name: " << xmlFileName << endl;
 }
 
-void SaveDecayData::SaveGeneralDecayInfo(std::string path)
+void SaveDecayData::GeneralDecayInfo()
 {
     DecayPath* decayPath = DecayPath::get();
     std::vector<Nuclide>* nuclidesVector = decayPath->GetAllNuclides();
     Nuclide* motherNuclide = &nuclidesVector->at(0);
-    //Nuclide* daughterNuclide = &nuclidesVector->at(1);
 
-    string outputFilename = path + "/GeneralDecayInfo.txt";
-    ofstream outputFile(outputFilename.c_str());
-    if (!outputFile.is_open())
-        cout << "Warning message: The file " + (string) outputFilename + " is not open!" << endl;
-
-    outputFile << "#LevelEnergy | BetaFeeding | Uncertainty | GrowingBetaFeeding(gammas)/Energy(neutrons) | FinalLevel(neutrons)" << endl;
-
-    double averageBetaEnergy = 0.;
-    double d_averageBetaEnergy = 0.;
-    double averageGammaEnergy = 0.;
-    double d_averageGammaEnergy = 0.;
-    double averageNeutronEnergy = 0.;
-    double d_averageNeutronEnergy = 0.;
-    double neutronPercentage = 0.;
-    double growingIntensity = 0.;
-    int numberOfGammaAddedLevels = 0;
-    int numberOfGammaDatabaseLevels = 0;
-    int numberOfNeutronAddedLevels = 0;
-    int numberOfNeutronDatabaseLevels = 0;
-    int numberOfUniqueAddedGammas = 0;
-    int numberOfUniqueDatabaseGammas = 0;
-
+    averageBetaEnergy_ = 0.;
+    d_averageBetaEnergy_ = 0.;
+    averageGammaEnergy_ = 0.;
+    d_averageGammaEnergy_ = 0.;
+    averageNeutronEnergy_ = 0.;
+    d_averageNeutronEnergy_ = 0.;
+    neutronPercentage_ = 0.;
+    growingIntensity_ = 0.;
+    numberOfGammaAddedLevels_ = 0;
+    numberOfGammaDatabaseLevels_ = 0;
+    numberOfNeutronAddedLevels_ = 0;
+    numberOfNeutronDatabaseLevels_ = 0;
+    numberOfUniqueAddedGammas_ = 0;
+    numberOfUniqueDatabaseGammas_ = 0;
+    gammaAverageMultiplicity_ = 0.;
+    gammaAverageMultiplicityNotBetaWeighted_ = 0.;
 
     // Find gamma multiplicy beginning. Neutron and gamma levels have to be separated!
     // It doesn't take IC into account.
     Level* motherLevel = &motherNuclide->GetNuclideLevels()->at(0);
-    double gammaAverageMultiplicity = 0.;
-    double gammaAverageMultiplicityNotBetaWeighted = 0.;
     Level* stopLevel = decayPath->GetPointerToStopLevel();
     for ( auto it = motherLevel->GetTransitions()->begin(); it != motherLevel->GetTransitions()->end(); ++it )
     {
         string particleType =  (*it)->GetParticleType();
         if (particleType != "B-" && particleType != "B+")
         {
-            outputFile << "Something is WRONG with motherLevel and gammaAverageMultiplicity!" << endl;
+            cout << "Something is WRONG with motherLevel and gammaAverageMultiplicity!" << endl;
             continue;
         }
         double betaIntensity = (*it)->GetIntensity();
@@ -677,8 +672,8 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
 
         // It assumes if it doesn't deexctitate by neutron, it always does by gamma
         double tempMultiplicityValue = CalcGammaMultiplictyFromLevel(daughterLevel, stopLevel);
-        gammaAverageMultiplicity += betaIntensity * tempMultiplicityValue;
-        gammaAverageMultiplicityNotBetaWeighted += tempMultiplicityValue;
+        gammaAverageMultiplicity_ += betaIntensity * tempMultiplicityValue;
+        gammaAverageMultiplicityNotBetaWeighted_ += tempMultiplicityValue;
     }
     // End of gamma multiplicy calculations
 
@@ -704,17 +699,17 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
             {
                 (*kt)->CalculateAverageBetaEnergy();
                 double averageLvlBetaEnergy = (*kt)->GetAverageBetaEnergy();
-                averageBetaEnergy += intensity * averageLvlBetaEnergy / 100;
-                d_averageBetaEnergy += pow( averageLvlBetaEnergy * uncertainty / 100., 2 );
+                averageBetaEnergy_+= intensity * averageLvlBetaEnergy / 100;
+                d_averageBetaEnergy_+= pow( averageLvlBetaEnergy * uncertainty / 100., 2 );
 
                 if(finalLevel->GetNeutronLevelStatus())
                 {
                     if(isPseudoLevel)
-                        numberOfNeutronAddedLevels ++;
+                        numberOfNeutronAddedLevels_++;
                     else
-                        numberOfNeutronDatabaseLevels ++;
+                        numberOfNeutronDatabaseLevels_++;
 
-                    neutronPercentage += intensity;
+                    neutronPercentage_+= intensity;
                     //string neutronsEnergies = " ";
                     int nEnergy = 0;
                     int targetLvlEnergy = 0;
@@ -727,21 +722,21 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
                         double nIntensity = (*nt)->GetIntensity();
                         if(targetLvlEnergy > 1.)
                         {
-                            averageGammaEnergy += targetLvlEnergy * intensity / 100;
-                            d_averageGammaEnergy += pow( targetLvlEnergy * uncertainty / 100., 2);
+                            averageGammaEnergy_+= targetLvlEnergy * intensity / 100;
+                            d_averageGammaEnergy_+= pow( targetLvlEnergy * uncertainty / 100., 2);
                         }
-                        averageNeutronEnergy += nEnergy * intensity / 100 * nIntensity;
+                        averageNeutronEnergy_+= nEnergy * intensity / 100 * nIntensity;
                     }
 
-                    outputFile << finalLevelEnergy << " " << intensity << " " << uncertainty << " "
-                               << nEnergy << " " << targetLvlEnergy << endl;
+//MK                    outputFile << finalLevelEnergy << " " << intensity << " " << uncertainty << " "
+//MK                               << nEnergy << " " << targetLvlEnergy << endl;
                 }
                 else
                 {
                     if(isPseudoLevel)
-                        numberOfGammaAddedLevels ++;
+                        numberOfGammaAddedLevels_++;
                     else
-                        numberOfGammaDatabaseLevels ++;
+                        numberOfGammaDatabaseLevels_++;
 
                     for(auto llt = finalLevel->GetTransitions()->begin(); llt != finalLevel->GetTransitions()->end(); ++llt)
                     {
@@ -749,14 +744,93 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
                             continue;
                         bool isAddedTransition = (*llt)->IsAddedTransition();
                         if(isAddedTransition)
-                            numberOfUniqueAddedGammas++;
+                            numberOfUniqueAddedGammas_++;
                         else
-                            numberOfUniqueDatabaseGammas++;
+                            numberOfUniqueDatabaseGammas_++;
                     }
 
+                    growingIntensity_+= intensity;
+                    averageGammaEnergy_+= finalLevelEnergy * intensity / 100;
+                    d_averageGammaEnergy_+= pow( finalLevelEnergy * uncertainty / 100, 2);
+//MK                    outputFile << finalLevelEnergy << " " << intensity << " "
+//MK                               << uncertainty << " " << growingIntensity_<< endl;
+                }
+            }
+        }
+    }
+
+    d_averageGammaEnergy_= sqrt(d_averageGammaEnergy_);
+    d_averageBetaEnergy_= sqrt(d_averageBetaEnergy_);
+
+
+}
+
+void SaveDecayData::SaveGeneralDecayInfo(std::string path)
+{
+    GeneralDecayInfo();
+    double growingIntensity = 0.;
+
+    DecayPath* decayPath = DecayPath::get();
+    std::vector<Nuclide>* nuclidesVector = decayPath->GetAllNuclides();
+    Nuclide* motherNuclide = &nuclidesVector->at(0);
+    //Nuclide* daughterNuclide = &nuclidesVector->at(1);
+    string outputFilename = path + "/GeneralDecayInfo.txt";
+    ofstream outputFile(outputFilename.c_str());
+    if (!outputFile.is_open())
+        cout << "Warning message: The file " + (string) outputFilename + " is not open!" << endl;
+
+    outputFile << "#LevelEnergy | BetaFeeding | Uncertainty | GrowingBetaFeeding(gammas)/Energy(neutrons) | FinalLevel(neutrons)" << endl;
+
+    Level* motherLevel = &motherNuclide->GetNuclideLevels()->at(0);
+    Level* stopLevel = decayPath->GetPointerToStopLevel();
+    for ( auto it = motherLevel->GetTransitions()->begin(); it != motherLevel->GetTransitions()->end(); ++it )
+    {
+        string particleType =  (*it)->GetParticleType();
+        if (particleType != "B-" && particleType != "B+")
+        {
+            outputFile << "Something is WRONG with motherLevel and gammaAverageMultiplicity!" << endl;
+            continue;
+        }
+
+    }
+    // End of gamma multiplicy calculations
+
+    for ( auto lt = motherNuclide->GetNuclideLevels()->begin(); lt != motherNuclide->GetNuclideLevels()->end(); ++lt )
+    {
+        for ( auto kt = lt->GetTransitions()->begin(); kt != lt->GetTransitions()->end(); ++kt )
+        {
+            string particleType =  (*kt)->GetParticleType();
+            //double transitionQValue =  (*kt)->GetTransitionQValue();
+            double intensity = (*kt)->GetIntensity() * 100.;
+            double uncertainty = (*kt)->GetD_Intensity() * 100.;
+            if(uncertainty < 1e-6)
+                uncertainty = 0.;
+            double finalLevelEnergy = (*kt)->GetFinalLevelEnergy();
+            Level* finalLevel = (*kt)->GetPointerToFinalLevel();
+//MK            bool isPseudoLevel = finalLevel->isPseudoLevel();
+//MK            int numberOfTransitionsFromFinalLevel = finalLevel->GetTransitions()->size();
+
+            if (particleType == "B-" || particleType == "B+")
+            {
+//MK                (*kt)->CalculateAverageBetaEnergy();
+
+                if(finalLevel->GetNeutronLevelStatus())
+                {
+//MK                    neutronPercentage += intensity;
+                    int nEnergy = 0;
+                    int targetLvlEnergy = 0;
+                    for(auto nt = finalLevel->GetTransitions()->begin(); nt != finalLevel->GetTransitions()->end(); ++nt)
+                    {
+                        nEnergy = (*nt)->GetTransitionQValue();
+                        targetLvlEnergy = (*nt)->GetFinalLevelEnergy();
+                        double nIntensity = (*nt)->GetIntensity();
+                    }
+                    outputFile << finalLevelEnergy << " " << intensity << " " << uncertainty << " "
+                               << nEnergy << " " << targetLvlEnergy << endl;
+                }
+                else
+                {
                     growingIntensity += intensity;
-                    averageGammaEnergy += finalLevelEnergy * intensity / 100;
-                    d_averageGammaEnergy += pow( finalLevelEnergy * uncertainty / 100, 2);
                     outputFile << finalLevelEnergy << " " << intensity << " "
                                << uncertainty << " " << growingIntensity << endl;
                 }
@@ -764,21 +838,20 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
         }
     }
 
-    d_averageGammaEnergy = sqrt(d_averageGammaEnergy);
-    d_averageBetaEnergy = sqrt(d_averageBetaEnergy);
+
     //averageGammaEnergy /= (100 - neutronPercentage);
-    outputFile << "#AverageGammaEnergy = " << averageGammaEnergy << " +- " << d_averageGammaEnergy << endl;
-    outputFile << "#AverageBetaEnergy = " << averageBetaEnergy << " +- " << d_averageBetaEnergy << endl;
-    outputFile << "#AverageNeutronEnergy = " << averageNeutronEnergy << endl;
-    outputFile << "#NeutronPercentage = " << neutronPercentage << endl;
-    outputFile << "#AverageGammaMultiplicity = " << gammaAverageMultiplicity << endl;
-    outputFile << "#AverageGammaMultiplicityNotBetaWeighted = " << gammaAverageMultiplicityNotBetaWeighted << endl;
+    outputFile << "#AverageGammaEnergy = " << averageGammaEnergy_ << " +- " << d_averageGammaEnergy_ << endl;
+    outputFile << "#AverageBetaEnergy = " << averageBetaEnergy_ << " +- " << d_averageBetaEnergy_ << endl;
+    outputFile << "#averageNeutronEnergy = " << averageNeutronEnergy_ << endl;
+    outputFile << "#NeutronPercentage = " << neutronPercentage_<< endl;
+    outputFile << "#AverageGammaMultiplicity = " << gammaAverageMultiplicity_ << endl;
+    outputFile << "#AverageGammaMultiplicityNotBetaWeighted = " << gammaAverageMultiplicityNotBetaWeighted_ << endl;
     outputFile << "#numberOfGammaAddedLevels + numberOfGammaDatabaseLevels = "
-               << numberOfGammaAddedLevels << " + " << numberOfGammaDatabaseLevels << endl;
+               << numberOfGammaAddedLevels_<< " + " << numberOfGammaDatabaseLevels_<< endl;
     outputFile << "#numberOfNeutronAddedLevels + numberOfNeutronDatabaseLevels = "
-               << numberOfNeutronAddedLevels << " + " << numberOfNeutronDatabaseLevels << endl;
+               << numberOfNeutronAddedLevels_<< " + " << numberOfNeutronDatabaseLevels_<< endl;
     outputFile << "#numberOfUniqueAddedGammas + numberOfUniqueDatabaseGammas = "
-               << numberOfUniqueAddedGammas << " + " << numberOfUniqueDatabaseGammas << endl;
+               << numberOfUniqueAddedGammas_ << " + " << numberOfUniqueDatabaseGammas_ << endl;
     outputFile.close();
 }
 
@@ -853,9 +926,11 @@ void SaveDecayData::SaveGammaEvolution()
     outputFile.close();
 }
 
-
 void SaveDecayData::SaveENSDecayStructure()
 {
+
+    GeneralDecayInfo();
+
     DecayPath* decayPath = DecayPath::get();
     delayedNeutrons_ = false;
     std::vector<Nuclide>* nuclidesVector = decayPath->GetAllNuclides();
@@ -903,11 +978,54 @@ void SaveDecayData::SaveENSDecayStructure()
 
 
 
-    for ( auto lt = motherNuclide->GetNuclideLevels()->begin(); lt != motherNuclide->GetNuclideLevels()->end(); ++lt )
+    bool delayedParticle = false;
+  // start from mother nuclide in case we will have isomer beta decaying
+        for ( auto lt = motherNuclide->GetNuclideLevels()->begin(); lt != motherNuclide->GetNuclideLevels()->end(); ++lt )
     {
-        outputFile << setENSParentRec(motherNuclide).toStdString();
+        outputFile << setENSParentRec(nuclidesVector,delayedParticle).toStdString();
+       // loop over  daughter levels
+        for ( auto ll = daughterNuclide->GetNuclideLevels()->begin(); ll != daughterNuclide->GetNuclideLevels()->end(); ++ll )
+        {
+            Level* currentLevel =  &(*ll);
+            outputFile << setENSLevelRec(daughterHeader, &(*ll)).toStdString();
+            // find beta transition
+            Transition* currentBetaTransition;
+            for ( auto kt = lt->GetTransitions()->begin(); kt != lt->GetTransitions()->end(); ++kt )
+            {
+             if((*kt)->GetPointerToFinalLevel() == &(*ll))
+             {
+                 double totalIntensity = (*kt)->GetIntensity()*100;
+                 currentBetaTransition = (*kt);
+                 if (totalIntensity > 0.001)
+                 {
+                     //output beta transition to the level details
+                     outputFile << setENSBetaRec(daughterHeader, (*kt)).toStdString();
+                 }
+             }
+            }
+            // output transitions from the level
+            for ( auto tt = currentLevel->GetTransitions()->begin(); tt != currentLevel->GetTransitions()->end(); ++tt )
+            {
+                // prepare and write Gamma lines (NOT correct for neutrons and other transitions propably)
+                // for now eCC lines are not completly output
+                double transitionEnergy = (*tt)->GetTransitionQValue();
+                double electConvCoef = 0.; //(*tt)->GetElectronConversionCoefficient();
 
-        for ( auto kt = lt->GetTransitions()->begin(); kt != lt->GetTransitions()->end(); ++kt )
+                string type = (*tt)->GetParticleType();
+                if(transitionEnergy != 0.0)
+                {
+                    double totalIntensity = (*tt)->GetIntensity()*100;
+                    if((type == "G") &(totalIntensity > 0.001))
+                    outputFile << setENSGammaRec(daughterHeader, (*tt), currentBetaTransition).toStdString();
+                if(type == "N") delayedNeutrons_=true;
+                // dodace conversje elektronow
+                // comment line only if Transition was added during analysis
+                }
+            }
+        }
+
+// to be cut out if the rest works!!!mk - 20240404
+  /*      for ( auto kt = lt->GetTransitions()->begin(); kt != lt->GetTransitions()->end(); ++kt )
         {
             string particleType =  (*kt)->GetParticleType();
 
@@ -919,8 +1037,11 @@ void SaveDecayData::SaveENSDecayStructure()
                 outputFile << setENSLevelRec(daughterHeader, finalLevel).toStdString();
 
                 // write Beta line
-                outputFile << setENSBetaRec(daughterHeader, (*kt)).toStdString();
-
+                double totalIntensity = (*kt)->GetIntensity()*100;
+                if (totalIntensity > 0.001)
+                {
+                    outputFile << setENSBetaRec(daughterHeader, (*kt)).toStdString();
+                }
                 for ( auto tt = finalLevel->GetTransitions()->begin(); tt != finalLevel->GetTransitions()->end(); ++tt )
                 {
                     // prepare and write Gamma lines (NOT correct for neutrons and other transitions propably)
@@ -932,15 +1053,18 @@ void SaveDecayData::SaveENSDecayStructure()
                     if(transitionEnergy != 0.0)
                     {
                     //if(type == "N")outputFile << setENSPartRec(granddaughterHeader, (*tt)).toStdString();
-                    if(type == "G")outputFile << setENSGammaRec(daughterHeader, (*tt), (*kt)).toStdString();
+                        double totalIntensity = (*tt)->GetIntensity()*100;
+                        if((type == "G") &(totalIntensity > 0.001))
+                        outputFile << setENSGammaRec(daughterHeader, (*tt), (*kt)).toStdString();
                     if(type == "N") delayedNeutrons_=true;
                     // dodace conversje elektronow
                     // comment line only if Transition was added during analysis
                     }
                 }
             }
-        }
+        } */
     }
+
     outputFile << "\n";
 
     // Neutron output
@@ -949,7 +1073,7 @@ void SaveDecayData::SaveENSDecayStructure()
     {
         QString Id = "B-n";
      outputFile << setENSIdentificationRec(Id,granddaughterHeader, motherNuclide).toStdString();
-     outputFile << setENSParentRec(motherNuclide).toStdString();
+     outputFile << setENSParentRec(nuclidesVector,delayedNeutrons_).toStdString();
 
       // Normalization record, it is needed apparently
      outputFile << setENSNormRec(granddaughterHeader).toStdString();
@@ -1007,19 +1131,41 @@ void SaveDecayData::SaveENSDecayStructure()
     outputFile.close();
 }
 
-QString SaveDecayData::setENSParentRec(Nuclide* parent)
+QString SaveDecayData::setENSParentRec(std::vector<Nuclide>* nuclidesVector, bool delayedParticle)
 {
+    qDebug()<< delayedParticle;
+    Nuclide* parent = &nuclidesVector->at(0);
+//    Nuclide* motherNuclide = &nuclidesVector->at(0);
+    Nuclide* daughterNuclide = &nuclidesVector->at(1);
+    Nuclide* granddaughterNuclide = &nuclidesVector->at(2);
     QChar space = ' ';
     QString qstr;
-     for (int i=0; i<80; i++)qstr.push_back(space);
+    QString qstrC;
+    QString output;
+     for (int i=0; i<80; i++)
+     {
+         qstr.push_back(space);
+         qstrC.push_back(space);
+     }
      qstr.push_back("\n");
+     qstrC.push_back("\n");
     int atomicNumber = parent->GetAtomicNumber();
     int atomicMass = parent->GetAtomicMass();
-    double qBeta = parent->GetQBeta();
-    // GetSn();
+    double qBeta;
+    double DqBeta;
+    if(!delayedParticle)
+    {
+    qBeta = parent->GetQBeta();
+    DqBeta = parent->GetD_QBeta();
+    } else
+    {
+        qBeta = parent->GetQBeta() - daughterNuclide->GetSn();
+    }
+
     vector<Level>* levels = parent->GetNuclideLevels();
     double energy = levels->at(0).GetLevelEnergy();
     double T12 = levels->at(0).GetHalfLifeTime();
+//    double dT12 = levels->at(0).GetD_T12();
     QString unit = "S";
     QString qstr40to49;
     if(T12 > 0.0) //in case T12=0 we write nothing
@@ -1047,15 +1193,28 @@ QString SaveDecayData::setENSParentRec(Nuclide* parent)
             if(T12 < 1.0)qstr40to49 = QString("%1").arg(T12,7,'E',3,space)+QString("%1").arg(unit,-2,space);
 
     }
-    int spin = int( levels->at(0).GetSpin()*2);
+    int spin2 = int( levels->at(0).GetSpin()*2);
     QString parity = QString::fromStdString(levels->at(0).GetParity());
     QString qMass = QString("%1").arg(atomicMass,3,10);
     QString qstr4to5=QString::fromStdString(PeriodicTable::GetAtomicNameCap(atomicNumber));
     QString qstr10to19 = QString("%1").arg(energy,10,'f',2,space);
-    QString qstr22to39 = QString("%1/2").arg(spin,14,10,space)+QString("%1").arg(parity,1,space)+space;
+
+    QString qstr22to39;
+    if(spin2 == 0 )
+    {
+        if (!parity.isEmpty()) {  //spin=0 and known parity
+            qstr22to39 = QString("%1").arg(spin2,14,10,space)+QString("%1").arg(parity,1,space)+space;; // spin with just parity
+        }
+    } else if (spin2 > 0){
+        if (spin2 % 2 == 0){  //even spins
+            qstr22to39 = QString("%1").arg(spin2/2,14,10,space)+QString("%1").arg(parity,1,space)+space;; // spin with just parity
+        } else {  // odd spins
+            qstr22to39 = QString("%1/2").arg(spin2,14,10,space)+QString("%1").arg(parity,1,space)+space;
+        }
+    }
+
 //    QString qstr22to39 = QString("%1").arg(spin,16,'f',1,space)+QString("%1").arg(parity,1,space)+space;
 //    QString qstr40to49 = QString("%1").arg(T12,7,'f',2,space)+QString("%1").arg(unit,2,space);
-    QString qstr65to74 = QString("%1").arg(qBeta,10,'f',2,space);
     qstr.replace(0,5,qMass+qstr4to5); // Nuclide Identification
     qstr.replace(5,1,space);
     qstr.replace(6,1,space);
@@ -1067,10 +1226,33 @@ QString SaveDecayData::setENSParentRec(Nuclide* parent)
     qstr.replace(39,10,qstr40to49); //Half-life with units
 //    qstr.replace(49,6,qstr50to55); // dT1/2
 //    qstr.replace(?,?,qstr56to64); // MUST be BLANK
+    QString qstr65to74 = QString("%1").arg(qBeta,10,'f',2,space);
     qstr.replace(64,10,qstr65to74);  // qBeta
-//    qstr.replace(74,2,qstr75to76); // dQBeta
+
+//    string tmpstr = toStringPrecision(d_totalIntensity,2);
+//    cout << tmpstr.substr( tmpstr.length() - 2 ) << endl;
+//    qstr30to31 = QString::fromStdString(tmpstr.substr( tmpstr.length() - 2 ));  // bledy IBeta
+
+    QString qstr75to76 = QString::number(DqBeta,'g',2);  ;
+
+//    QString qstr75to76 = QString("%1").arg(DqBeta,2,'f',2,space);
+    qstr.replace(74,2,qstr75to76); // dQBeta
 //    qstr.replace(76,4,qstr77to80); // IonizationState(for Ionized Atom decay) otherwise blank
-    return qstr;
+    output= qstr;
+    if(delayedParticle)
+    {
+        QString qstr10to80 = "  S(n)({+"+ QString("%1").arg(atomicMass-1,3,10) +"}" + qstr4to5 + ")=" +
+                QString("%1").arg(daughterNuclide->GetSn(),8,'f',2,space);
+        qstrC.replace(0,5,qMass+qstr4to5); // Nuclide Identification
+        qstrC.replace(5,1,space);
+        qstrC.replace(6,1,"c");  //'c' for comment
+        qstrC.replace(7,1,"P");   // L for Parent
+        qstrC.replace(8,1,space); //must be blank
+        qstrC.replace(9,71,qstr10to80); //Comment
+        output = output+qstrC;
+    }
+
+    return output;
 }
 QString SaveDecayData::setENSLevelRec(QString header, Level* level)
 {
@@ -1089,34 +1271,35 @@ QString SaveDecayData::setENSLevelRec(QString header, Level* level)
     double energy = level->GetLevelEnergy();
     double T12 = level->GetHalfLifeTime();
     QString unit = "S";
-    int spin  = int( level->GetSpin()*2);
+//    double spin = level->GetSpin();
+    int spin2  = int( level->GetSpin()*2);
     QString parity = QString::fromStdString(level->GetParity());
 
  //   QString qMass = QString("%1").arg(atomicMass,3,10);
  //   QString qstr4to5=QString::fromStdString(PeriodicTable::GetAtomicNameCap(atomicNumber));
     QString qstr10to19 = QString("%1").arg(energy,10,'f',2,space);
     QString qstr22to39;
-    if(spin == 0 )
+    if(spin2 == 0 )
     {
-        if (!parity.isEmpty()) {
-            qstr22to39 = QString("%1").arg(spin,14,10,space)+QString("%1").arg(parity,1,space)+space;; // spin with just parity
+        if (!parity.isEmpty()) {  //spin=0 and known parity
+            qstr22to39 = QString("%1").arg(spin2,14,10,space)+QString("%1").arg(parity,1,space)+space;; // spin with just parity
         }
-    } else if (spin > 0){
-        if (spin % 2 == 0){  //even spins
-            qstr22to39 = QString("%1").arg(spin,14,10,space)+QString("%1").arg(parity,1,space)+space;; // spin with just parity
+    } else if (spin2 > 0){
+        if (spin2 % 2 == 0){  //even spins
+            qstr22to39 = QString("%1").arg(spin2/2,14,10,space)+QString("%1").arg(parity,1,space)+space;; // spin with just parity
         } else {  // odd spins
-            qstr22to39 = QString("%1/2").arg(spin,14,10,space)+QString("%1").arg(parity,1,space)+space;
+            qstr22to39 = QString("%1/2").arg(spin2,14,10,space)+QString("%1").arg(parity,1,space)+space;
         }
     }
 
-    if(!parity.isEmpty() & spin % 2 != 0)
+/*    if(!parity.isEmpty() & (spin2 % 2 != 0))
     {
-        qstr22to39 = QString("%1/2").arg(spin,14,10,space)+QString("%1").arg(parity,1,space)+space;
+        qstr22to39 = QString("%1/2").arg(spin2,14,10,space)+QString("%1").arg(parity,1,space)+space;
 //    QString qstr22to39 = QString("%1").arg(spin,16,'f',1,space)+QString("%1").arg(parity,1,space)+space;
-    } else  if (!parity.isEmpty() & spin % 2 == 0){
-        qstr22to39 = QString("%1").arg(spin,14,10,space)+QString("%1").arg(parity,1,space)+space;; // spin with just parity
+    } else  if (!parity.isEmpty() & (spin2 % 2 == 0)){
+        qstr22to39 = QString("%1").arg(spin2,14,10,space)+QString("%1").arg(parity,1,space)+space;; // spin with just parity
     }
-        QString qstr40to49;
+ */       QString qstr40to49;
     if(T12 > 0.0) //in case T12=0 we write nothing
      {
         // changing units.
@@ -1182,7 +1365,7 @@ QString SaveDecayData::setENSLevelRec(QString header, Level* level)
         qstrC.replace(0,5,header); // Nuclide Identification
         qstrC.replace(5,1,space);
         qstrC.replace(6,1,"c");  //'c' for comment
-        qstrC.replace(7,1,"L");   // L for gamma
+        qstrC.replace(7,1,"L");   // L for level
         qstrC.replace(8,1,space); //must be blank
         qstrC.replace(9,71,qstr10to80); //Comment
         output = output+qstrC;
@@ -1190,7 +1373,6 @@ QString SaveDecayData::setENSLevelRec(QString header, Level* level)
 
     return output;
 }
-
 QString SaveDecayData::setENSGammaRec(QString header, Transition* transitionFrom, Transition* transitionTo)
 {
     QChar space = ' ';
@@ -1210,15 +1392,25 @@ QString SaveDecayData::setENSGammaRec(QString header, Transition* transitionFrom
 
     // GetSn();
     double energy = transitionFrom->GetTransitionQValue();
-    double totalIntensity = transitionFrom->GetIntensity();
+    double totalIntensity = transitionFrom->GetIntensity()*100;
     QString qstr65to74 = QString("%1").arg(space,10,space);
     if(transitionTo!=NULL){
     double betafeeding =  transitionTo->GetIntensity();
-    double normalisedTotalIntensity = totalIntensity*betafeeding;
+    double normalisedTotalIntensity = totalIntensity*betafeeding; //does not include GAMMAfeeding!!!
       qstr65to74 = QString("%1").arg(normalisedTotalIntensity,10,'f',5,space);
     }
     QString qstr10to19 = QString("%1").arg(energy,10,'f',2,space);
-    QString qstr22to29 = QString("%1").arg(totalIntensity*100,8,'f',2,space);
+    QString qstr22to29;
+    QString qstr30to31;
+    if (totalIntensity < 0.01)
+    {
+    qstr22to29 = QString("%1").arg("0.01",8,space);
+    qstr30to31 = QString("%1").arg("LT",2,space);
+    } else
+    {
+    qstr22to29 = QString("%1").arg(totalIntensity,8,'f',2,space);
+    qstr30to31 = QString("%1").arg("  ",2,space);
+    }
 //    QString qstr40to49 = QString("%1").arg(T12,7,'f',2,space)+QString("%1").arg(unit,2,space);
 
     qstr.replace(0,5,header); // Nuclide Identification
@@ -1277,7 +1469,6 @@ QString SaveDecayData::setENSGammaRec(QString header, Transition* transitionFrom
 
     return output;
 }
-
 QString SaveDecayData::setENSBetaRec(QString header, Transition* transition)
 {
     // for B- ONLY for now.20230719
@@ -1287,7 +1478,28 @@ QString SaveDecayData::setENSBetaRec(QString header, Transition* transition)
      qstr.push_back("\n");
 
      double totalIntensity = transition->GetIntensity()*100;
-     QString qstr22to29 = QString("%1").arg(totalIntensity,8,'f',2,space);
+     double d_totalIntensity = transition->GetD_Intensity()*100;
+     QString qstr22to29;
+     QString qstr30to31;
+   if (totalIntensity < 0.01)
+         {
+     qstr22to29 = QString("%1").arg("0.01",8,space);
+     qstr30to31 = QString("%1").arg("LT",2,space);
+         }
+
+     else
+         { //intensity larger than 0.01%
+
+       QStringList qList = getValueAndError(totalIntensity,d_totalIntensity);
+       qstr22to29 = qList.at(0);
+       qstr30to31 = qList.at(1);
+/*     qstr22to29 = QString("%1").arg(totalIntensity,8,'f',2,space);
+     string tmpstr = toStringPrecision(d_totalIntensity,2);
+     cout << tmpstr.substr( tmpstr.length() - 2 ) << endl;
+     qstr30to31 = QString::fromStdString(tmpstr.substr( tmpstr.length() - 2 ));  // bledy IBeta
+//     qstr30to31 = QString::fromStdString(toStringPrecision(d_totalIntensity,2));  // bledy IBeta
+*/
+     }
 //     QString qstr10to19 = ;
     qstr.replace(0,5,header); // Nuclide Identification
     qstr.replace(5,1,space);
@@ -1298,7 +1510,7 @@ QString SaveDecayData::setENSBetaRec(QString header, Transition* transition)
 //    qstr.replace(19,2,qstr10to21); //  DE uncertainty
     qstr.replace(21,7,qstr22to29); //  IB - Intensity of B- branch.
                                    //Intensity units defined by the NORMALIZATION record.
-//    qstr.replace(29,2,qstr30to31); //  DIB - uncertainty of Beta intensity
+    qstr.replace(29,2,qstr30to31); //  DIB - uncertainty of Beta intensity
 //    qstr.replace(31,11,space); // blank
 //    qstr.replace(41,7,qstr42to49); // LOGFT logfT values calculated for uniqueness given in col 78-79
 //    qstr.replace(59,6,qstr50to55); //  DFT - standard uncertainty for LOGFT value
@@ -1312,7 +1524,6 @@ QString SaveDecayData::setENSBetaRec(QString header, Transition* transition)
                               // Letter 'S' denotes an expected or predicted transition.
    return qstr;
 }
-
 QString SaveDecayData::setENSIdentificationRec(QString Id, QString header, Nuclide* parent)
 {
     QChar space = ' ';
@@ -1324,7 +1535,7 @@ QString SaveDecayData::setENSIdentificationRec(QString Id, QString header, Nucli
      QString qMass = QString("%1").arg(atomicMass,3,10);
      QString qstr4to5=QString::fromStdString(PeriodicTable::GetAtomicNameCap(atomicNumber));
 
-     double qBeta = parent->GetQBeta();
+//     double qBeta = parent->GetQBeta();
 
     QString qstr10to39 =  QString("%1%2 %3 DECAY%4").arg(qMass,3,10).arg(qstr4to5,2).arg(Id,3,space).arg(space,16,space) ;
     QDateTime now = QDateTime::currentDateTime();
@@ -1341,7 +1552,6 @@ QString SaveDecayData::setENSIdentificationRec(QString Id, QString header, Nucli
     qDebug() << qstr;
     return qstr;
 }
-
 QString SaveDecayData::setENSQvalueRec(QString header, Nuclide* nuclide)
 {
     QChar space = ' ';
@@ -1375,11 +1585,11 @@ QString SaveDecayData::setENSQvalueRec(QString header, Nuclide* nuclide)
 //    qstr.replace(55,25,qstr56to80); // Reference citation(s) for Q-values
     return qstr;
 }
-
 QString SaveDecayData::setENSNormRec(QString header)
 {
     QChar space = ' ';
     QString qstr;
+    double one =1.0;
      for (int i=0; i<80; i++)qstr.push_back(space);
      qstr.push_back("\n");
     // GetSn();
@@ -1398,14 +1608,20 @@ QString SaveDecayData::setENSNormRec(QString header)
                                     // (TI in the GAMMA record) to transitions per 100 decays of the parent through this decay branch
                                     // or per 100 neutron captures in an (n,gamma) reqaction.
 //    qstr.replace(29,2,qstr30to31) ; // DNT - standard uncertainty in NT.
-//    qstr.replace(31,8,qstr32to39); // BR - Branching ratio multiplier for converting intensity per 100 decays
+     QString qstr32to39 = QString("%1").arg(one,8,'f',2,space);
+     if(delayedNeutrons_)qstr32to39 = QString("%1").arg(neutronPercentage_/100,6,'f',4,space); //Pn here
+     qstr.replace(31,8,qstr32to39); // BR - Branching ratio multiplier for converting intensity per 100 decays
                                     // through this decay branch to intensity per 100 decays of the parent nuclide.
                                     // Required if known.
 //    qstr.replace(39,2,qstr40to41); // DBR - standard uncertainty in BR
-//    qstr.replace(41,8,qstr42to49); // NB - Multiplier for converting relative B- and EC intensities (IB in the B- recordl IB,IE,TI in the EC record)
+     QString qstr42to49 = QString("%1").arg(one,8,'f',2,space);
+
+     qstr.replace(41,8,qstr42to49); // NB - Multiplier for converting relative B- and EC intensities (IB in the B- recordl IB,IE,TI in the EC record)
                                     // to intensities per 100 decays through this decay branch. Required if known.
 //    qstr.replce(49,6,qstr50to55); // DNB - standard uncertainty in NB.
-//    qstr.replace(55,6,qstr56to62); // NP - Multiplier for converting per 100 delayed transition intensities to per 100 decays of precursor.
+     QString qstr56to62 = QString("%1").arg(neutronPercentage_,6,'f',2,space); //Pn here
+
+      qstr.replace(55,6,qstr56to62); // NP - Multiplier for converting per 100 delayed transition intensities to per 100 decays of precursor.
 //    qstr.replace(62,2,qstr63to64); // DNP - standard uncertainty in NP.
 //    qstr.replace(64,21,space);     // must be blank
 
@@ -1414,6 +1630,7 @@ QString SaveDecayData::setENSNormRec(QString header)
 QString SaveDecayData::setENSPNormRec(QString header)
 {
     QChar space = ' ';
+    double one = 1.0;
     QString qstr;
      for (int i=0; i<80; i++)qstr.push_back(space);
      qstr.push_back("\n");
@@ -1434,11 +1651,13 @@ QString SaveDecayData::setENSPNormRec(QString header)
                                     // If left blank (NT DNT) x (BR DBR) from N record will be used for normalisation.
 //    qstr.replace(29,2,qstr30to31) ; // UNC - Standrad uncertainty in NT x BR. If left blank no uncertainty will appear in the publication.
 //    qstr.replace(31,8,qstr32to41); // Blank
-//    qstr.replace(41,8,qstr42to49); // NB x BR - Multiplier for converting relative B- and EC intensities (IB in the B- recordl IB,IE,TI in the EC record)
+      QString qstr42to49 = QString("%1").arg(one,10,'f',2,space);
+      qstr.replace(41,8,qstr42to49); // NB x BR - Multiplier for converting relative B- and EC intensities (IB in the B- recordl IB,IE,TI in the EC record)
                                     // to intensities per 100 decays.
                                        // If left blank (NB DNB) x (BR DBR) from N record will be used for normalisation.
 //    qstr.replce(49,6,qstr50to55); // UNC - Standrad uncertainty in NB x BR. If left blank no uncertainty will appear in the publication.
-//    qstr.replace(55,6,qstr56to62); // NP - Multiplier for converting per 100 delayed transition intensities to per 100 decays of precursor.
+      QString qstr56to62 = QString("%1").arg(neutronPercentage_,10,'f',2,space); //Pn here
+      qstr.replace(55,6,qstr56to62); // NP - Multiplier for converting per 100 delayed transition intensities to per 100 decays of precursor.
 //    qstr.replace(62,2,qstr63to64); // DNP - standard uncertainty in NP.
 //    qstr.replace(64,12,space);     // must be blank
       qstr.replace(76,1,space);  // Blank or 'C' (for comment). If blank, comment associated with the intensity option will appear in the drawing in the Nuclear DAta Sheets.
@@ -1454,43 +1673,48 @@ QString SaveDecayData::setENSPNormRec(QString header)
                                 // 7 - RI - % photon branching from each level
      return qstr;
 }
-
-
 QString SaveDecayData::setENSPartRec(QString header, Transition* transitionFrom, Transition* transitionTo)
 {
     QChar space = ' ';
     QString qstr;
-     for (int i=0; i<80; i++)qstr.push_back(space);
+    QString qstrC;
+     for (int i=0; i<80; i++)
+     {
+         qstr.push_back(space);
+         qstrC.push_back(space);
+     }
      qstr.push_back("\n");
-    // GetSn();
-    double energy = transitionFrom->GetTransitionQValue();
+     qstrC.push_back("\n");
+
+     double energy = transitionFrom->GetTransitionQValue();
     double totalIntensity = transitionFrom->GetIntensity();
     double betafeeding =  transitionTo->GetIntensity();
-    double normalisedTotalIntensity = totalIntensity*betafeeding;
+    double normalisedTotalIntensity = totalIntensity*betafeeding/neutronPercentage_*100;
 
 
     QString partType = QString::fromStdString(transitionFrom->GetParticleType());
-    QString qstr9 = QString("%1").arg(partType,1,space);
-    QString qstr10to19 = QString("%1").arg(energy,10,'f',2,space);
-    QString qstr22to29 = QString("%1").arg(normalisedTotalIntensity,8,'f',6,space);
     Level* initLevel = transitionFrom->GetPointerToInitialLevel();
     double energyInitLevel = initLevel->GetLevelEnergy();
-    QString qstr32to39 = QString("%1").arg(energyInitLevel,8,'f',2,space);
-//    QString qstr40to49 = QString("%1").arg(T12,7,'f',2,space)+QString("%1").arg(unit,2,space);
-    QString qstr65to74 = QString("%1").arg(totalIntensity,10,'f',2,space);
+
     qstr.replace(0,5,header); // Nuclide Identification
     qstr.replace(5,1,space); //blank  any character other than '1' for continuation records
     qstr.replace(6,1,space); // must be blank
-    qstr.replace(7,1,"D");   // D - blnak for prompt, Letter 'D' for delayed particle emission.
+    qstr.replace(7,1,"D");   // D - blank for prompt, Letter 'D' for delayed particle emission.
+    QString qstr9 = QString("%1").arg(partType,1,space);
     qstr.replace(8,1,qstr9); //Particle - N for neutrons, P for proton, A for Alpha particle.
+    QString qstr10to19 = QString("%1").arg(energy,10,'f',2,space);
     qstr.replace(9,10,qstr10to19); // energy
 //    qstr.replace(19,2,qstr20to21); //denergy
+    QString qstr22to29 = QString("%1").arg(normalisedTotalIntensity,8,'f',6,space);
     qstr.replace(21,18,qstr22to29); //IP -Intensity of (delayed) particle in percent of the total (delayed) particle emissions. I
 //    qstr.replace(29,2,qstr30to31); //dIP
+    QString qstr32to39 = QString("%1").arg(energyInitLevel,8,'f',2,space);
     qstr.replace(31,8,qstr32to39); // EI - energy of the level in the 'intermediate' mass=A+1 for n and p; A+4 for alpha
+    //    QString qstr40to49 = QString("%1").arg(T12,7,'f',2,space)+QString("%1").arg(unit,2,space);
 //     qstr.replace(39,10,qstr40to49); // T- Width of the transition in keV
 //     qstr.replace(49,6,qstr50to55);  // DT - Uncertainty of T
 //     qstr.replace(55,9,qstr56to64); // L - angular momentum transfer of the emitted particle
+ //   QString qstr65to74 = QString("%1").arg(totalIntensity,10,'f',2,space);
 //     qstr.replace(64,12,space);  //Blank
 //       qstr.replace(77,1,space);  // C - comment FLAG used to refer to a particlura comment record
 //        qstr.replace(78,1," "); // COIN Letter 'C' denotes placement confirmed by coincidence. Symbol '?' denotes probable coincidence
@@ -1499,4 +1723,64 @@ QString SaveDecayData::setENSPartRec(QString header, Transition* transitionFrom,
                                 // Letter 'S' denotes expected, but as yet unobserved transition
 
      return qstr;
+}
+
+QStringList SaveDecayData::getValueAndError(double value, double error)
+{
+    QStringList outputList;
+    QChar space = ' ';
+ //   QString valueStr;
+    QString valueStr = QString("%1").arg(value,11,'f',4,space);  //11 and 4 set arbitrary
+    QString errorStr = QString("%1").arg(error,11,'f',4,space);
+    errorStr.remove(space);
+    valueStr.remove(space);
+ //   qDebug() << "Input: " << value <<" " << error;
+ //   qDebug() << "valueStr = " << valueStr << "errorStr = " << errorStr;
+    int dotPossitionInValue;
+    int dotPossitionInError;
+    if (error <= value)
+    {
+        dotPossitionInValue = valueStr.indexOf(".");
+        dotPossitionInError = errorStr.indexOf(".");
+ //       qDebug() <<  " dotPossitionInValue " <<   dotPossitionInValue
+ //                <<  " dotPossitionInError " <<   dotPossitionInError;
+        //find first non-zero character in string errorStr
+        signed short dError1=0;
+        for(auto i=0; i!=errorStr.length(); i++)
+        { //finding possition of first non-zero number in error
+            if ((errorStr[i] != "0") && (errorStr[i] != ".")) {
+                dError1=i;
+                break;}
+        }
+        signed short dValue1=0;
+        if((valueStr.length() - dotPossitionInValue) >= (errorStr.length() - dotPossitionInError))
+                dError1++;
+
+/*        if(errorStr[dError1+1] == "0" )
+        { //nic nie robimy nie zaaokraglamy bledow
+
+        } else
+        {  // strzeba zaokraglic bledy w gore
+
+        }
+ */
+        int outputValueLength =  dotPossitionInValue + 1 +  (dError1 - dotPossitionInError);
+        QString errorStrOut;
+        if (dError1 == dotPossitionInError)
+        {
+            errorStrOut = errorStr.mid(dError1-1,3);
+            errorStrOut.remove(".");
+            outputValueLength++;
+        } else
+        {   errorStrOut = errorStr.mid(dError1-1,2);
+        }
+         outputList << valueStr.mid(dValue1,outputValueLength) << errorStrOut ;
+ //               qDebug() << outputList;
+         return outputList;
+    } else
+    { // uncertainty larger than value
+         outputList <<  QString("%1").arg(value,8,'f',2,space);
+ //          qDebug() << outputList;
+         return outputList;
+    }
 }

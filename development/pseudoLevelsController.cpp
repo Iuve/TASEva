@@ -16,7 +16,7 @@ using namespace std;
 
 PseudoLevelsController::PseudoLevelsController()
 {
-    std::cout<<"PseudoLevelsController::PseudoLevelsController(Decay* decayVal)"<<std::endl;
+    qInfo()<<"PseudoLevelsController::PseudoLevelsController(Decay* decayVal)";
     try
     {
         decayPath_= DecayPath::get();

@@ -4,6 +4,10 @@
 #include "pugixml.hh"
 #include "project.h"
 
+#include "QApplication"
+#include "QDialog"
+#include "QMessageBox"
+
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -192,7 +196,16 @@ Nuclide LoadDecayData::LoadNuclideData(const string filename)
             string transitionQvalStr = transition.attribute("TransitionQValue").value();
             double transitionQval = stringToDouble(transitionQvalStr);
             string intensityStr = transition.attribute("Intensity").value();
-            double intensity = stringToDouble(intensityStr);
+            double intensity;
+            if (intensityStr == "n/a")
+            {
+                intensity = 0.;
+            }else {
+            intensity = stringToDouble(intensityStr) / 100.;
+            }
+            qDebug() << "LoadDecayData " << QString::fromStdString(filename) << " transition: "
+                     << QString::fromStdString(type) << " transitionQval " << transitionQval
+                     << "Intensity: " << intensity;   ;
             string d_intensityStr = transition.attribute("d_Intensity").value();
             double d_intensity = stringToDouble(d_intensityStr);
             string originString = transition.attribute("Origin").value();
@@ -303,7 +316,13 @@ Nuclide LoadDecayData::LoadNuclideData(const string filename)
         std::cout << "LoadDecayData Level Energy = " << lvlEnergy << std::endl;
         //double lvlSpin = level.attribute("Spin").as_double();
         string lvlSpinStr = level.attribute("Spin").value();
-        double lvlSpin = stringToDouble(lvlSpinStr);
+        double lvlSpin ;
+        if (lvlSpinStr !="")
+        {
+            lvlSpin = stringToDouble(lvlSpinStr);
+        } else {
+            lvlSpin = -1;
+        }
 		string lvlParity = level.attribute("Parity").value();
         string lvlSpinParity = level.attribute("SpinParity").value();
         //double lvlHalfLifeTime = level.attribute("HalfLifeTime").as_double();
@@ -431,10 +450,12 @@ Level* LoadDecayData::FindPointerToLevel(int atomicNumber, int atomicMass, doubl
 	}
 	
 	// throw Exception
-//    cout << "Pointer to level " << energy << " in " << atomicMass << " " << atomicNumber <<
- //   " not found with default accuracy of " << energyLevelUncertainty << "keV." << endl;
+    qInfo() << "Pointer to level " << energy << " in " << atomicMass << " " << atomicNumber <<
+    " not found with default accuracy of " << energyLevelUncertainty << "keV.";
 	
 		// additional security
+    bool warning;
+    warning = false;
 	for ( auto it = allNuclides_.begin(); it != allNuclides_.end(); ++it )
 	{
 		int atNumber = it->GetAtomicNumber();
@@ -447,17 +468,29 @@ Level* LoadDecayData::FindPointerToLevel(int atomicNumber, int atomicMass, doubl
 					double temp = jt->GetLevelEnergy();
 					if( ((temp - i) <= energy) && ((temp + i) >= energy) )
                     {
-//                        cout << "Pointer to level " << energy << " found with accuracy of " << i << "keV." << endl;
+                        cout << "Pointer to level " << energy << " found with accuracy of " << i << "keV." << endl;
 						return &(*jt);
                     }
+                    if(i >= 2){warning=true;}
 				}
 			}
 	}
 	
 	// throw Exception
     cout << "Pointer to level " << energy << " STILL not found after 50keV threshold!" << endl;
-}
 
+     if(warning)
+     {
+         cout << "+++++++++++++++++++++++++++++++++++++" << endl;
+         cout << "+++Level/gamma energy mismatch!++++++"   << endl;
+         cout << "+++++++++++++++++++++++++++++++++++++" << endl;
+
+//        int r = QMessageBox::warning(this, tr("Error"),
+//                                 tr("Level/gamma energy mismatch! Check the log file"),
+//                                 QMessageBox::Ok);
+//        if (r == QMessageBox::Ok){}
+     }
+}
 void LoadDecayData::SortNuclidesVector()
 {
     //Nuclide* motherNuclide = 0L;

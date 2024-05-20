@@ -273,7 +273,7 @@ void Project::replaceSimHistInMap(int Id, Histogram hist)
 {
    std::map<int,Histogram>::iterator it;
    it = simHistMap_.find(Id);
-   if (it != simHistMap_.end())simHistMap_.erase(it);
+   if (it != simHistMap_.end()) simHistMap_.erase(it);
    simHistMap_.insert(std::pair<int,Histogram>(Id,hist));
 }
 
@@ -329,17 +329,17 @@ void Project::removeAllContaminations()
 
 void Project::removeContamination(QString name, QString id)
 {
-    std::cout << "Project::removeContamination()" << endl;
+    qInfo() << "Project::removeContamination()" ;
     std::string filename = name.toStdString();
     int idVal = id.toInt();
-    cout << filename << " : " << idVal <<endl;
+//    cout << filename << " : " << idVal ;
     //std::vector <Contamination>::iterator it;
     for(auto it = contaminations_.begin(); it != contaminations_.end(); ++it)
     {
         if( (*it).second.filename == filename && (*it).second.id == idVal)
         {
             contaminations_.erase(it);
-            std::cout << "Project::removeContamination() Found to ERASE" << endl;
+            std::cout << "Project::removeContamination() Found and ERASED" << endl;
             return;
         }
 
@@ -374,7 +374,4 @@ void Project::readSortXMLInputFile(QString qFileName)
         sortInputXML_.push_back(QString::fromStdString(line));
       }
      }
- //   a << line;
-   //     a >> b1 >> b2 ;
-
 }
