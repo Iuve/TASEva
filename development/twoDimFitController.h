@@ -81,6 +81,7 @@ private:
     vector <double> errors;
     double otherLevelsToFeedingsRatio_;
     int normalizeStartPoint_;
+    int normalizeEndPoint_;
     int expSpectra2Dbinning_;
 
     void PrepareNeutronLevelsResponse();

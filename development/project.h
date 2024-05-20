@@ -140,6 +140,9 @@ public:
     bool getCheckOutputROOT(){return checkOutputROOT_;}
     void setGammaEvolutionEnergies(std::pair<double, double> energies){gammaEvolutionEnergies_ = energies;}
     std::pair<double, double> getGammaEvolutionEnergies(){return gammaEvolutionEnergies_;}
+    bool getNormalizeBetaIntensities(){return normalizeBetaIntensities_;}
+    bool getSaveRoundedBetaIntensities(){return saveRoundedBetaIntensities_;}
+    std::pair<double, string> getTwoDimNormalizeRange(){return twoDimNormalizeRange_;}
 
     QString getSortProgramName(){return codeSORT_;}
     void setSortProgramName(string s){codeSORT_ = QString::fromStdString(s);}
@@ -259,6 +262,9 @@ private:
     bool checkOutputROOT_;
     // variable below contains energy range of gamma rays intensities evolution
     std::pair<double, double> gammaEvolutionEnergies_;
+    bool normalizeBetaIntensities_;
+    bool saveRoundedBetaIntensities_;
+    std::pair<double, string> twoDimNormalizeRange_;
 
     void operator=(Project const&);
     static Project* instance;//

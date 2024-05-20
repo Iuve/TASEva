@@ -16,7 +16,6 @@
 #include <sstream>      // std::stringstream
 
 
-
 Project* Project::instance = NULL;
 
 Project::Project()
@@ -84,6 +83,9 @@ void  Project::New()
     sortXML_ = false;
     gammaEvolutionEnergies_ = std::make_pair(-1, -1);
     checkOutputROOT_ = true;
+    normalizeBetaIntensities_ = true;
+    saveRoundedBetaIntensities_ = false;
+    twoDimNormalizeRange_ = std::make_pair(100, "max");
 }
 
 
@@ -167,6 +169,24 @@ bool Project::Open(string fileName)
         {
             if(b2 == "no")
                 checkOutputROOT_ = false;
+        }
+        else if (b1 == "NormalizeBetaIntensities:")
+        {
+            if(b2 == "no")
+                normalizeBetaIntensities_ = false;
+        }
+        else if (b1 == "SaveRoundedBetaIntensities:")
+        {
+            if(b2 == "yes")
+                saveRoundedBetaIntensities_ = true;
+        }
+        //2D default value is from 100 to max
+        else if (b1 == "2DNormalizeRange:")
+        {
+            a  >> b3;
+            int lowE = std::stoi(b2);
+            b3.erase(std::remove (b3.begin(), b3.end(), ' '), b3.end());
+            twoDimNormalizeRange_ = std::make_pair(lowE, b3);
         }
         else {std::cout << "unknown text in input file " << b1 <<" i "<< b2 << std::endl; }
          }

@@ -369,6 +369,7 @@ Nuclide LoadDecayData::LoadNuclideData(const string filename)
 
 void LoadDecayData::SetPointersToTransitions()
 {
+    Project* myProject = Project::get();
 	for ( auto it = allNuclides_.begin(); it != allNuclides_.end(); ++it )
 	{
 		for ( auto jt = it->GetNuclideLevels()->begin(); jt != it->GetNuclideLevels()->end(); ++jt )
@@ -396,7 +397,8 @@ void LoadDecayData::SetPointersToTransitions()
 			}
 
 			jt->SetTransitions(pointersToTransitionsFromLvL);
-            jt->NormalizeTransitionIntensities();
+            if( myProject->getNormalizeBetaIntensities() )
+                jt->NormalizeTransitionIntensities();
 			jt->CalculateTotalProbability();
 		}
 	}

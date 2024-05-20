@@ -60,6 +60,8 @@ string toStringPrecision(double input,int n)
 
 void SaveDecayData::SaveDecayStructure()
 {
+    Project* myProject = Project::get();
+    bool saveRoundedBetaIntensites = myProject->getSaveRoundedBetaIntensities();
 	DecayPath* decayPath = DecayPath::get();
 	std::vector<Nuclide>* nuclidesVector = decayPath->GetAllNuclides();
 
@@ -125,7 +127,8 @@ void SaveDecayData::SaveDecayStructure()
                     else
                     {
                         // uncertainty should already be corrected (rounded) for precision
-                        nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,4).c_str());
+                        if( !saveRoundedBetaIntensites )
+                            nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,4).c_str());
                         if(d_intensity > 1e-6) // needed for "official" precision
                         {
                             string intensityString = toStringPrecision(intensity,3);
@@ -133,7 +136,8 @@ void SaveDecayData::SaveDecayStructure()
                             if(intensityString.find('.') == 2) //feeding >= 10
                             {
                                 intensity = round_to(intensity, 1);
-                                //nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,0).c_str());
+                                if( saveRoundedBetaIntensites )
+                                    nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,0).c_str());
                                 nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,0).c_str());
                             }
                             else // feeding < 10
@@ -143,20 +147,23 @@ void SaveDecayData::SaveDecayStructure()
                                     if(intensityString[2] == '0' && intensityString[3] == '0')
                                     {
                                         intensity = round_to(intensity, 0.001);
-                                        //nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,3).c_str());
+                                        if( saveRoundedBetaIntensites )
+                                            nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,3).c_str());
                                         nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,3).c_str());
                                     }
                                     else
                                     {
                                         intensity = round_to(intensity, 0.01);
-                                        //nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,2).c_str());
+                                        if( saveRoundedBetaIntensites )
+                                            nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,2).c_str());
                                         nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,2).c_str());
                                     }
                                 }
                                 else
                                 {
                                     intensity = round_to(intensity, 0.1);
-                                    //nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,1).c_str());
+                                    if( saveRoundedBetaIntensites )
+                                        nodeTransition.append_attribute("Intensity").set_value(toStringPrecision(intensity,1).c_str());
                                     nodeTransition.append_attribute("d_Intensity").set_value(toStringPrecision(d_intensity,1).c_str());
                                 }
                             }
