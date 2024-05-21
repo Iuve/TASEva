@@ -143,6 +143,7 @@ public:
     bool getNormalizeBetaIntensities(){return normalizeBetaIntensities_;}
     bool getSaveRoundedBetaIntensities(){return saveRoundedBetaIntensities_;}
     std::pair<double, string> getTwoDimNormalizeRange(){return twoDimNormalizeRange_;}
+    double getUncertModifierInPercents(){return roughUncertaintyModifierInPercents_;}
 
     QString getSortProgramName(){return codeSORT_;}
     void setSortProgramName(string s){codeSORT_ = QString::fromStdString(s);}
@@ -265,6 +266,7 @@ private:
     bool normalizeBetaIntensities_;
     bool saveRoundedBetaIntensities_;
     std::pair<double, string> twoDimNormalizeRange_;
+    double roughUncertaintyModifierInPercents_;
 
     void operator=(Project const&);
     static Project* instance;//

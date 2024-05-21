@@ -86,6 +86,7 @@ void  Project::New()
     normalizeBetaIntensities_ = true;
     saveRoundedBetaIntensities_ = false;
     twoDimNormalizeRange_ = std::make_pair(100, "max");
+    roughUncertaintyModifierInPercents_ = 5;
 }
 
 
@@ -188,6 +189,8 @@ bool Project::Open(string fileName)
             b3.erase(std::remove (b3.begin(), b3.end(), ' '), b3.end());
             twoDimNormalizeRange_ = std::make_pair(lowE, b3);
         }
+        else if (b1 == "RoughUncertaintyModifierInPercents:")
+            roughUncertaintyModifierInPercents_ = stod(b2);
         else {std::cout << "unknown text in input file " << b1 <<" i "<< b2 << std::endl; }
          }
         }

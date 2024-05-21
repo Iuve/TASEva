@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "Randomize.hh"
+#include "project.h"
 
 Level::Level(double levelEnergy, double spin, std::string parity, double halfLifeTimeInSeconds,
  std::vector<Gamma> gammasFromLvL, std::vector<Beta> betasFromLvL,
@@ -340,6 +341,8 @@ void Level::CalculateBetaTransitionsUncertainties(double expSum)
     //double maxEnergy = 16000.;
     //double expSum = tempExpHist->GetNrOfCounts(minEnergy,maxEnergy);
 
+    Project* myProject = Project::get();
+    double uncertModifierInPercents = myProject->getUncertModifierInPercents();
     double arbitraryFactor = 0.1;
     double highestIntensity = 0.;
     Transition* highestIntensityTransition;
@@ -391,7 +394,7 @@ void Level::CalculateBetaTransitionsUncertainties(double expSum)
         // 88Br: uncertainty Charlie's A4 formula times 10, then added 7% of feeding
         // 88Br: for levels 7050+ uncertainty is multiplied by 1.5 on top of everything else
         uncertainty *= 10;
-        uncertainty += intensity * 0.05;
+        uncertainty += intensity * uncertModifierInPercents/100.;
         //double levelEnergy = (*kt)->GetFinalLevelEnergy();
         //if(levelEnergy >= 7050)
         //    uncertainty *= 1.5;
