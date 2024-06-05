@@ -983,7 +983,16 @@ void SaveDecayData::SaveENSDecayStructure()
     // Production normalization record, tells how to display intensities
     outputFile << setENSPNormRec(daughterHeader).toStdString();
 
-
+    QString LComA, RType, Sym, ENSFlag;
+    QString GComA;
+    ENSFlag=" ";
+    LComA = QString("Quasi-level, energy denotes the center of the quasi-level.");
+    GComA = QString("Added transition.");
+    RType = "L";
+    Sym = QString("E");
+//    ENSFlag = QString("A");
+    outputFile << setENSComRec(daughterHeader, "L", "E", "A", LComA ).toStdString();
+    outputFile << setENSComRec(daughterHeader, "G", "E", "A", GComA ).toStdString();
 
     bool delayedParticle = false;
   // start from mother nuclide in case we will have isomer beta decaying
@@ -994,7 +1003,9 @@ void SaveDecayData::SaveENSDecayStructure()
         for ( auto ll = daughterNuclide->GetNuclideLevels()->begin(); ll != daughterNuclide->GetNuclideLevels()->end(); ++ll )
         {
             Level* currentLevel =  &(*ll);
-            outputFile << setENSLevelRec(daughterHeader, &(*ll)).toStdString();
+            if(currentLevel->isPseudoLevel())ENSFlag = QString("A");
+
+            outputFile << setENSLevelRec(daughterHeader, ENSFlag, &(*ll)).toStdString();
             // find beta transition
             Transition* currentBetaTransition;
             for ( auto kt = lt->GetTransitions()->begin(); kt != lt->GetTransitions()->end(); ++kt )
@@ -1078,6 +1089,7 @@ void SaveDecayData::SaveENSDecayStructure()
     Transition* betaTransition;
     if(delayedNeutrons_)
     {
+        ENSFlag=" ";
         QString Id = "B-n";
      outputFile << setENSIdentificationRec(Id,granddaughterHeader, motherNuclide).toStdString();
      outputFile << setENSParentRec(nuclidesVector,delayedNeutrons_).toStdString();
@@ -1089,7 +1101,9 @@ void SaveDecayData::SaveENSDecayStructure()
 
     for(auto dt=granddaughterNuclide->GetNuclideLevels()->begin(); dt != granddaughterNuclide->GetNuclideLevels()->end(); ++dt)
       {
-        outputFile << setENSLevelRec(granddaughterHeader, &(*dt)).toStdString();
+        if(dt->isPseudoLevel())ENSFlag = QString("A");
+
+        outputFile << setENSLevelRec(granddaughterHeader,ENSFlag, &(*dt)).toStdString();
 
         vector<Transition*>*  grandTransitions = dt->GetTransitions();
         for (auto ddt = grandTransitions->begin(); ddt != grandTransitions->end(); ++ddt)
@@ -1149,6 +1163,8 @@ QString SaveDecayData::setENSParentRec(std::vector<Nuclide>* nuclidesVector, boo
     QString qstr;
     QString qstrC;
     QString output;
+    double qBeta=0;
+    double DqBeta=0;
      for (int i=0; i<80; i++)
      {
          qstr.push_back(space);
@@ -1158,8 +1174,6 @@ QString SaveDecayData::setENSParentRec(std::vector<Nuclide>* nuclidesVector, boo
      qstrC.push_back("\n");
     int atomicNumber = parent->GetAtomicNumber();
     int atomicMass = parent->GetAtomicMass();
-    double qBeta;
-    double DqBeta;
     if(!delayedParticle)
     {
     qBeta = parent->GetQBeta();
@@ -1207,17 +1221,22 @@ QString SaveDecayData::setENSParentRec(std::vector<Nuclide>* nuclidesVector, boo
     QString qstr10to19 = QString("%1").arg(energy,10,'f',2,space);
 
     QString qstr22to39;
+    for (int i=22; i<=39; i++)
+    {
+        qstr22to39.push_back(space);
+    }
+
     if(spin2 == 0 )
     {
         if (!parity.isEmpty()) {  //spin=0 and known parity
             qstr22to39 = QString("%1").arg(spin2,14,10,space)+QString("%1").arg(parity,1,space)+space;; // spin with just parity
-        }
+            }
     } else if (spin2 > 0){
         if (spin2 % 2 == 0){  //even spins
             qstr22to39 = QString("%1").arg(spin2/2,14,10,space)+QString("%1").arg(parity,1,space)+space;; // spin with just parity
-        } else {  // odd spins
+            } else {  // odd spins
             qstr22to39 = QString("%1/2").arg(spin2,14,10,space)+QString("%1").arg(parity,1,space)+space;
-        }
+            }
     }
 
 //    QString qstr22to39 = QString("%1").arg(spin,16,'f',1,space)+QString("%1").arg(parity,1,space)+space;
@@ -1226,42 +1245,55 @@ QString SaveDecayData::setENSParentRec(std::vector<Nuclide>* nuclidesVector, boo
     qstr.replace(5,1,space);
     qstr.replace(6,1,space);
     qstr.replace(7,1,"P");   // P for Parent
+    qDebug() << "a " << qstr;
     qstr.replace(8,1,space); //balnk or integer in case of multiple P records in the data set
     qstr.replace(9,10,qstr10to19); // energy
+    qDebug() << "b " << qstr;
 //    qstr.replace(19,2,qstr20to21); //denergy
     qstr.replace(21,18,qstr22to39); //spin and parity
+    qDebug() << "c " << qstr;
     qstr.replace(39,10,qstr40to49); //Half-life with units
+    qDebug() << "d " << qstr;
 //    qstr.replace(49,6,qstr50to55); // dT1/2
 //    qstr.replace(?,?,qstr56to64); // MUST be BLANK
     QString qstr65to74 = QString("%1").arg(qBeta,10,'f',2,space);
+    qDebug() << "QBeta " << qstr65to74 ;
     qstr.replace(64,10,qstr65to74);  // qBeta
+    qDebug() << "f " << qstr;
 
 //    string tmpstr = toStringPrecision(d_totalIntensity,2);
 //    cout << tmpstr.substr( tmpstr.length() - 2 ) << endl;
 //    qstr30to31 = QString::fromStdString(tmpstr.substr( tmpstr.length() - 2 ));  // bledy IBeta
-
-    QString qstr75to76 = QString::number(DqBeta,'g',2);  ;
+    QString qstr75to76;
+    if(DqBeta != 0){
+        qstr75to76 = QString::number(DqBeta,'g',2);
+    }else {
+        qstr75to76 = QString("%1").arg(space,2);
+    }
 
 //    QString qstr75to76 = QString("%1").arg(DqBeta,2,'f',2,space);
+    qDebug() << "DqBETAt " << DqBeta ;
     qstr.replace(74,2,qstr75to76); // dQBeta
 //    qstr.replace(76,4,qstr77to80); // IonizationState(for Ionized Atom decay) otherwise blank
     output= qstr;
     if(delayedParticle)
     {
-        QString qstr10to80 = "  S(n)({+"+ QString("%1").arg(atomicMass-1,3,10) +"}" + qstr4to5 + ")=" +
+        QString qstr4to5d=QString::fromStdString(PeriodicTable::GetAtomicNameCap(daughterNuclide->GetAtomicNumber()));
+
+        QString qstr10to80 = "  S(n)({+"+ QString("%1").arg(atomicMass,3,10) +"}" + qstr4to5d + ")=" +
                 QString("%1").arg(daughterNuclide->GetSn(),8,'f',2,space);
         qstrC.replace(0,5,qMass+qstr4to5); // Nuclide Identification
         qstrC.replace(5,1,space);
         qstrC.replace(6,1,"c");  //'c' for comment
-        qstrC.replace(7,1,"P");   // L for Parent
+        qstrC.replace(7,1,"P");   // P for Parent
         qstrC.replace(8,1,space); //must be blank
         qstrC.replace(9,71,qstr10to80); //Comment
         output = output+qstrC;
     }
-
+    qDebug() << output;
     return output;
 }
-QString SaveDecayData::setENSLevelRec(QString header, Level* level)
+QString SaveDecayData::setENSLevelRec(QString header, QString ENSFlag, Level* level)
 {
     QChar space = ' ';
     QString qstr;
@@ -1286,14 +1318,16 @@ QString SaveDecayData::setENSLevelRec(QString header, Level* level)
  //   QString qstr4to5=QString::fromStdString(PeriodicTable::GetAtomicNameCap(atomicNumber));
     QString qstr10to19 = QString("%1").arg(energy,10,'f',2,space);
     QString qstr22to39;
+    for (int i=22; i<=39; i++) qstr22to39.push_back(space);
+
     if(spin2 == 0 )
     {
         if (!parity.isEmpty()) {  //spin=0 and known parity
-            qstr22to39 = QString("%1").arg(spin2,14,10,space)+QString("%1").arg(parity,1,space)+space;; // spin with just parity
+            qstr22to39 = QString("%1").arg(spin2,14,10,space)+QString("%1").arg(parity,1,space)+space; // spin with just parity
         }
     } else if (spin2 > 0){
         if (spin2 % 2 == 0){  //even spins
-            qstr22to39 = QString("%1").arg(spin2/2,14,10,space)+QString("%1").arg(parity,1,space)+space;; // spin with just parity
+            qstr22to39 = QString("%1").arg(spin2/2,14,10,space)+QString("%1").arg(parity,1,space)+space+space+space; // spin with just parity
         } else {  // odd spins
             qstr22to39 = QString("%1/2").arg(spin2,14,10,space)+QString("%1").arg(parity,1,space)+space;
         }
@@ -1307,6 +1341,8 @@ QString SaveDecayData::setENSLevelRec(QString header, Level* level)
         qstr22to39 = QString("%1").arg(spin2,14,10,space)+QString("%1").arg(parity,1,space)+space;; // spin with just parity
     }
  */       QString qstr40to49;
+    for (int i=0; i< 10;i++) qstr40to49.push_back(space);
+
     if(T12 > 0.0) //in case T12=0 we write nothing
      {
         // changing units.
@@ -1339,10 +1375,10 @@ QString SaveDecayData::setENSLevelRec(QString header, Level* level)
             if (T12/31556952 > 99 )
                { T12= T12/31556952;
                unit = "Y";
-               qstr40to49 = QString("%1").arg(T12,9,'E',2,space)+QString("%1").arg(unit,1,space);
+               qstr40to49 = QString("%1").arg(T12,-9,'E',2,space)+QString("%1").arg(unit,1,space);
                 }
 
-            if(T12 < 1.0)qstr40to49 = QString("%1").arg(T12,7,'E',3,space)+QString("%1").arg(unit,-2,space);
+            if(T12 < 1.0)qstr40to49 = QString("%1").arg(T12,-7,'E',3,space)+space+QString("%1").arg(unit,2,space);
 
     }
 //    QString qstr65to74 = QString("%1").arg(qBeta,10,'f',2,space);
@@ -1351,22 +1387,29 @@ QString SaveDecayData::setENSLevelRec(QString header, Level* level)
     qstr.replace(5,1,space);
     qstr.replace(6,1,space);
     qstr.replace(7,1,"L");   // L for Level
+    qDebug() << qstr;
     qstr.replace(8,1,space); //balnk or integer in case of multiple P records in the data set
     qstr.replace(9,10,qstr10to19); // energy
 //    qstr.replace(19,2,qstr20to21); //denergy
+    qDebug() << "a " << qstr;
     qstr.replace(21,18,qstr22to39); //spin and parity
+    qDebug() << "b " << qstr;
     qstr.replace(39,10,qstr40to49); //Half-life with units
+    qDebug() << "c " << qstr;
 //    qstr.replace(49,6,qstr50to55); // dT1/2
 //    qstr.replace(?,?,qstr56to64); // L Angular momentum transfer in the reacition determianinf the data set.
 //    qstr.replace(64,10,qstr65to74);  // S Spectroscopiv strength for this level as determined from the reaction
 //    qstr.replace(74,2,qstr75to76); // dS
-//      qstr.replace(76,1,"C") ;      // Comment  FLAG used to refer to a particular comment record
+     if(level->isPseudoLevel())qstr.replace(76,1,ENSFlag);
+     qDebug() << "d " << qstr;
+    //      qstr.replace(76,1,"C") ;      // Comment  FLAG used to refer to a particular comment record
 //    qstr.replace(77,2,qstr78to79); // Metastabel state is denoted by 'M' or "M1' for the first (lowest) M2, for the second etc.
                                     // For ionized atom decay filed gives the atomic electron shell or subshell in which B- particle is captured.
-//    qstr.replace(79,1,qstr80); // The character '?' denotes an uncertain or questionable level.Letter 'S' denotes neutron,proton,alpha,separation
+     if(level->isPseudoLevel()) qstr.replace(79,1,"?"); // The character '?' denotes an uncertain or questionable level.Letter 'S' denotes neutron,proton,alpha,separation
                                  //energy or a leel expected but not observed.
-    output = qstr;
-    if(level->isPseudoLevel())
+
+     output = qstr;
+ /*   if(level->isPseudoLevel())
     {
         QString qstr10to80 = QString("Added Pseudolevel. Energy denotes center of the pseudolevel") ;
         qstrC.replace(0,5,header); // Nuclide Identification
@@ -1377,7 +1420,7 @@ QString SaveDecayData::setENSLevelRec(QString header, Level* level)
         qstrC.replace(9,71,qstr10to80); //Comment
         output = output+qstrC;
     }
-
+   */ qDebug() << output;
     return output;
 }
 QString SaveDecayData::setENSGammaRec(QString header, Transition* transitionFrom, Transition* transitionTo)
@@ -1409,9 +1452,9 @@ QString SaveDecayData::setENSGammaRec(QString header, Transition* transitionFrom
     QString qstr10to19 = QString("%1").arg(energy,10,'f',2,space);
     QString qstr22to29;
     QString qstr30to31;
-    if (totalIntensity < 0.01)
+    if (totalIntensity < 0.001)
     {
-    qstr22to29 = QString("%1").arg("0.01",8,space);
+    qstr22to29 = QString("%1").arg("0.001",8,space);
     qstr30to31 = QString("%1").arg("LT",2,space);
     } else
     {
@@ -1424,10 +1467,13 @@ QString SaveDecayData::setENSGammaRec(QString header, Transition* transitionFrom
     qstr.replace(5,1,space);
     qstr.replace(6,1,space);
     qstr.replace(7,1,"G");   // G for gamma
+    qDebug() << "a " << qstr;
     qstr.replace(8,1,space); //must be blank
     qstr.replace(9,10,qstr10to19); // energy
 //    qstr.replace(19,2,qstr20to21); //denergy
+    qDebug() << "b " << qstr;
     qstr.replace(21,8,qstr22to29); //RI, relative photon intensity I
+    qDebug() << "c " << qstr;
 //    qstr.replace(29,2,qstr30to31); //dRI
 //    qstr.replace(31,10,qstr32to41); //M - Multipolarity of transition
 //    qstr.replace(41,8,qstr42to49); // MR Mixing ratio (sigma) (Sign must be shown explicitly if known.
@@ -1436,23 +1482,55 @@ QString SaveDecayData::setENSGammaRec(QString header, Transition* transitionFrom
 //    qstr.replace(55,7,qstr56to62); // CC, Total conversion coeficient
 //    qstr.replace(62,2,qstr63to64); // dCC
     qstr.replace(64,10,qstr65to74);  // TI, Relative total transition intensity. (Normalisation given in NORMALISATION record)
+    qDebug() << "d " << qstr;
 //    qstr.replace(74,2,qstr75to76); // dTI*----
-//    qstr.replace(76,1,qstr77); // Comment FLAG used to refere to particular comment record.
+    QString qstr77=" ";
+    if(transitionFrom->IsAddedTransition())qstr77="A";
+
+     qstr.replace(76,1,qstr77); // Comment FLAG used to refere to particular comment record.
                               // The symbol '*' denotes multiply placed g-ray.
                               // '&' - a multiplaced transitions with intensity not divided,
                               // '@' - a multiplaced transitions with intensity suitably divided.
                               // '%' - denotes that intensity given as RI is the branching in the SUper DEformed Band.
+     qDebug() << "e " << qstr;
     qstr.replace(77,1,' ');  //  Letter 'C' denotes placement confirmed by coincidence.
                               // Symbol '?' denotes questionable coincidence.
     qstr.replace(78,1,space);
-    QString qstr80 ="";
+    QString qstr80 =" ";
+//    if(transitionFrom->IsAddedTransition())qstr80="?";
     qstr.replace(79,1,qstr80); // The Character '?' denotes an uncertain placement of the transition in the lvel scheme.
                                // Letter 'S' denotes an expected, but as yet unobserved, transition.
+    qDebug() << "f " << qstr;
     output=qstr;
     double electronConversion = transitionFrom->GetElectronConversionCoefficient();
+    double* shellElectronConversion  = transitionFrom->GetShellElectronConversionCoefficient();
+    QString qstrCE, qstrKE, qstrLE, qstrME, qstrNE;
+    qDebug() << "------------SHellElectronConversion--------------" << shellElectronConversion[2] ;
     if(electronConversion != 0)
     {
-        QString qstr10to80 =QString("CE=%1").arg(electronConversion,-7,'f',4,space);
+
+        QString qstrCE =QString("CE= %1").arg(electronConversion,-8,'f',6,space);
+        QString qstr10to80;
+        qDebug() <<qstr10to80;
+        qstr10to80.insert(0,qstrCE);
+        qDebug() <<qstr10to80;
+
+        if (shellElectronConversion[0] !=0){
+            qstrKE = QString(" KC= %1").arg(shellElectronConversion[0], -8,'f',6,space);
+            qstr10to80.insert(12,qstrKE);  }
+
+        if (shellElectronConversion[1] !=0){
+            qstrLE = QString(" LC= %1").arg(shellElectronConversion[1]-shellElectronConversion[0], -8,'f',6,space);
+            qstr10to80.insert(26, qstrLE); }
+
+        if (shellElectronConversion[2] !=0){
+            qstrME = QString(" MC= %1").arg(shellElectronConversion[2]-shellElectronConversion[1], -8,'f',6,space);
+            qstr10to80.insert(39,qstrME);  }
+
+        if (shellElectronConversion[3] !=0){
+            qstrNE = QString(" NC= %1").arg(shellElectronConversion[3]-shellElectronConversion[2], -8,'f',6,space);
+            qstr10to80.insert(52,qstrNE); }
+
         qstr2.replace(0,5,header); // Nuclide Identification
         qstr2.replace(5,1,"2"); // Any alphanumeric character other than 1. Note 'S' is reserved for computer produced records.
         qstr2.replace(6,1,space);  //'c' for comment
@@ -1462,7 +1540,7 @@ QString SaveDecayData::setENSGammaRec(QString header, Transition* transitionFrom
         output = output+qstr2;
     }
 
-    if(transitionFrom->IsAddedTransition())
+/*    if(transitionFrom->IsAddedTransition())
     {
         QString qstr10to80 = QString("Added transition") ;
         qstrC.replace(0,5,header); // Nuclide Identification
@@ -1473,7 +1551,7 @@ QString SaveDecayData::setENSGammaRec(QString header, Transition* transitionFrom
         qstrC.replace(9,71,qstr10to80); //Comment
         output = output+qstrC;
     }
-
+  */  qDebug() << output;
     return output;
 }
 QString SaveDecayData::setENSBetaRec(QString header, Transition* transition)
@@ -1488,40 +1566,47 @@ QString SaveDecayData::setENSBetaRec(QString header, Transition* transition)
      double d_totalIntensity = transition->GetD_Intensity()*100;
      QString qstr22to29;
      QString qstr30to31;
-   if (totalIntensity < 0.01)
+   if (totalIntensity < 0.001)
          {
-     qstr22to29 = QString("%1").arg("0.01",8,space);
+     qstr22to29 = QString("%1").arg("0.001",8,space);
      qstr30to31 = QString("%1").arg("LT",2,space);
          }
 
      else
-         { //intensity larger than 0.01%
+         { //intensity larger than 0.001%
 
        QStringList qList = getValueAndError(totalIntensity,d_totalIntensity);
-       qstr22to29 = qList.at(0);
-       qstr30to31 = qList.at(1);
-/*     qstr22to29 = QString("%1").arg(totalIntensity,8,'f',2,space);
-     string tmpstr = toStringPrecision(d_totalIntensity,2);
+       qDebug() << qList;
+     //  qstr22to29 = qList.at(0);
+     //  qstr30to31 = qList.at(1);
+     qstr22to29 = QString("%1").arg(qList.at(0),-8);
+     qstr30to31 =QString("%1").arg(qList.at(1),2);
+/*     string tmpstr = toStringPrecision(d_totalIntensity,2);
      cout << tmpstr.substr( tmpstr.length() - 2 ) << endl;
      qstr30to31 = QString::fromStdString(tmpstr.substr( tmpstr.length() - 2 ));  // bledy IBeta
 //     qstr30to31 = QString::fromStdString(toStringPrecision(d_totalIntensity,2));  // bledy IBeta
 */
      }
+    qDebug() << qstr;
 //     QString qstr10to19 = ;
     qstr.replace(0,5,header); // Nuclide Identification
     qstr.replace(5,1,space);
     qstr.replace(6,1,space);
-    qstr.replace(7,1,"B");   // B for gamma
+    qstr.replace(7,1,"B");   // B for beta
     qstr.replace(8,1,space); // blank
+    qDebug() << qstr;
 //    qstr.replace(9,10,qstr10to19); // E - End Point energy given only if measured
 //    qstr.replace(19,2,qstr10to21); //  DE uncertainty
     qstr.replace(21,7,qstr22to29); //  IB - Intensity of B- branch.
                                    //Intensity units defined by the NORMALIZATION record.
     qstr.replace(29,2,qstr30to31); //  DIB - uncertainty of Beta intensity
-//    qstr.replace(31,11,space); // blank
+    qDebug() << "a " << qstr;
+ //   qstr.replace(31,11,space); // blank
+    qDebug() << "b " <<qstr;
 //    qstr.replace(41,7,qstr42to49); // LOGFT logfT values calculated for uniqueness given in col 78-79
 //    qstr.replace(59,6,qstr50to55); //  DFT - standard uncertainty for LOGFT value
-    qstr.replace(55,21,space); // Must be blank
+ //   qstr.replace(55,21,space); // Must be blank
+    qDebug() << "c " << qstr;
 //   qstr.replace(76,1,qstr77); //  Comment FLAG : C- denotes coincidence with the following radiation,
                                // A '?' denotes probable coincidence with a following radiation.
 //    qstr.replace(77,2,qstr78to79); // Forbiddenness calsification for B- decay e.g. 1U, 2U for first,second uniqueforbiden.
@@ -1529,7 +1614,8 @@ QString SaveDecayData::setENSBetaRec(QString header, Transition* transition)
                                    // Nonunique forbiddenness can be indicated in col 78., with col 79 blank.
     qstr.replace(79,1,space); // The character '?' denotes an uncertain or questionable B- decay
                               // Letter 'S' denotes an expected or predicted transition.
-   return qstr;
+     qDebug() << qstr;
+    return qstr;
 }
 QString SaveDecayData::setENSIdentificationRec(QString Id, QString header, Nuclide* parent)
 {
@@ -1547,9 +1633,9 @@ QString SaveDecayData::setENSIdentificationRec(QString Id, QString header, Nucli
     QString qstr10to39 =  QString("%1%2 %3 DECAY%4").arg(qMass,3,10).arg(qstr4to5,2).arg(Id,3,space).arg(space,16,space) ;
     QDateTime now = QDateTime::currentDateTime();
     const QString timestamp = now.toString(QLatin1String("yyyyMM"));
-    qDebug() << timestamp;
+ //   qDebug() << timestamp;
     QString qstr75to80 = QString("%1").arg(timestamp,6);
-    qDebug() << qstr75to80;
+//    qDebug() << qstr75to80;
     qstr.replace(0,5,header); // Nuclide Identification
 //    qstr.replace(5,4,space); // must be blank
     qstr.replace(9,30,qstr10to39); //DSID - Data Set IDentification
@@ -1590,6 +1676,7 @@ QString SaveDecayData::setENSQvalueRec(QString header, Nuclide* nuclide)
 //    qstr.replace(41,8,qstr42to49); // QA - Total energy (kev) available for apha decay of the ground state
 //    qstr.replace(49,6,qstr50to55); // DQA - standard uncertaint in QA
 //    qstr.replace(55,25,qstr56to80); // Reference citation(s) for Q-values
+    qDebug() << qstr;
     return qstr;
 }
 QString SaveDecayData::setENSNormRec(QString header)
@@ -1631,7 +1718,7 @@ QString SaveDecayData::setENSNormRec(QString header)
       qstr.replace(55,6,qstr56to62); // NP - Multiplier for converting per 100 delayed transition intensities to per 100 decays of precursor.
 //    qstr.replace(62,2,qstr63to64); // DNP - standard uncertainty in NP.
 //    qstr.replace(64,21,space);     // must be blank
-
+    qDebug() << qstr;
      return qstr;
 }
 QString SaveDecayData::setENSPNormRec(QString header)
@@ -1678,7 +1765,8 @@ QString SaveDecayData::setENSPNormRec(QString header)
                                 // 5 - RI - Relative I(gamma)
                                 // 6 - RI - Relative photon branching from each level
                                 // 7 - RI - % photon branching from each level
-     return qstr;
+      qDebug() << qstr;
+      return qstr;
 }
 QString SaveDecayData::setENSPartRec(QString header, Transition* transitionFrom, Transition* transitionTo)
 {
@@ -1731,26 +1819,48 @@ QString SaveDecayData::setENSPartRec(QString header, Transition* transitionFrom,
 
      return qstr;
 }
+QString SaveDecayData::setENSComRec(QString header, QString RType, QString Sym, QString Flag, QString CText)
+{
+    QChar space = ' ';
+    QString qstr;
+    QString qstr10to80;
+//    double one =1.0;
+     for (int i=0; i<80; i++)qstr.push_back(space);
+     qstr.push_back("\n");
+
+     qstr.replace(0,5,header); // Nuclide Identification
+     qstr.replace(5,1,space);  // must be blank or any alphanueric character other then '1' for continuation records
+     qstr.replace(6,1,'C'); // 'C', 'D', 'T' ora 'c', 'd', 't'
+     qstr.replace(7,1,RType); // Balnk or RType for record type of records to which the comment pertains
+     qstr.replace(8,1,space); // PSYM - Blank or symbol for a (delayed-) particle eg. N,P
+//    qstr.replace(9,10,qstr10to19); // NR - Multiplier for converting relative photon intensity (RI in GAMMA record) to photons per 100 decays
+
+     qstr10to80 = QString("%1(%2)$%3").arg(Sym).arg(Flag).arg(CText);
+     qstr.replace(9,70,qstr10to80);
+
+     return qstr;
+}
 
 QStringList SaveDecayData::getValueAndError(double value, double error)
 {
     QStringList outputList;
     QChar space = ' ';
  //   QString valueStr;
-    QString valueStr = QString("%1").arg(value,11,'f',4,space);  //11 and 4 set arbitrary
-    QString errorStr = QString("%1").arg(error,11,'f',4,space);
+    qDebug() << "Input: " << value <<" " << error;
+    QString valueStr = QString("%1").arg(value,11,'f',3,space);  //11 arbitray 3 to count the 1/1000a
+    QString errorStr = QString("%1").arg(error,11,'f',3,space);
+    qDebug() << "valueStr = " << valueStr << "errorStr = " << errorStr;
     errorStr.remove(space);
     valueStr.remove(space);
- //   qDebug() << "Input: " << value <<" " << error;
- //   qDebug() << "valueStr = " << valueStr << "errorStr = " << errorStr;
+    qDebug() << "valueStr = " << valueStr << "errorStr = " << errorStr;
     int dotPossitionInValue;
     int dotPossitionInError;
     if (error <= value)
     {
         dotPossitionInValue = valueStr.indexOf(".");
         dotPossitionInError = errorStr.indexOf(".");
- //       qDebug() <<  " dotPossitionInValue " <<   dotPossitionInValue
- //                <<  " dotPossitionInError " <<   dotPossitionInError;
+        qDebug() <<  " dotPossitionInValue " <<   dotPossitionInValue
+                 <<  " dotPossitionInError " <<   dotPossitionInError;
         //find first non-zero character in string errorStr
         signed short dError1=0;
         for(auto i=0; i!=errorStr.length(); i++)
@@ -1781,8 +1891,19 @@ QStringList SaveDecayData::getValueAndError(double value, double error)
         } else
         {   errorStrOut = errorStr.mid(dError1-1,2);
         }
-         outputList << valueStr.mid(dValue1,outputValueLength) << errorStrOut ;
- //               qDebug() << outputList;
+// cuts out last zeros if they exist in both value and error
+        QString tstr1, tstr2;
+         tstr1 = valueStr.mid(dValue1,outputValueLength);
+         tstr2 = errorStrOut;
+         if(tstr1.endsWith('0') && tstr2.endsWith('0'))
+         {
+             tstr1.chop(1);
+             tstr2.chop(1);
+         }
+         qDebug() << "after choping" << tstr1 << " " << tstr2;
+         outputList << tstr1 << tstr2;
+//         outputList << valueStr.mid(dValue1,outputValueLength) << errorStrOut ;
+               qDebug() << "Output LIST" << outputList;
          return outputList;
     } else
     { // uncertainty larger than value

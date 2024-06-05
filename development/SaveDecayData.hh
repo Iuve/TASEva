@@ -28,10 +28,11 @@ public:
 
     QString setENSIdentificationRec(QString Id, QString header, Nuclide* parent);
     QString setENSQvalueRec(QString header, Nuclide* nuclide);
+    QString setENSComRec(QString header, QString RType, QString Sym, QString Flag, QString CText);
     QString setENSParentRec(std::vector<Nuclide>* nuclidesVector, bool delayedParticle);
     QString setENSNormRec(QString header);
     QString setENSPNormRec(QString header);
-    QString setENSLevelRec(QString header, Level* level);
+    QString setENSLevelRec(QString header, QString ENSFlag, Level* level);
     QString setENSGammaRec(QString header, Transition* transitionFrom, Transition* transitionTo);
     QString  setENSBetaRec(QString header, Transition* transition);
     QString setENSPartRec(QString header, Transition* transitionFrom , Transition* transitionTo);

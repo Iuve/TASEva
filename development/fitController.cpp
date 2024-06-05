@@ -651,6 +651,8 @@ void FitController::findErrors()
 
 void FitController::findBayesianErrors()
 {
+    // This whole method is... something but does not provide correct uncertainties
+
     cout << "------------- findBayesianErrors start.-----------------" << endl;
     // chi2EachBin = (simCounts - expCounts) * (simCounts - expCounts) / expCounts;
     // chi2WholeGate += chi2EachBin;

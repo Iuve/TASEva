@@ -1,5 +1,6 @@
+// See function Project::Open in project.cpp for full list of options
 ProjectName: 87Br
-ExpFile: 87Br_expCal10_nW_10bin.his
+ExpFile: 87Br_expCal10_nW_10bin_12C.his
 ExpSpecID: 6300
 ExpSpecID: 6310
 ExpSpecID: 6320
@@ -9,15 +10,30 @@ OutputENSFile: newIsotope2.ens
 OutputSIMFile: sim.his
 OutputLEVFile: LevRes.his
 CodeGEANT: MTASSimulation_XML
+//CodeGEANTver: 10-07
 // Contamination: <expID> <file_name> <intensity_in_total_spectrum_in%> <hisId>
 Contamination: 6300 87Kr_full_1800-5700_87KrCal5_nW.his 3,71726129017 6300
-Contamination: 6300 pileup_signalSignal.his 0,118127944623 8300
-Contamination: 6300 pileup_signalBkg.his 0,8544525 8300
+Contamination: 6300 pileup_signalSignal.his 0,119 8300
+Contamination: 6300 pileup_signalBkg.his 0,682 8300
 Contamination: 6310 87Kr_full_1800-5700_87KrCal5_nW.his 3,76 6310
-Contamination: 6320 87Kr_full_1800-5700_87KrCal5_nW.his 2,117142 6320
-Contamination: 6310 pileupC_signalSignal.his 0,118127944623 8300
-Contamination: 6310 pileupC_signalBkg.his 0,8544525 8300
-Contamination: 6320 pileupI_signalSignal.his 0,118127944623 8300
-Contamination: 6320 pileupI_signalBkg.his 0,8544525 8300
+Contamination: 6310 pileupC_signalSignal.his 0,13 8300
+Contamination: 6310 pileupC_signalBkg.his 0,19 8300
+Contamination: 6320 87Kr_full_1800-5700_87KrCal5_nW.his 1,45 6320
+Contamination: 6320 pileupI_signalSignal.his 0,05 8300
+Contamination: 6320 pileupI_signalBkg.his 0,35 8300
+SortProgramName: sortCalFold2D_87fold
+//SortInputFileName: sort.xml
+NumberOfSimulations 1e5
+SiliconThreshold: 10
+IMOThreshold: 30
+Binning1D: 1
 Binning2D: 10
 SimulationActiveCores: 6
+SortXML: yes
+//GammaEvolutionRange: 1500 1700
+CheckOutputROOT: yes
+NormalizeBetaIntensities: yes
+SaveRoundedBetaIntensities: no
+//2D range default: 100 max
+2DNormalizeRange: 100 max
+RoughUncertaintyModifierInPercents: 5
