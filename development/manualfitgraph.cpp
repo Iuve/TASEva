@@ -632,7 +632,7 @@ void ManualFitGraph::slotNormaliseBetaFeeding(bool ok)
 {
 //   if(ok)
 //   {
-   cout << "ManualFitGraph::slotNormaliseBetaFeeding " << endl;
+    qDebug() << "ManualFitGraph::slotNormaliseBetaFeeding " ;
     DecayPath *decayPath_ = DecayPath::get();
     ResponseFunction* responseFunction = ResponseFunction::get();
 

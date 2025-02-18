@@ -1022,7 +1022,7 @@ void SaveDecayData::SaveENSDecayStructure()
              }
             }
             // output transitions from the level
-            for ( auto tt = currentLevel->GetTransitions()->begin(); tt != currentLevel->GetTransitions()->end(); ++tt )
+            for ( auto tt = currentLevel->GetTransitions()->rbegin(); tt != currentLevel->GetTransitions()->rend(); ++tt )
             {
                 // prepare and write Gamma lines (NOT correct for neutrons and other transitions propably)
                 // for now eCC lines are not completly output
@@ -1106,7 +1106,7 @@ void SaveDecayData::SaveENSDecayStructure()
         outputFile << setENSLevelRec(granddaughterHeader,ENSFlag, &(*dt)).toStdString();
 
         vector<Transition*>*  grandTransitions = dt->GetTransitions();
-        for (auto ddt = grandTransitions->begin(); ddt != grandTransitions->end(); ++ddt)
+        for (auto ddt = grandTransitions->rbegin(); ddt != grandTransitions->rend(); ++ddt)
         { // correct second pointer it is supose to be for B feeding
             Transition* ptr = NULL;
             outputFile << setENSGammaRec(granddaughterHeader, (*ddt), ptr).toStdString();

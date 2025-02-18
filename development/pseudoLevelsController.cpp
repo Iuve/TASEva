@@ -54,6 +54,10 @@ void PseudoLevelsController::createGammaIntensityMethodList()
     intensityGammaMethodListToolTip_.push_back("All intensitites are of M1 type");
     intensityGammaMethodList_.push_back("AllM2");
     intensityGammaMethodListToolTip_.push_back("All intensitites are of M2 type");
+    intensityGammaMethodList_.push_back("PropEn");
+    intensityGammaMethodListToolTip_.push_back("Intensities are proportional to energy");
+    intensityGammaMethodList_.push_back("PropEn^2");
+    intensityGammaMethodListToolTip_.push_back("Intensities are proportional to energy^2");
 //    intensityGammaMethodList_.push_back("87Br");
 //    intensityGammaMethodListToolTip_.push_back("");
 //    intensityGammaMethodList_.push_back("ModelM1"); // no pseudo lvls, but deexcitation model
@@ -460,6 +464,12 @@ double PseudoLevelsController::calculateIntensity(string method,double transitio
     } else if (method == "AllM2")
     {
         intensity = getM2Intensity(atomicMass, transitionEnergy);
+    } else if (method == "PropEn")
+    {
+        intensity = transitionEnergy;
+    } else if (method == "PropEn^2")
+    {
+        intensity = transitionEnergy * transitionEnergy;
     }
 
     else
@@ -652,6 +662,14 @@ void PseudoLevelsController::changeIntensitiesToChoosenMethod(Level* level, stri
             else if (method == "AllM2")
             {
                 newTransitionIntensity = getM2Intensity(atomicMass, transitionEnergy);
+            }
+            else if (method == "PropEn")
+            {
+                newTransitionIntensity = transitionEnergy;
+            }
+            else if (method == "PropEn^2")
+            {
+                newTransitionIntensity = transitionEnergy * transitionEnergy;
             }
             else
             {

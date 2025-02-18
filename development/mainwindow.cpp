@@ -1440,13 +1440,22 @@ void MainWindow::newProject(bool triggered)
 void MainWindow::saveProject(bool trigered)
 {
     Project* myProject = Project::get();
+    e1= new ExportFiles;
+    std::string path = e1->checkAndPreparePath();
+    QString Qpath_ ;
+    if(path.size() < 40)
+    {
+        Qpath_ = QString::fromStdString(path);
+    } else {
+        Qpath_ = QString::fromStdString(path.substr(0,15)) + "..."  + QString::fromStdString(path.substr(path.size() - 25,path.size()));
+    }
 
     if(!trigered)
     {
-//    QMessageBox::information(this, "New Project", "Please fill in Project Frame data", QMessageBox::Ok, QMessageBox::Ok);
 
     QString qfileName;
-    qfileName = QFileDialog::getSaveFileName(this, tr("Save project to file") );
+    qfileName = Qpath_ + "/" + QString::fromStdString(myProject->getProjectName()) + ".tas" ;
+ //   qfileName = QFileDialog::getSaveFileName(this, tr("Save project to file") );
     QFile file(qfileName);
             file.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream out(&file);
@@ -1460,7 +1469,41 @@ void MainWindow::saveProject(bool trigered)
     out << "OutputSIMFile: " << QString::fromStdString(myProject->getOutputSIMFile()) <<"\n" ;
     out << "OutputLEVFile: " << QString::fromStdString(myProject->getOutputLEVFile()) <<"\n" ;
     out << "CodeGEANT: " << QString::fromStdString(myProject->getCodeGEANTName()) <<"\n" ;
-//    out << "Contamination: " << QString::fromStdString(myProject->getWorkingDir()) <<"\n" ;
+    out << "CodeGEANTver: " << QString::fromStdString(myProject->getCodeGEANTver()) <<"\n" ;
+    out << "NumberOfSimulations: " << QString::number(myProject->getNumberOfSimulations()) <<"\n" ;
+//---Contaminations --
+// lpop po mapie
+    vector<vector <string> > inputContaminations = myProject->getInputContaminations();
+    qDebug() << "--------------------------------" ;
+    qDebug() << "size" <<    inputContaminations.size() ;
+    for(unsigned long i=0; i<inputContaminations.size(); i++)
+    {
+          qDebug() << "size" <<    inputContaminations.at(i).size() ;
+      //  qDebug() << QString::fromStdString(inputContaminations.at(i)) ;
+          qDebug() <<"i= " <<i;
+        out << "Contamination: " ;
+            for(unsigned long ii=0; ii<inputContaminations.at(i).size(); ii++){
+            qDebug() <<"ii= " <<ii << " "
+                         << QString::fromStdString(inputContaminations.at(i).at(ii));
+            out << " " << QString::fromStdString(inputContaminations.at(i).at(ii)) ;
+        } out << "\n";
+    }
+    //   out << "Contamination: " << QString::fromStdString(myProject->getCodeGEANTver()) <<"\n" ;
+//Contami-end
+    out << "SortProgramName: " << myProject->getSortProgramName() <<"\n" ;
+    out << "SortInputFileName: " << myProject->getSortInputFileName() <<"\n" ;
+    out << "SiliconThreshold: " << QString::number(myProject->getSiliThreshold()) <<"\n" ;
+    out << "IMOThreshold: " << QString::number(myProject->getIMOThreshold()) <<"\n" ;
+    out << "Binning1D: " << QString::number(myProject->getBinning1Dfactor()) <<"\n" ;
+    out << "Binning2D: " << QString::number(myProject->getBinning2Dfactor()) <<"\n" ;
+    out << "SimulationActiveCores: " << QString::number(myProject->getActiveCoresForSimulation()) <<"\n" ;
+    out << "NormalizeBetaIntensities: " << myProject->getNormalizeBetaIntensities()  <<"\n" ;
+    out << "SaveRaoundedBetaIntensities: " << myProject->getSaveRoundedBetaIntensities() <<"\n" ;
+    out << "2DNormalizeRange: " << QString::number(get<0>(myProject->getTwoDimNormalizeRange())) << " "
+        << QString::fromStdString(get<1>(myProject->getTwoDimNormalizeRange())) <<"\n" ;
+    out << "RoughUncertaintyModifierInPercets: " << QString::number(myProject->getUncertModifierInPercents()) <<"\n" ;
+
+    //    out << "Contamination: " << QString::fromStdString(myProject->getWorkingDir()) <<"\n" ;
 
 // consider saving also HERE decay path OutputENSFile
     file.close();
@@ -1643,6 +1686,7 @@ void MainWindow::exportENSFile(bool trigered)
 void MainWindow::slotExportFiles(bool triggered)
 {
     e1 = new ExportFiles();
+    saveProject(false);    // always saves <ProjectName.tas> file
     e1->show();
 }
 
