@@ -647,6 +647,7 @@ void SaveDecayData::GeneralDecayInfo()
     d_averageGammaEnergy_ = 0.;
     averageNeutronEnergy_ = 0.;
     d_averageNeutronEnergy_ = 0.;
+    averageNeutronGammaEnergy_ = 0.;
     neutronPercentage_ = 0.;
     growingIntensity_ = 0.;
     numberOfGammaAddedLevels_ = 0;
@@ -729,8 +730,11 @@ void SaveDecayData::GeneralDecayInfo()
                         double nIntensity = (*nt)->GetIntensity();
                         if(targetLvlEnergy > 1.)
                         {
-                            averageGammaEnergy_+= targetLvlEnergy * intensity / 100;
-                            d_averageGammaEnergy_+= pow( targetLvlEnergy * uncertainty / 100., 2);
+                            averageGammaEnergy_+= targetLvlEnergy * intensity / 100 * nIntensity;
+                            // Uncertainty of gamma part in beta-n-gamma transitions should be calculated with
+                            // d_beta-n; here it is calculated with d_beta and then multiplied by neutron intensity
+                            d_averageGammaEnergy_+= pow( targetLvlEnergy * uncertainty / 100. * nIntensity, 2);
+                            averageNeutronGammaEnergy_ += targetLvlEnergy * intensity / 100 * nIntensity;
                         }
                         averageNeutronEnergy_+= nEnergy * intensity / 100 * nIntensity;
                     }
@@ -786,7 +790,7 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
     if (!outputFile.is_open())
         cout << "Warning message: The file " + (string) outputFilename + " is not open!" << endl;
 
-    outputFile << "#LevelEnergy | BetaFeeding | Uncertainty | GrowingBetaFeeding(gammas)/Energy(neutrons) | FinalLevel(neutrons)" << endl;
+    outputFile << "#LevelEnergy | BetaFeeding | Uncertainty | GrowingBetaFeeding(gammas)/Energy(neutrons) | FinalLevel(neutrons) | NeutronIntensity" << endl;
 
     Level* motherLevel = &motherNuclide->GetNuclideLevels()->at(0);
     Level* stopLevel = decayPath->GetPointerToStopLevel();
@@ -831,9 +835,10 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
                         nEnergy = (*nt)->GetTransitionQValue();
                         targetLvlEnergy = (*nt)->GetFinalLevelEnergy();
                         double nIntensity = (*nt)->GetIntensity();
+
+                        outputFile << finalLevelEnergy << " " << intensity << " " << uncertainty << " "
+                                   << nEnergy << " " << targetLvlEnergy << " " << nIntensity << endl;
                     }
-                    outputFile << finalLevelEnergy << " " << intensity << " " << uncertainty << " "
-                               << nEnergy << " " << targetLvlEnergy << endl;
                 }
                 else
                 {
@@ -848,6 +853,7 @@ void SaveDecayData::SaveGeneralDecayInfo(std::string path)
 
     //averageGammaEnergy /= (100 - neutronPercentage);
     outputFile << "#AverageGammaEnergy = " << averageGammaEnergy_ << " +- " << d_averageGammaEnergy_ << endl;
+    outputFile << "#AverageNeutronGammaEnergy = " << averageNeutronGammaEnergy_ << endl;
     outputFile << "#AverageBetaEnergy = " << averageBetaEnergy_ << " +- " << d_averageBetaEnergy_ << endl;
     outputFile << "#averageNeutronEnergy = " << averageNeutronEnergy_ << endl;
     outputFile << "#NeutronPercentage = " << neutronPercentage_<< endl;
@@ -1908,7 +1914,7 @@ QStringList SaveDecayData::getValueAndError(double value, double error)
     } else
     { // uncertainty larger than value
          outputList <<  QString("%1").arg(value,8,'f',2,space);
- //          qDebug() << outputList;
+         qDebug() << "uncertainty larger than value" << outputList;
          return outputList;
     }
 }

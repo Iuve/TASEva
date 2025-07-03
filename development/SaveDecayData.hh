@@ -51,6 +51,7 @@ private:
   double d_averageGammaEnergy_ = 0.;
   double averageNeutronEnergy_ = 0.;
   double d_averageNeutronEnergy_ = 0.;
+  double averageNeutronGammaEnergy_;
   double neutronPercentage_ = 0.;
   double growingIntensity_ = 0.;
   int numberOfGammaAddedLevels_ = 0;

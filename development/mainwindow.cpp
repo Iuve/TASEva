@@ -1578,8 +1578,11 @@ void MainWindow::openProject(bool trigered)
     //Histogram *tmphis2D = new Histogram( myProject->getExpFile(),std::stoi(myProject->getExp2DSpecID()) );
     //Dopisac automatyczne ustalanie wielkosci os Xi Y czyli Ysize i Xsize zeby
     // dobrze odczytywac widma
-    Histogram tmp2DHist = Histogram( myProject->getExpFile(),std::stoi(myProject->getExp2DSpecID()) );
-     myProject->setExp2DHist( tmp2DHist );
+    if (myProject->getExp2DSpecID() != "no")
+    {
+        Histogram tmp2DHist = Histogram( myProject->getExpFile(),std::stoi(myProject->getExp2DSpecID()) );
+        myProject->setExp2DHist( tmp2DHist );
+    }
 //Eva SPRAWDZIC    //mk    expHist->Rebin(BinningController::getBinningFactor());//10keV/ch
 
      ContaminationController *contaminationController = new ContaminationController();
